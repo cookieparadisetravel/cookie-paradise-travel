@@ -1,0 +1,77 @@
+import { bookingRequests } from "@/db/schema";
+import { getDb } from "@/db";
+import { eq } from "drizzle-orm";
+import { addConsentedSubscriber } from "@/lib/mailerlite";
+import { sendOwnerInquiryNotification } from "@/lib/owner-notification";
+
+const validDepartures = new Set(["2027-06-01", "2027-06-29", "2027-07-27", "flexible"]);
+const validRooms = new Set(["shared", "private", "unsure"]);
+const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "WA"]);
+
+export async function POST(request: Request) {
+  try {
+    const payload = await request.json() as Record<string, unknown>;
+    const fullName = String(payload.fullName ?? "").trim();
+    const email = String(payload.email ?? "").trim().toLowerCase();
+    const phone = String(payload.phone ?? "").trim();
+    const departure = String(payload.departure ?? "");
+    const room = String(payload.room ?? "");
+    const notes = String(payload.notes ?? "").trim();
+    const partySize = Number(payload.partySize ?? 1);
+    const marketingConsent = payload.marketingConsent === true;
+    const contactConsent = payload.contactConsent === true;
+    const sellerOfTravelStateResident = payload.sellerOfTravelStateResident === true;
+    const residenceState = String(payload.residenceState ?? "").trim().toUpperCase();
+
+    if (!fullName || fullName.length > 120 || !/^\S+@\S+\.\S+$/.test(email) || email.length > 180) {
+      return Response.json({ error: "Valid name and email are required." }, { status: 400 });
+    }
+    if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 6) {
+      return Response.json({ error: "Please review the trip selections." }, { status: 400 });
+    }
+    if (phone.length > 40 || notes.length > 1000) {
+      return Response.json({ error: "One or more fields are too long." }, { status: 400 });
+    }
+    if (!contactConsent) {
+      return Response.json({ error: "Contact consent is required to send an inquiry." }, { status: 400 });
+    }
+    if (sellerOfTravelStateResident && !validSellerOfTravelStates.has(residenceState)) {
+      return Response.json({ error: "Please select your state of residence." }, { status: 400 });
+    }
+
+    const db = getDb();
+    const [saved] = await db.insert(bookingRequests).values({
+      tripSlug: "vietnam-southern-charms-central-heritage",
+      fullName, email, phone, departure,
+      roomPreference: room, partySize, notes,
+      contactConsent: true,
+      contactConsentedAt: new Date().toISOString(),
+      sellerOfTravelStateResident,
+      residenceState: sellerOfTravelStateResident ? residenceState : null,
+      marketingConsent,
+      marketingConsentedAt: marketingConsent ? new Date().toISOString() : null,
+      mailerLiteStatus: marketingConsent ? "pending" : "not_requested",
+      ownerNotificationStatus: "pending",
+    }).returning({ id: bookingRequests.id });
+
+    let mailerLiteStatus = marketingConsent ? "pending" : "not_requested";
+    if (marketingConsent) {
+      mailerLiteStatus = await addConsentedSubscriber({ fullName, email });
+    }
+
+    const ownerNotificationStatus = await sendOwnerInquiryNotification({
+      id: saved.id, fullName, email, phone, departure, room, partySize, notes,
+      contactConsent: true, sellerOfTravelStateResident,
+      residenceState: sellerOfTravelStateResident ? residenceState : null,
+    });
+
+    await db.update(bookingRequests).set({
+      mailerLiteStatus,
+      ownerNotificationStatus,
+    }).where(eq(bookingRequests.id, saved.id));
+    return Response.json({ ok: true }, { status: 201 });
+  } catch (error) {
+    console.error("Booking request failed", error);
+    return Response.json({ error: "Booking requests are temporarily unavailable." }, { status: 500 });
+  }
+}

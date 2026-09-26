@@ -1,0 +1,13 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "cookie-paradise-travel",
+  "main": "vinext/server/fetch-handler",
+  "compatibility_date": "2026-09-26",
+  "compatibility_flags": ["nodejs_compat"],
+  "observability": { "enabled": true },
+  "vars": {
+    "SQUARE_ENV": "sandbox",
+    "SQUARE_APPLICATION_ID": "sandbox-sq0idb-LXRKY7_IJOLJU8Ec0rk_SQ",
+    "SQUARE_LOCATION_ID": "LF9EW4W95QPA7"
+  }
+}
