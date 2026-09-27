@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { LogOut, Mail, Phone, Users } from "lucide-react";
 import { bookingRequests } from "@/db/schema";
 import { getDb } from "@/db";
+import { chatGPTSignOutPath } from "@/app/chatgpt-auth";
 import { requireOwner } from "@/lib/owner-auth";
 import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
@@ -39,7 +40,7 @@ export default async function InquiryDashboard() {
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Owner dashboard</p>
             <h1 className="mt-1 font-serif text-2xl sm:text-3xl">Trip inquiries</h1>
           </div>
-          <a className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-sm font-semibold hover:bg-white/10" href="/cdn-cgi/access/logout"><LogOut className="h-4 w-4" /> Sign out</a>
+          <a className="inline-flex items-center gap-2 rounded-full border border-white/25 px-4 py-2 text-sm font-semibold hover:bg-white/10" href={chatGPTSignOutPath("/")}><LogOut className="h-4 w-4" /> Sign out</a>
         </div>
       </header>
 
@@ -84,6 +85,7 @@ export default async function InquiryDashboard() {
                 <DepositInvoiceAction
                   id={item.id}
                   partySize={item.partySize}
+                  departure={item.departure}
                   email={item.email}
                   initialStatus={item.squareDepositInvoiceStatus}
                   initialUrl={item.squareDepositInvoiceUrl}

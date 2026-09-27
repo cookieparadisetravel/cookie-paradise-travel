@@ -1,0 +1,31 @@
+import { sql } from "drizzle-orm";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+
+export const bookingRequests = sqliteTable("booking_requests", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  tripSlug: text("trip_slug").notNull(),
+  fullName: text("full_name").notNull(),
+  email: text("email").notNull(),
+  phone: text("phone").notNull().default(""),
+  departure: text("departure").notNull(),
+  roomPreference: text("room_preference").notNull(),
+  partySize: integer("party_size").notNull(),
+  notes: text("notes").notNull().default(""),
+  contactConsent: integer("contact_consent", { mode: "boolean" }).notNull().default(false),
+  contactConsentedAt: text("contact_consented_at"),
+  sellerOfTravelStateResident: integer("seller_of_travel_state_resident", { mode: "boolean" }).notNull().default(false),
+  residenceState: text("residence_state"),
+  marketingConsent: integer("marketing_consent", { mode: "boolean" }).notNull().default(false),
+  marketingConsentedAt: text("marketing_consented_at"),
+  mailerLiteStatus: text("mailerlite_status").notNull().default("not_requested"),
+  ownerNotificationStatus: text("owner_notification_status").notNull().default("pending"),
+  squareCustomerId: text("square_customer_id"),
+  squareDepositOrderId: text("square_deposit_order_id"),
+  squareDepositInvoiceId: text("square_deposit_invoice_id"),
+  squareDepositInvoiceStatus: text("square_deposit_invoice_status").notNull().default("not_created"),
+  squareDepositAmountCents: integer("square_deposit_amount_cents"),
+  squareDepositInvoiceUrl: text("square_deposit_invoice_url"),
+  squareDepositCreatedAt: text("square_deposit_created_at"),
+  status: text("status").notNull().default("new"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+});

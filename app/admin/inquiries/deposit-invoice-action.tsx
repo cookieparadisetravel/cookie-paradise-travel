@@ -6,25 +6,35 @@ import { CheckCircle2, ExternalLink, Loader2 } from "lucide-react";
 type Props = {
   id: number;
   partySize: number;
+  departure: string;
   email: string;
   initialStatus: string;
   initialUrl: string | null;
 };
 
-export function DepositInvoiceAction({ id, partySize, email, initialStatus, initialUrl }: Props) {
+export function DepositInvoiceAction({ id, partySize, departure, email, initialStatus, initialUrl }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState(initialStatus);
   const [invoiceUrl, setInvoiceUrl] = useState(initialUrl);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
-  const amount = partySize * 500;
+  const [bookingTotal, setBookingTotal] = useState("");
+  const departureTime = Date.parse(`${departure}T12:00:00Z`);
+  const daysRemaining = Number.isFinite(departureTime) ? Math.ceil((departureTime - Date.now()) / 86_400_000) : null;
+  const paymentPercent = daysRemaining !== null && daysRemaining <= 90 ? 100 : 50;
+  const bookingTotalNumber = Number(bookingTotal);
+  const amount = Number.isFinite(bookingTotalNumber) ? bookingTotalNumber * paymentPercent / 100 : 0;
   const alreadyCreated = !["not_created", "error"].includes(status);
 
   async function createInvoice() {
     setSending(true);
     setError("");
     try {
-      const response = await fetch(`/api/admin/inquiries/${id}/square-deposit`, { method: "POST" });
+      const response = await fetch(`/api/admin/inquiries/${id}/square-deposit`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ bookingTotalDollars: bookingTotalNumber }),
+      });
       const payload = await response.json() as { error?: string; publicUrl?: string | null; status?: string };
       if (!response.ok) throw new Error(payload.error || "Square could not create the invoice.");
       setStatus(payload.status || "published");
@@ -42,7 +52,7 @@ export function DepositInvoiceAction({ id, partySize, email, initialStatus, init
     return (
       <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
         <p className="flex items-center gap-2 text-sm font-bold text-emerald-900"><CheckCircle2 className="h-4 w-4" /> Deposit invoice {status.replaceAll("_", " ")}</p>
-        <p className="mt-1 text-sm text-emerald-900/80">${amount.toLocaleString("en-US")} for {partySize} traveler{partySize === 1 ? "" : "s"}</p>
+        <p className="mt-1 text-sm text-emerald-900/80">Payment invoice for {partySize} traveler{partySize === 1 ? "" : "s"}</p>
         {invoiceUrl && <a className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-emerald-900 underline" href={invoiceUrl} target="_blank" rel="noreferrer">Open Square invoice <ExternalLink className="h-3.5 w-3.5" /></a>}
       </div>
     );
@@ -50,15 +60,20 @@ export function DepositInvoiceAction({ id, partySize, email, initialStatus, init
 
   return (
     <div className="rounded-2xl border border-[var(--line)] bg-[var(--cream)] p-4">
-      <p className="text-sm font-bold text-[var(--ink)]">Square deposit invoice</p>
-      <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">${amount.toLocaleString("en-US")} total — $500 × {partySize} traveler{partySize === 1 ? "" : "s"}</p>
+      <p className="text-sm font-bold text-[var(--ink)]">Square payment invoice</p>
+      <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">{paymentPercent === 50 ? "50% is due upon booking acceptance; the first $500 per traveler is nonrefundable, and the remaining 50% is due 90 days before departure." : "This departure is within 90 days, so the full booking price is due upon acceptance; the first $500 per traveler is nonrefundable."}</p>
+      <label className="mt-3 block text-sm font-semibold text-[var(--ink)]">
+        Confirmed total booking price
+        <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => setBookingTotal(event.target.value)} placeholder="Enter total including supplements" /></span>
+      </label>
+      {bookingTotalNumber > 0 && <p className="mt-2 text-sm font-bold text-[var(--ink)]">Invoice amount: ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({paymentPercent}%)</p>}
       {!confirming ? (
-        <button className="mt-3 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white hover:bg-[var(--navy)]" onClick={() => setConfirming(true)}>
-          Prepare deposit invoice
+        <button disabled={!Number.isFinite(bookingTotalNumber) || bookingTotalNumber <= 0 || departure === "flexible"} className="mt-3 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50" onClick={() => setConfirming(true)}>
+          Prepare payment invoice
         </button>
       ) : (
         <div className="mt-3 rounded-xl border border-[var(--orange)]/30 bg-white p-4">
-          <p className="text-sm leading-6 text-[var(--ink)]">Square will create the invoice and email it to <strong>{email}</strong>. This action sends a real Sandbox invoice.</p>
+          <p className="text-sm leading-6 text-[var(--ink)]">Square will create a <strong>${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> invoice and email it to <strong>{email}</strong>. This action sends a real Sandbox invoice.</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button disabled={sending} className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50" onClick={createInvoice}>
               {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : "Confirm and email invoice"}
