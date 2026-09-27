@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
 import {
   Dialog, DialogContent, DialogDescription, DialogHeader,
@@ -12,7 +12,58 @@ import {
 
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
 
+type TurnstileApi = {
+  render: (
+    container: HTMLElement,
+    options: {
+      sitekey: string;
+      action?: string;
+      theme?: "light" | "dark" | "auto";
+      size?: "normal" | "compact" | "flexible";
+      callback?: (token: string) => void;
+      "expired-callback"?: () => void;
+      "error-callback"?: () => void;
+    },
+  ) => string;
+  remove: (widgetId: string) => void;
+  reset: (widgetId?: string) => void;
+};
+
+declare global {
+  interface Window {
+    turnstile?: TurnstileApi;
+  }
+}
+
+let turnstileScriptPromise: Promise<void> | null = null;
+
+function loadTurnstileScript() {
+  if (typeof window === "undefined" || window.turnstile) return Promise.resolve();
+  if (turnstileScriptPromise) return turnstileScriptPromise;
+
+  turnstileScriptPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>('script[data-cookie-paradise-turnstile="true"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error("Turnstile failed to load")), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.dataset.cookieParadiseTurnstile = "true";
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error("Turnstile failed to load"));
+    document.head.appendChild(script);
+  });
+
+  return turnstileScriptPromise;
+}
+
 export function BookingDialog({ triggerLabel, compact = false, inverse = false }: Props) {
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [departure, setDeparture] = useState("");
@@ -21,6 +72,51 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const [contactConsent, setContactConsent] = useState(false);
   const [sellerOfTravelStateResident, setSellerOfTravelStateResident] = useState(false);
   const [residenceState, setResidenceState] = useState("");
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileAvailable, setTurnstileAvailable] = useState(true);
+  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
+
+  const resetTurnstile = useCallback(() => {
+    setTurnstileToken("");
+    if (turnstileWidgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(turnstileWidgetIdRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!open || !turnstileSiteKey || !turnstileContainerRef.current) return;
+
+    let cancelled = false;
+    setTurnstileAvailable(true);
+    setTurnstileToken("");
+
+    void loadTurnstileScript()
+      .then(() => {
+        if (cancelled || !window.turnstile || !turnstileContainerRef.current) return;
+        turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+          sitekey: turnstileSiteKey,
+          action: "booking_inquiry",
+          theme: "light",
+          size: "flexible",
+          callback: (token) => setTurnstileToken(token),
+          "expired-callback": () => setTurnstileToken(""),
+          "error-callback": () => {
+            setTurnstileToken("");
+            setTurnstileAvailable(false);
+          },
+        });
+      })
+      .catch(() => setTurnstileAvailable(false));
+
+    return () => {
+      cancelled = true;
+      if (turnstileWidgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(turnstileWidgetIdRef.current);
+      }
+      turnstileWidgetIdRef.current = null;
+    };
+  }, [open, turnstileSiteKey]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -34,6 +130,8 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       room,
       partySize: Number(partySize),
       notes: form.get("notes"),
+      website: form.get("website"),
+      turnstileToken,
       contactConsent,
       sellerOfTravelStateResident,
       residenceState: sellerOfTravelStateResident ? residenceState : "",
@@ -45,7 +143,10 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) throw new Error("Unable to save request");
+      if (!response.ok) {
+        resetTurnstile();
+        throw new Error("Unable to save request");
+      }
       setStatus("success");
     } catch {
       setStatus("error");
@@ -83,6 +184,10 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               </DialogDescription>
             </DialogHeader>
             <form onSubmit={submit} className="grid gap-5 p-6 sm:grid-cols-2 sm:p-8">
+              <label className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
+                Website
+                <input name="website" type="text" tabIndex={-1} autoComplete="off" />
+              </label>
               <label className="field-label sm:col-span-2">Full name
                 <input className="field-input" name="fullName" autoComplete="name" required maxLength={120} />
               </label>
@@ -159,10 +264,20 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                   </div>
                 )}
               </div>
+              <div className="sm:col-span-2">
+                {turnstileSiteKey ? (
+                  <div ref={turnstileContainerRef} className="min-h-[65px] w-full" aria-label="Human verification" />
+                ) : (
+                  <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">Human verification is not configured. Please try again later.</p>
+                )}
+                {!turnstileAvailable && (
+                  <p className="mt-2 rounded-xl bg-red-50 p-3 text-sm text-red-700">Human verification could not load. Please refresh the page and try again.</p>
+                )}
+              </div>
               {status === "error" && (
                 <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">We couldn’t save your request. Please try again in a moment.</p>
               )}
-              <button disabled={status === "saving" || !departure || !contactConsent || (sellerOfTravelStateResident && !residenceState)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
+              <button disabled={status === "saving" || !departure || !contactConsent || !turnstileToken || !turnstileAvailable || (sellerOfTravelStateResident && !residenceState)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
                 {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>Send my request <ArrowRight className="h-4 w-4" /></>}
               </button>
               <p className="text-center text-xs leading-5 text-[var(--muted-ink)] sm:col-span-2">Please do not enter passport numbers, medical information or payment details here. See our <a className="font-semibold underline" href="/privacy" target="_blank">Privacy Policy</a>.</p>
