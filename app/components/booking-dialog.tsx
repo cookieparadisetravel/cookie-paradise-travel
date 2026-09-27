@@ -74,7 +74,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const [residenceState, setResidenceState] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileAvailable, setTurnstileAvailable] = useState(true);
-  const turnstileContainerRef = useRef<HTMLDivElement>(null);
+  const [turnstileContainer, setTurnstileContainer] = useState<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
 
   const resetTurnstile = useCallback(() => {
@@ -85,16 +85,14 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   }, []);
 
   useEffect(() => {
-    if (!open || !turnstileSiteKey || !turnstileContainerRef.current) return;
+    if (!open || !turnstileSiteKey || !turnstileContainer) return;
 
     let cancelled = false;
-    setTurnstileAvailable(true);
-    setTurnstileToken("");
 
     void loadTurnstileScript()
       .then(() => {
-        if (cancelled || !window.turnstile || !turnstileContainerRef.current) return;
-        turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+        if (cancelled || !window.turnstile) return;
+        turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainer, {
           sitekey: turnstileSiteKey,
           action: "booking_inquiry",
           theme: "light",
@@ -116,7 +114,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       }
       turnstileWidgetIdRef.current = null;
     };
-  }, [open, turnstileSiteKey]);
+  }, [open, turnstileContainer, turnstileSiteKey]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -160,7 +158,15 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       : "inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-7 text-sm font-extrabold text-[var(--orange)] shadow-lg shadow-black/15 transition hover:-translate-y-0.5 hover:bg-[#ffc56c]";
 
   return (
-    <Dialog open={open} onOpenChange={(next) => { setOpen(next); if (!next) setTimeout(() => setStatus("idle"), 200); }}>
+    <Dialog open={open} onOpenChange={(next) => {
+      setOpen(next);
+      if (next) {
+        setTurnstileAvailable(true);
+        setTurnstileToken("");
+      } else {
+        setTimeout(() => setStatus("idle"), 200);
+      }
+    }}>
       <DialogTrigger className={triggerClasses}>
         {triggerLabel}{!compact && <ArrowRight className="h-4 w-4" />}
       </DialogTrigger>
@@ -266,7 +272,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               </div>
               <div className="sm:col-span-2">
                 {turnstileSiteKey ? (
-                  <div ref={turnstileContainerRef} className="min-h-[65px] w-full" aria-label="Human verification" />
+                  <div ref={setTurnstileContainer} className="min-h-[65px] w-full" aria-label="Human verification" />
                 ) : (
                   <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">Human verification is not configured. Please try again later.</p>
                 )}
