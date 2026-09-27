@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cookie-paradise-travel",
   "main": "vinext/server/fetch-handler",
+  "workers_dev": false,
   "compatibility_date": "2026-09-26",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
