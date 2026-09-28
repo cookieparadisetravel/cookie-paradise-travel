@@ -146,9 +146,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       }).where(eq(bookingRequests.id, id));
     }
 
-    if (invoiceVersion === undefined) invoiceVersion = await getSquareInvoiceVersion(invoiceId);
+    let published: { status: string; publicUrl: string | null };
+    if (invoiceVersion === undefined) {
+      const existingInvoice = await getSquareInvoiceVersion(invoiceId);
+      invoiceVersion = existingInvoice.version;
+      published = existingInvoice.status === "draft"
+        ? await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion })
+        : { status: existingInvoice.status, publicUrl: existingInvoice.publicUrl };
+    } else {
+      published = await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion });
+    }
 
-    const published = await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion });
     await db.update(bookingRequests).set({
       squareDepositInvoiceStatus: published.status,
       squareDepositAmountCents: squareOrderAmountCents,

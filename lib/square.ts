@@ -203,10 +203,18 @@ export async function publishSquareInvoice(input: {
 }
 
 export async function getSquareInvoiceVersion(invoiceId: string) {
-  const result = await squareRequest<{ invoice?: { version?: number } }>(
+  const result = await squareRequest<{
+    invoice?: { version?: number; status?: string; public_url?: string };
+  }>(
     `/v2/invoices/${encodeURIComponent(invoiceId)}`,
     { method: "GET" },
   );
-  if (result.invoice?.version === undefined) throw new Error("Square did not return the invoice version.");
-  return result.invoice.version;
+  if (result.invoice?.version === undefined || !result.invoice.status) {
+    throw new Error("Square did not return the complete invoice state.");
+  }
+  return {
+    version: result.invoice.version,
+    status: result.invoice.status.toLowerCase(),
+    publicUrl: result.invoice.public_url || null,
+  };
 }
