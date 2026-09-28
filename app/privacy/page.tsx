@@ -1,4 +1,5 @@
 import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 
 export const metadata = {
   title: "Privacy Policy | Cookie Paradise Travel Company",
@@ -10,7 +11,7 @@ export default function PrivacyPolicy() {
     <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
       <header className="bg-[var(--navy)] text-white">
         <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
-          <a className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)] hover:underline" href="/"><ArrowLeft className="h-4 w-4" /> Back to the trip</a>
+          <Link className="inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)] hover:underline" href="/"><ArrowLeft className="h-4 w-4" /> Back to the trip</Link>
           <h1 className="mt-6 font-serif text-4xl sm:text-6xl">Privacy Policy</h1>
           <p className="mt-3 text-white/75">Effective September 28, 2026</p>
         </div>
