@@ -35,7 +35,16 @@ async function verifyTurnstileToken(token: string, remoteIp: string | null) {
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json() as Record<string, unknown>;
+    let parsedPayload: unknown;
+    try {
+      parsedPayload = await request.json();
+    } catch {
+      return Response.json({ error: "Request body must be valid JSON." }, { status: 400 });
+    }
+    if (!parsedPayload || typeof parsedPayload !== "object" || Array.isArray(parsedPayload)) {
+      return Response.json({ error: "Request body must be a JSON object." }, { status: 400 });
+    }
+    const payload = parsedPayload as Record<string, unknown>;
     const website = String(payload.website ?? "").trim();
     if (website) return Response.json({ ok: true }, { status: 201 });
 
@@ -106,10 +115,14 @@ export async function POST(request: Request) {
       residenceState: sellerOfTravelStateResident ? residenceState : null,
     });
 
-    await db.update(bookingRequests).set({
-      mailerLiteStatus,
-      ownerNotificationStatus,
-    }).where(eq(bookingRequests.id, saved.id));
+    try {
+      await db.update(bookingRequests).set({
+        mailerLiteStatus,
+        ownerNotificationStatus,
+      }).where(eq(bookingRequests.id, saved.id));
+    } catch (error) {
+      console.error("Inquiry saved, but follow-up statuses could not be updated", error);
+    }
     return Response.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error("Booking request failed", error);

@@ -22,7 +22,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 
   const { id: rawId } = await context.params;
   const id = Number(rawId);
-  const payload = await request.json() as { status?: unknown };
+  let parsedPayload: unknown;
+  try {
+    parsedPayload = await request.json();
+  } catch {
+    return Response.json({ error: "Request body must be valid JSON." }, { status: 400 });
+  }
+  if (!parsedPayload || typeof parsedPayload !== "object" || Array.isArray(parsedPayload)) {
+    return Response.json({ error: "Request body must be a JSON object." }, { status: 400 });
+  }
+  const payload = parsedPayload as Record<string, unknown>;
   const status = String(payload.status ?? "");
   if (!Number.isInteger(id) || id < 1 || !validStatuses.has(status)) {
     return Response.json({ error: "Invalid inquiry or status" }, { status: 400 });
