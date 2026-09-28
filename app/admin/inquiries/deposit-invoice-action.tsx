@@ -7,21 +7,20 @@ type Props = {
   id: number;
   partySize: number;
   departure: string;
+  daysUntilDeparture: number | null;
   email: string;
   initialStatus: string;
   initialUrl: string | null;
 };
 
-export function DepositInvoiceAction({ id, partySize, departure, email, initialStatus, initialUrl }: Props) {
+export function DepositInvoiceAction({ id, partySize, departure, daysUntilDeparture, email, initialStatus, initialUrl }: Props) {
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState(initialStatus);
   const [invoiceUrl, setInvoiceUrl] = useState(initialUrl);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [bookingTotal, setBookingTotal] = useState("");
-  const departureTime = Date.parse(`${departure}T12:00:00Z`);
-  const daysRemaining = Number.isFinite(departureTime) ? Math.ceil((departureTime - Date.now()) / 86_400_000) : null;
-  const paymentPercent = daysRemaining !== null && daysRemaining <= 90 ? 100 : 50;
+  const paymentPercent = daysUntilDeparture !== null && daysUntilDeparture <= 90 ? 100 : 50;
   const bookingTotalNumber = Number(bookingTotal);
   const amount = Number.isFinite(bookingTotalNumber) ? bookingTotalNumber * paymentPercent / 100 : 0;
   const alreadyCreated = ["unpaid", "paid", "scheduled", "partially_paid"].includes(status);

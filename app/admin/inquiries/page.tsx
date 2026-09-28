@@ -23,11 +23,20 @@ const stateLabels: Record<string, string> = {
   WA: "Washington",
 };
 
+function daysUntilDeparture(departure: string, referenceTime: number) {
+  const departureTime = Date.parse(`${departure}T12:00:00Z`);
+  if (!Number.isFinite(departureTime)) return null;
+  return Math.ceil((departureTime - referenceTime) / 86_400_000);
+}
+
 export default async function InquiryDashboard() {
   const owner = await requireOwner("/admin/inquiries");
   if (!owner) notFound();
 
   const inquiries = await getDb().select().from(bookingRequests).orderBy(desc(bookingRequests.createdAt));
+  // This forced-dynamic server page intentionally snapshots time once per request.
+  // eslint-disable-next-line react-hooks/purity
+  const referenceTime = Date.now();
   const newCount = inquiries.filter((item) => item.status === "new").length;
   const consentCount = inquiries.filter((item) => item.marketingConsent).length;
 
@@ -85,6 +94,7 @@ export default async function InquiryDashboard() {
                   id={item.id}
                   partySize={item.partySize}
                   departure={item.departure}
+                  daysUntilDeparture={daysUntilDeparture(item.departure, referenceTime)}
                   email={item.email}
                   initialStatus={item.squareDepositInvoiceStatus}
                   initialUrl={item.squareDepositInvoiceUrl}
