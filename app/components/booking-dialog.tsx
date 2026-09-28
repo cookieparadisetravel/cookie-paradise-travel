@@ -66,6 +66,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+  const [errorMessage, setErrorMessage] = useState("");
   const [departure, setDeparture] = useState("");
   const [room, setRoom] = useState("shared");
   const [partySize, setPartySize] = useState("1");
@@ -119,6 +120,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setStatus("saving");
+    setErrorMessage("");
     const form = new FormData(event.currentTarget);
     const payload = {
       fullName: form.get("fullName"),
@@ -141,12 +143,17 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
+      const result = await response.json().catch(() => null) as { error?: unknown } | null;
       if (!response.ok) {
         resetTurnstile();
-        throw new Error("Unable to save request");
+        const serverMessage = typeof result?.error === "string" ? result.error.trim() : "";
+        throw new Error(serverMessage || "We couldn’t save your request. Please try again in a moment.");
       }
       setStatus("success");
-    } catch {
+    } catch (error) {
+      setErrorMessage(error instanceof Error && error.message
+        ? error.message
+        : "We couldn’t save your request. Please try again in a moment.");
       setStatus("error");
     }
   }
@@ -163,6 +170,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       if (next) {
         setTurnstileAvailable(true);
         setTurnstileToken("");
+        setErrorMessage("");
       } else {
         setTimeout(() => setStatus("idle"), 200);
       }
@@ -281,7 +289,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 )}
               </div>
               {status === "error" && (
-                <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">We couldn’t save your request. Please try again in a moment.</p>
+                <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{errorMessage}</p>
               )}
               <button disabled={status === "saving" || !departure || !contactConsent || !turnstileToken || !turnstileAvailable || (sellerOfTravelStateResident && !residenceState)} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
                 {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>Send my request <ArrowRight className="h-4 w-4" /></>}
