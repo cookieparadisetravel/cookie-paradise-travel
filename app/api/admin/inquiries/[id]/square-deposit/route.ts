@@ -7,6 +7,7 @@ import {
   createSquareDepositInvoice,
   createSquareDepositOrder,
   getSquareInvoiceVersion,
+  getSquareOrderAmountCents,
   publishSquareInvoice,
 } from "@/lib/square";
 
@@ -101,9 +102,28 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }
 
     let orderId = inquiry.squareDepositOrderId;
-    if (!orderId) {
-      orderId = await createSquareDepositOrder({ inquiryId: id, customerId, amountCents, paymentPercent });
-      await db.update(bookingRequests).set({ squareDepositOrderId: orderId }).where(eq(bookingRequests.id, id));
+    let squareOrderAmountCents: number;
+    if (orderId) {
+      squareOrderAmountCents = await getSquareOrderAmountCents(orderId);
+    } else {
+      const order = await createSquareDepositOrder({ inquiryId: id, customerId, amountCents, paymentPercent });
+      orderId = order.id;
+      squareOrderAmountCents = order.amountCents;
+      await db.update(bookingRequests).set({
+        squareDepositOrderId: orderId,
+        squareDepositAmountCents: squareOrderAmountCents,
+      }).where(eq(bookingRequests.id, id));
+    }
+
+    if (squareOrderAmountCents !== amountCents) {
+      await db.update(bookingRequests).set({
+        squareDepositInvoiceStatus: "error",
+        squareDepositAmountCents: squareOrderAmountCents,
+        squareDepositClaimedAt: null,
+      }).where(eq(bookingRequests.id, id));
+      return Response.json({
+        error: `Square already has an order for $${(squareOrderAmountCents / 100).toFixed(2)}. The entered payment would be $${(amountCents / 100).toFixed(2)}. Use the original confirmed booking total or resolve the existing Square order before retrying.`,
+      }, { status: 409 });
     }
 
     let invoiceId = inquiry.squareDepositInvoiceId;
@@ -115,7 +135,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         orderId,
         partySize: inquiry.partySize,
         departure: inquiry.departure,
-        amountCents,
+        amountCents: squareOrderAmountCents,
         paymentPercent,
       });
       invoiceId = draft.id;
@@ -131,7 +151,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const published = await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion });
     await db.update(bookingRequests).set({
       squareDepositInvoiceStatus: published.status,
-      squareDepositAmountCents: amountCents,
+      squareDepositAmountCents: squareOrderAmountCents,
       squareDepositInvoiceUrl: published.publicUrl,
       squareDepositCreatedAt: new Date().toISOString(),
       squareDepositClaimedAt: null,
@@ -139,7 +159,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     return Response.json({
       ok: true,
-      amountCents,
+      amountCents: squareOrderAmountCents,
       paymentPercent,
       publicUrl: published.publicUrl,
       status: published.status,

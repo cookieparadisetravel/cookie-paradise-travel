@@ -62,6 +62,18 @@ function todayInIndiana() {
   return `${values.year}-${values.month}-${values.day}`;
 }
 
+function requireSquareAmount(value: unknown) {
+  const amount = typeof value === "number"
+    ? value
+    : typeof value === "string" && /^\d+$/.test(value)
+      ? Number(value)
+      : NaN;
+  if (!Number.isSafeInteger(amount) || amount < 1) {
+    throw new Error("Square did not return a valid order amount.");
+  }
+  return amount;
+}
+
 export async function createSquareCustomer(input: {
   inquiryId: number;
   fullName: string;
@@ -89,7 +101,9 @@ export async function createSquareDepositOrder(input: {
   paymentPercent: 50 | 100;
 }) {
   const { locationId } = squareConfig();
-  const result = await squareRequest<{ order?: { id?: string } }>("/v2/orders", { body: {
+  const result = await squareRequest<{
+    order?: { id?: string; total_money?: { amount?: number | string } };
+  }>("/v2/orders", { body: {
     idempotency_key: `cpt-inquiry-${input.inquiryId}-deposit-order-v1`,
     order: {
       location_id: locationId,
@@ -106,7 +120,18 @@ export async function createSquareDepositOrder(input: {
     },
   } });
   if (!result.order?.id) throw new Error("Square did not return an order ID.");
-  return result.order.id;
+  return {
+    id: result.order.id,
+    amountCents: requireSquareAmount(result.order.total_money?.amount),
+  };
+}
+
+export async function getSquareOrderAmountCents(orderId: string) {
+  const result = await squareRequest<{
+    order?: { id?: string; total_money?: { amount?: number | string } };
+  }>(`/v2/orders/${encodeURIComponent(orderId)}`, { method: "GET" });
+  if (!result.order?.id) throw new Error("Square did not return the order.");
+  return requireSquareAmount(result.order.total_money?.amount);
 }
 
 export async function createSquareDepositInvoice(input: {
