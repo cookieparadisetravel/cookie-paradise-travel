@@ -8,6 +8,12 @@ import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 
 export const dynamic = "force-dynamic";
+export const metadata = {
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
 
 const departureLabels: Record<string, string> = {
   "2027-06-01": "June 1, 2027",
@@ -71,7 +77,7 @@ export default async function InquiryDashboard() {
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--orange)]">Inquiry #{item.id}</p>
                   <h2 className="mt-1 font-serif text-2xl">{item.fullName}</h2>
-                  <p className="mt-1 text-sm text-[var(--muted-ink)]">Submitted {new Date(item.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}</p>
+                  <p className="mt-1 text-sm text-[var(--muted-ink)]">Submitted {new Date(item.createdAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" })}</p>
                 </div>
                 <StatusSelect id={item.id} initialStatus={item.status} />
               </div>
