@@ -3,7 +3,6 @@ import {
   ShieldCheck, Sparkles, Users, Utensils,
 } from "lucide-react";
 import { BookingDialog } from "./components/booking-dialog";
-import { WebMcpTools } from "./components/webmcp-tools";
 
 const itinerary = [
   ["01", "Arrive in Ho Chi Minh City", "A private airport welcome, hotel transfer and an easy first evening to settle in."],
@@ -92,7 +91,6 @@ const detailedItinerary = [
 export default function Home() {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
-      <WebMcpTools />
       <header className="absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white">
         <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-3 sm:px-8">
           <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
