@@ -23,6 +23,7 @@ export const bookingRequests = sqliteTable("booking_requests", {
   squareDepositOrderId: text("square_deposit_order_id"),
   squareDepositInvoiceId: text("square_deposit_invoice_id"),
   squareDepositInvoiceStatus: text("square_deposit_invoice_status").notNull().default("not_created"),
+  squareDepositClaimedAt: text("square_deposit_claimed_at"),
   squareDepositAmountCents: integer("square_deposit_amount_cents"),
   squareDepositInvoiceUrl: text("square_deposit_invoice_url"),
   squareDepositCreatedAt: text("square_deposit_created_at"),

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { bookingRequests } from "@/db/schema";
 import { getDb } from "@/db";
 import { isOwnerRequest } from "@/lib/owner-auth";
@@ -52,18 +52,41 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const paymentPercent: 50 | 100 = daysRemaining <= 90 ? 100 : 50;
   const bookingTotalCents = Math.round(bookingTotalDollars * 100);
   const amountCents = paymentPercent === 50 ? Math.round(bookingTotalCents / 2) : bookingTotalCents;
+  const claimTimestamp = new Date().toISOString();
+  const staleClaimBefore = new Date(Date.now() - 5 * 60_000).toISOString();
+  const claimableStatus = ["not_created", "error", "draft"].includes(inquiry.squareDepositInvoiceStatus);
+  const claimedAtTime = inquiry.squareDepositClaimedAt ? Date.parse(inquiry.squareDepositClaimedAt) : NaN;
+  const staleCreatingClaim = inquiry.squareDepositInvoiceStatus === "creating"
+    && (!Number.isFinite(claimedAtTime) || claimedAtTime <= Date.parse(staleClaimBefore));
 
-  if (inquiry.squareDepositInvoiceId && !["error", "creating"].includes(inquiry.squareDepositInvoiceStatus)) {
+  if (!claimableStatus && !staleCreatingClaim) {
+    if (inquiry.squareDepositInvoiceStatus === "creating") {
+      return Response.json({ error: "Invoice creation is already in progress. Try again after five minutes." }, { status: 409 });
+    }
     return Response.json({ error: "A deposit invoice already exists for this inquiry." }, { status: 409 });
   }
 
-  const [claimed] = await db.update(bookingRequests).set({ squareDepositInvoiceStatus: "creating" })
+  const [claimed] = await db.update(bookingRequests).set({
+    squareDepositInvoiceStatus: "creating",
+    squareDepositClaimedAt: claimTimestamp,
+  })
     .where(and(
       eq(bookingRequests.id, id),
-      inArray(bookingRequests.squareDepositInvoiceStatus, ["not_created", "error"]),
+      or(
+        inArray(bookingRequests.squareDepositInvoiceStatus, ["not_created", "error", "draft"]),
+        and(
+          eq(bookingRequests.squareDepositInvoiceStatus, "creating"),
+          or(
+            isNull(bookingRequests.squareDepositClaimedAt),
+            lt(bookingRequests.squareDepositClaimedAt, staleClaimBefore),
+          ),
+        ),
+      ),
     ))
     .returning({ id: bookingRequests.id });
-  if (!claimed) return Response.json({ error: "Invoice creation is already in progress." }, { status: 409 });
+  if (!claimed) {
+    return Response.json({ error: "Invoice creation is already in progress. Try again after five minutes." }, { status: 409 });
+  }
 
   try {
     let customerId = inquiry.squareCustomerId;
@@ -111,6 +134,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       squareDepositAmountCents: amountCents,
       squareDepositInvoiceUrl: published.publicUrl,
       squareDepositCreatedAt: new Date().toISOString(),
+      squareDepositClaimedAt: null,
     }).where(eq(bookingRequests.id, id));
 
     return Response.json({
@@ -122,7 +146,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     });
   } catch (error) {
     console.error("Square deposit invoice failed", error);
-    await db.update(bookingRequests).set({ squareDepositInvoiceStatus: "error" }).where(eq(bookingRequests.id, id));
+    await db.update(bookingRequests).set({
+      squareDepositInvoiceStatus: "error",
+      squareDepositClaimedAt: null,
+    }).where(eq(bookingRequests.id, id));
     const message = error instanceof Error && error.message === "Square is not fully configured."
       ? "Square is not fully configured yet. Add the Sandbox access token and try again."
       : "Square could not create the invoice. No second invoice will be created on retry.";

@@ -24,7 +24,8 @@ export function DepositInvoiceAction({ id, partySize, departure, email, initialS
   const paymentPercent = daysRemaining !== null && daysRemaining <= 90 ? 100 : 50;
   const bookingTotalNumber = Number(bookingTotal);
   const amount = Number.isFinite(bookingTotalNumber) ? bookingTotalNumber * paymentPercent / 100 : 0;
-  const alreadyCreated = !["not_created", "error"].includes(status);
+  const alreadyCreated = ["unpaid", "paid", "scheduled", "partially_paid"].includes(status);
+  const retrying = status !== "not_created";
 
   async function createInvoice() {
     setSending(true);
@@ -69,7 +70,7 @@ export function DepositInvoiceAction({ id, partySize, departure, email, initialS
       {bookingTotalNumber > 0 && <p className="mt-2 text-sm font-bold text-[var(--ink)]">Invoice amount: ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({paymentPercent}%)</p>}
       {!confirming ? (
         <button disabled={!Number.isFinite(bookingTotalNumber) || bookingTotalNumber <= 0 || departure === "flexible"} className="mt-3 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50" onClick={() => setConfirming(true)}>
-          Prepare payment invoice
+          {retrying ? "Retry payment invoice" : "Prepare payment invoice"}
         </button>
       ) : (
         <div className="mt-3 rounded-xl border border-[var(--orange)]/30 bg-white p-4">
