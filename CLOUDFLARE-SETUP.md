@@ -44,11 +44,21 @@ npx wrangler secret put MAILERLITE_GROUP_ID
 npx wrangler secret put OWNER_NOTIFICATION_WEBHOOK_URL
 npx wrangler secret put TURNSTILE_SECRET_KEY
 npx wrangler secret put SQUARE_ACCESS_TOKEN
+npx wrangler secret put SQUARE_WEBHOOK_SIGNATURE_KEY
 ```
 
-Square's sandbox environment, application ID and location ID are non-secret values configured in `wrangler.jsonc`.
+Square's sandbox environment, application ID, location ID and webhook notification URL are non-secret values configured in `wrangler.jsonc`.
 
-## 4. Add build variables
+## 4. Configure the Square webhook
+
+In the Square Developer Console, open the application used by this site and add a webhook subscription with:
+
+- Notification URL: `https://cookieparadisetravel.com/api/square/webhook`
+- Events: `invoice.payment_made` and `invoice.updated`
+
+Copy the subscription's signature key into the `SQUARE_WEBHOOK_SIGNATURE_KEY` Wrangler secret above. The notification URL must exactly match `SQUARE_WEBHOOK_NOTIFICATION_URL` in `wrangler.jsonc` for signature verification to succeed.
+
+## 5. Add build variables
 
 In the Worker dashboard, open **Settings → Build → Build Variables and Secrets** and add:
 
@@ -57,7 +67,7 @@ In the Worker dashboard, open **Settings → Build → Build Variables and Secre
 
 The repository also contains `.node-version` as a second Node 22 pin.
 
-## 5. Protect the owner dashboard
+## 6. Protect the owner dashboard
 
 In Cloudflare Zero Trust, create one or more self-hosted Access applications that protect both:
 
@@ -66,7 +76,7 @@ In Cloudflare Zero Trust, create one or more self-hosted Access applications tha
 
 Create an Allow policy for the owner email. Copy the Access team domain and application audience tag into the `CF_ACCESS_TEAM_DOMAIN` and `CF_ACCESS_AUD` secrets above.
 
-## 6. Connect GitHub and deploy
+## 7. Connect GitHub and deploy
 
 Connect the GitHub repository `cookieparadisetravel/cookie-paradise-travel` to the Worker and use:
 
@@ -77,11 +87,12 @@ Connect the GitHub repository `cookieparadisetravel/cookie-paradise-travel` to t
 
 The custom domains and D1 binding are declared in `wrangler.jsonc`, so every Git deployment preserves them. Push to the connected `main` branch to deploy.
 
-## 7. Verify
+## 8. Verify
 
 After deployment:
 
 1. Open `https://cookieparadisetravel.com` and submit a sandbox inquiry.
 2. Confirm the inquiry appears in the Access-protected `/admin/inquiries` dashboard.
 3. Confirm Turnstile, owner notification and optional MailerLite signup work.
-4. Use Square sandbox only until the live Square account and business review are complete.
+4. Send a Square sandbox webhook test and confirm it receives a successful response.
+5. Use Square sandbox only until the live Square account and business review are complete.

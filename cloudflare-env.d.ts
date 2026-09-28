@@ -6,6 +6,8 @@ declare namespace Cloudflare {
     SQUARE_APPLICATION_ID?: string;
     SQUARE_LOCATION_ID?: string;
     SQUARE_ACCESS_TOKEN?: string;
+    SQUARE_WEBHOOK_SIGNATURE_KEY?: string;
+    SQUARE_WEBHOOK_NOTIFICATION_URL?: string;
     CF_ACCESS_TEAM_DOMAIN?: string;
     CF_ACCESS_AUD?: string;
     ADMIN_OWNER_EMAIL?: string;
