@@ -208,8 +208,8 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               <label className="field-label">Email
                 <input className="field-input" name="email" type="email" autoComplete="email" required maxLength={180} />
               </label>
-              <label className="field-label">Phone <span className="font-normal text-[var(--muted-ink)]">(optional)</span>
-                <input className="field-input" name="phone" type="tel" autoComplete="tel" maxLength={40} />
+              <label className="field-label">Phone
+                <input className="field-input" name="phone" type="tel" autoComplete="tel" required aria-required="true" maxLength={40} />
               </label>
               <div className="field-label">Preferred departure
                 <Select value={departure} onValueChange={(value) => setDeparture(value ?? "")} required>

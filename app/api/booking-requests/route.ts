@@ -81,8 +81,11 @@ export async function POST(request: Request) {
     if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 6) {
       return Response.json({ error: "Please review the trip selections." }, { status: 400 });
     }
-    if (phone.length > 40 || notes.length > 1000) {
-      return Response.json({ error: "One or more fields are too long." }, { status: 400 });
+    if (!phone || phone.length > 40) {
+      return Response.json({ error: "A phone number is required and must be 40 characters or fewer." }, { status: 400 });
+    }
+    if (notes.length > 1000) {
+      return Response.json({ error: "Questions or notes must be 1,000 characters or fewer." }, { status: 400 });
     }
     if (!contactConsent) {
       return Response.json({ error: "Contact consent is required to send an inquiry." }, { status: 400 });
