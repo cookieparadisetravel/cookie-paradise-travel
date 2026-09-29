@@ -63,7 +63,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "Human verification failed. Please refresh and try again." }, { status: 400 });
     }
 
-    const fullName = String(payload.fullName ?? "").trim();
+    const firstName = String(payload.firstName ?? "").trim();
+    const lastName = String(payload.lastName ?? "").trim();
+    const fullName = `${firstName} ${lastName}`;
     const email = String(payload.email ?? "").trim().toLowerCase();
     const phone = String(payload.phone ?? "").trim();
     const departure = String(payload.departure ?? "");
@@ -75,8 +77,8 @@ export async function POST(request: Request) {
     const sellerOfTravelStateResident = payload.sellerOfTravelStateResident === true;
     const residenceState = String(payload.residenceState ?? "").trim().toUpperCase();
 
-    if (!fullName || fullName.length > 120 || !emailSchema.safeParse(email).success) {
-      return Response.json({ error: "Valid name and email are required." }, { status: 400 });
+    if (!firstName || firstName.length > 60 || !lastName || lastName.length > 60 || fullName.length > 121 || !emailSchema.safeParse(email).success) {
+      return Response.json({ error: "Valid first name, last name and email are required." }, { status: 400 });
     }
     if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 6) {
       return Response.json({ error: "Please review the trip selections." }, { status: 400 });

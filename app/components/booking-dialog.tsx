@@ -123,7 +123,8 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
     setErrorMessage("");
     const form = new FormData(event.currentTarget);
     const payload = {
-      fullName: form.get("fullName"),
+      firstName: form.get("firstName"),
+      lastName: form.get("lastName"),
       email: form.get("email"),
       phone: form.get("phone"),
       departure,
@@ -202,8 +203,11 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 Website
                 <input name="website" type="text" tabIndex={-1} autoComplete="off" />
               </label>
-              <label className="field-label sm:col-span-2">Full name
-                <input className="field-input" name="fullName" autoComplete="name" required maxLength={120} />
+              <label className="field-label">First Name
+                <input className="field-input" name="firstName" autoComplete="given-name" required aria-required="true" maxLength={60} />
+              </label>
+              <label className="field-label">Last Name
+                <input className="field-input" name="lastName" autoComplete="family-name" required aria-required="true" maxLength={60} />
               </label>
               <label className="field-label">Email
                 <input className="field-input" name="email" type="email" autoComplete="email" required maxLength={180} />
