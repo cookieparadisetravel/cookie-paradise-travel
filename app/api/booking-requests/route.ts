@@ -4,10 +4,12 @@ import { eq } from "drizzle-orm";
 import { addConsentedSubscriber } from "@/lib/mailerlite";
 import { sendOwnerInquiryNotification } from "@/lib/owner-notification";
 import { env } from "cloudflare:workers";
+import { z } from "zod";
 
 const validDepartures = new Set(["2027-06-01", "2027-06-29", "2027-07-27", "flexible"]);
 const validRooms = new Set(["shared", "private", "unsure"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "WA"]);
+const emailSchema = z.string().email().max(180);
 
 type TurnstileVerification = {
   success: boolean;
@@ -73,7 +75,7 @@ export async function POST(request: Request) {
     const sellerOfTravelStateResident = payload.sellerOfTravelStateResident === true;
     const residenceState = String(payload.residenceState ?? "").trim().toUpperCase();
 
-    if (!fullName || fullName.length > 120 || !/^\S+@\S+\.\S+$/.test(email) || email.length > 180) {
+    if (!fullName || fullName.length > 120 || !emailSchema.safeParse(email).success) {
       return Response.json({ error: "Valid name and email are required." }, { status: 400 });
     }
     if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 6) {

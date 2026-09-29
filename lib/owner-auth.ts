@@ -61,6 +61,8 @@ async function verifiedOwner(): Promise<AccessOwner | null> {
     const { payload } = await jwtVerify(token, jwks, {
       audience: config.audience,
       issuer: config.issuer,
+      algorithms: ["RS256"],
+      requiredClaims: ["exp"],
     });
     const email = typeof payload.email === "string"
       ? payload.email.trim().toLowerCase()
