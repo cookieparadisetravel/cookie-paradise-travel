@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { eq } from "drizzle-orm";
+import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { bookingRequests } from "@/db/schema";
 
@@ -106,26 +106,38 @@ export async function POST(request: Request) {
   if (
     !invoice ||
     typeof invoice.id !== "string" ||
-    typeof invoice.status !== "string"
+    typeof invoice.status !== "string" ||
+    typeof invoice.version !== "number" ||
+    !Number.isSafeInteger(invoice.version) ||
+    invoice.version < 0
   ) {
     return Response.json({ error: "Square invoice data is incomplete." }, { status: 400 });
   }
 
   const changes: {
     squareDepositInvoiceStatus: string;
+    squareDepositInvoiceVersion: number;
     squareDepositInvoiceUrl?: string;
   } = {
     squareDepositInvoiceStatus: invoice.status.toLowerCase(),
+    squareDepositInvoiceVersion: invoice.version,
   };
 
   if (typeof invoice.public_url === "string" && invoice.public_url.length > 0) {
     changes.squareDepositInvoiceUrl = invoice.public_url;
   }
 
-  await getDb()
+  const [updated] = await getDb()
     .update(bookingRequests)
     .set(changes)
-    .where(eq(bookingRequests.squareDepositInvoiceId, invoice.id));
+    .where(and(
+      eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+      or(
+        isNull(bookingRequests.squareDepositInvoiceVersion),
+        lt(bookingRequests.squareDepositInvoiceVersion, invoice.version),
+      ),
+    ))
+    .returning({ id: bookingRequests.id });
 
-  return Response.json({ ok: true });
+  return Response.json({ ok: true, updated: Boolean(updated) });
 }

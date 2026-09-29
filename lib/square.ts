@@ -188,17 +188,22 @@ export async function publishSquareInvoice(input: {
   invoiceId: string;
   version: number;
 }) {
-  const result = await squareRequest<{ invoice?: { id?: string; public_url?: string; status?: string } }>(
+  const result = await squareRequest<{
+    invoice?: { id?: string; public_url?: string; status?: string; version?: number };
+  }>(
     `/v2/invoices/${encodeURIComponent(input.invoiceId)}/publish`,
     { body: {
       version: input.version,
       idempotency_key: `cpt-inquiry-${input.inquiryId}-deposit-publish-v1`,
     } },
   );
-  if (!result.invoice?.id) throw new Error("Square did not publish the invoice.");
+  if (!result.invoice?.id || result.invoice.version === undefined) {
+    throw new Error("Square did not return the complete published invoice.");
+  }
   return {
     publicUrl: result.invoice.public_url || null,
     status: result.invoice.status?.toLowerCase() || "published",
+    version: result.invoice.version,
   };
 }
 

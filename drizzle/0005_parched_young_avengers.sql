@@ -1,0 +1,1 @@
+ALTER TABLE `booking_requests` ADD `square_deposit_invoice_version` integer;

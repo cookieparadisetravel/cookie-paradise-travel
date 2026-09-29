@@ -133,22 +133,28 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       await db.update(bookingRequests).set({
         squareDepositInvoiceId: invoiceId,
         squareDepositInvoiceStatus: "draft",
+        squareDepositInvoiceVersion: invoiceVersion,
       }).where(eq(bookingRequests.id, id));
     }
 
-    let published: { status: string; publicUrl: string | null };
+    let published: { status: string; publicUrl: string | null; version: number };
     if (invoiceVersion === undefined) {
       const existingInvoice = await getSquareInvoiceVersion(invoiceId);
       invoiceVersion = existingInvoice.version;
       published = existingInvoice.status === "draft"
         ? await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion })
-        : { status: existingInvoice.status, publicUrl: existingInvoice.publicUrl };
+        : {
+            status: existingInvoice.status,
+            publicUrl: existingInvoice.publicUrl,
+            version: existingInvoice.version,
+          };
     } else {
       published = await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion });
     }
 
     await db.update(bookingRequests).set({
       squareDepositInvoiceStatus: published.status,
+      squareDepositInvoiceVersion: published.version,
       squareDepositAmountCents: squareOrderAmountCents,
       squareDepositInvoiceUrl: published.publicUrl,
       squareDepositCreatedAt: new Date().toISOString(),
