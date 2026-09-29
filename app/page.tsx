@@ -116,8 +116,11 @@ export default function Home() {
       <section id="top" className="relative isolate min-h-[760px] overflow-hidden bg-[var(--navy)] text-white">
         <img
           className="absolute inset-0 -z-20 h-full w-full object-cover opacity-50"
-          src="https://upload.wikimedia.org/wikipedia/commons/b/b1/H%E1%BB%99i_An%2C_Ancient_Town%2C_2020-01_CN-06.jpg"
+          src="/hoi-an-hero.jpg"
           alt="Historic yellow buildings and lanterns in Hội An Ancient Town"
+          width={1800}
+          height={1158}
+          fetchPriority="high"
         />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.96)_0%,rgba(45,29,16,.76)_50%,rgba(45,29,16,.22)_100%)]" />
         <div className="mx-auto flex min-h-[760px] max-w-7xl items-end px-5 pb-16 pt-36 sm:px-8 sm:pb-24">
@@ -201,6 +204,9 @@ export default function Home() {
               src="/about-trung.jpg"
               alt="Trung Le seated in front of the yellow Cookie Paradise bakery trailer"
               className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-center shadow-xl"
+              width={960}
+              height={1280}
+              loading="lazy"
             />
           </div>
           <div>
