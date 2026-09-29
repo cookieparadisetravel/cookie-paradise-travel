@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { bookingRequests } from "@/db/schema";
 import { getDb } from "@/db";
 import { isOwnerRequest } from "@/lib/owner-auth";
+import { hasValidOrigin } from "@/lib/same-origin";
 import {
   createSquareCustomer,
   createSquareDepositInvoice,
@@ -15,17 +16,6 @@ function daysUntilDeparture(departure: string) {
   const departureTime = Date.parse(`${departure}T12:00:00Z`);
   if (!Number.isFinite(departureTime)) return null;
   return Math.ceil((departureTime - Date.now()) / 86_400_000);
-}
-
-function hasValidOrigin(request: Request) {
-  const origin = request.headers.get("Origin");
-  if (!origin) return true;
-
-  try {
-    return new URL(origin).origin === new URL(request.url).origin;
-  } catch {
-    return false;
-  }
 }
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
