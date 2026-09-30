@@ -113,7 +113,7 @@ export async function POST(request: Request) {
 
     let mailerLiteStatus = marketingConsent ? "pending" : "not_requested";
     if (marketingConsent) {
-      mailerLiteStatus = await addConsentedSubscriber({ fullName, email });
+      mailerLiteStatus = await addConsentedSubscriber({ firstName, lastName, email });
     }
 
     const ownerNotificationStatus = await sendOwnerInquiryNotification({
