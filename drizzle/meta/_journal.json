@@ -43,6 +43,13 @@
       "when": 1790704471036,
       "tag": "0005_parched_young_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1790796781625,
+      "tag": "0006_white_magneto",
+      "breakpoints": true
     }
   ]
 }
