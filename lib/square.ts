@@ -169,11 +169,6 @@ export async function createSquareDepositInvoice(input: {
         ? `Initial payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}, equal to 50% of the confirmed booking price. The first $500 per traveler is a nonrefundable reservation deposit. The remaining 50% is due 90 days before departure.`
         : `Full payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Full payment is required because this booking is being accepted within 90 days of departure. The first $500 per traveler is a nonrefundable reservation deposit.`,
       ...(input.departure !== "flexible" ? { sale_or_service_date: input.departure } : {}),
-      custom_fields: [{
-        label: "Website inquiry",
-        value: `#${input.inquiryId}`,
-        placement: "ABOVE_LINE_ITEMS",
-      }],
       store_payment_method_enabled: false,
     },
   } });
