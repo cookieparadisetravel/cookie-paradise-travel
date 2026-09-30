@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const bookingRequests = sqliteTable("booking_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -28,6 +28,70 @@ export const bookingRequests = sqliteTable("booking_requests", {
   squareDepositAmountCents: integer("square_deposit_amount_cents"),
   squareDepositInvoiceUrl: text("square_deposit_invoice_url"),
   squareDepositCreatedAt: text("square_deposit_created_at"),
+  companyAcceptedAt: text("company_accepted_at"),
+  companyAcceptedBy: text("company_accepted_by"),
   status: text("status").notNull().default("new"),
   createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
 });
+
+export const travelers = sqliteTable("travelers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bookingRequestId: integer("booking_request_id")
+    .notNull()
+    .references(() => bookingRequests.id, { onDelete: "cascade" }),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  email: text("email").notNull(),
+  travelerType: text("traveler_type").notNull().default("adult"),
+  guardianLegalName: text("guardian_legal_name"),
+  guardianRelationship: text("guardian_relationship"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  index("travelers_booking_request_idx").on(table.bookingRequestId),
+]);
+
+export const agreementInvitations = sqliteTable("agreement_invitations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  travelerId: integer("traveler_id")
+    .notNull()
+    .references(() => travelers.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  agreementVersion: text("agreement_version").notNull(),
+  agreementDocumentHash: text("agreement_document_hash").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  acceptedAt: text("accepted_at"),
+  revokedAt: text("revoked_at"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  uniqueIndex("agreement_invitations_token_hash_unique").on(table.tokenHash),
+  index("agreement_invitations_traveler_idx").on(table.travelerId),
+]);
+
+export const agreementAcceptances = sqliteTable("agreement_acceptances", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  invitationId: integer("invitation_id")
+    .notNull()
+    .references(() => agreementInvitations.id, { onDelete: "restrict" }),
+  travelerId: integer("traveler_id")
+    .notNull()
+    .references(() => travelers.id, { onDelete: "restrict" }),
+  agreementVersion: text("agreement_version").notNull(),
+  agreementDocumentHash: text("agreement_document_hash").notNull(),
+  signerType: text("signer_type").notNull(),
+  signerLegalName: text("signer_legal_name").notNull(),
+  travelerInitials: text("traveler_initials").notNull(),
+  guardianRelationship: text("guardian_relationship"),
+  electronicSignatureConsent: integer("electronic_signature_consent", { mode: "boolean" }).notNull(),
+  agreementConsent: integer("agreement_consent", { mode: "boolean" }).notNull(),
+  depositAcknowledged: integer("deposit_acknowledged", { mode: "boolean" }).notNull(),
+  cancellationAcknowledged: integer("cancellation_acknowledged", { mode: "boolean" }).notNull(),
+  insuranceSelection: text("insurance_selection").notNull(),
+  insuranceProvider: text("insurance_provider"),
+  photoMediaOptIn: integer("photo_media_opt_in", { mode: "boolean" }).notNull().default(false),
+  ipHash: text("ip_hash").notNull(),
+  userAgent: text("user_agent").notNull(),
+  acceptedAt: text("accepted_at").notNull(),
+}, (table) => [
+  uniqueIndex("agreement_acceptances_invitation_unique").on(table.invitationId),
+  index("agreement_acceptances_traveler_idx").on(table.travelerId),
+]);
