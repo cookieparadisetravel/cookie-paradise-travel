@@ -1,11 +1,12 @@
 import { desc } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { LogOut, Mail, Phone, Users } from "lucide-react";
-import { bookingRequests } from "@/db/schema";
+import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
+import { TravelerAgreementManager } from "./traveler-agreement-manager";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -39,7 +40,15 @@ export default async function InquiryDashboard() {
   const owner = await requireOwner("/admin/inquiries");
   if (!owner) notFound();
 
-  const inquiries = await getDb().select().from(bookingRequests).orderBy(desc(bookingRequests.createdAt));
+  const db = getDb();
+  const inquiries = await db.select().from(bookingRequests).orderBy(desc(bookingRequests.createdAt));
+  const travelerRecords = await db.select().from(travelers).orderBy(travelers.createdAt);
+  const travelersByInquiry = new Map<number, typeof travelerRecords>();
+  for (const traveler of travelerRecords) {
+    const existing = travelersByInquiry.get(traveler.bookingRequestId) ?? [];
+    existing.push(traveler);
+    travelersByInquiry.set(traveler.bookingRequestId, existing);
+  }
   // This forced-dynamic server page intentionally snapshots time once per request.
   // eslint-disable-next-line react-hooks/purity
   const referenceTime = Date.now();
@@ -95,6 +104,9 @@ export default async function InquiryDashboard() {
                 <span><strong>Owner alert:</strong> {item.ownerNotificationStatus.replaceAll("_", " ")}</span>
               </div>
               {item.notes && <div className="mt-5 rounded-2xl bg-[var(--cream)] p-4"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--orange)]">Notes</p><p className="mt-2 whitespace-pre-wrap leading-7">{item.notes}</p></div>}
+              <div className="mt-5">
+                <TravelerAgreementManager inquiryId={item.id} expectedPartySize={item.partySize} initialTravelers={travelersByInquiry.get(item.id) ?? []} />
+              </div>
               <div className="mt-5">
                 <DepositInvoiceAction
                   id={item.id}
