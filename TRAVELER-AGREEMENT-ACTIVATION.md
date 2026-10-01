@@ -13,7 +13,7 @@ The agreement system is intentionally locked while `currentTravelerAgreement` is
    npx wrangler secret put ACCEPTANCE_IP_HASH_KEY
    ```
 
-5. Confirm `SQUARE_ENVIRONMENT` remains `sandbox` in `wrangler.jsonc` throughout testing.
+5. Confirm `SQUARE_ENV` remains `sandbox` in `wrangler.jsonc` throughout testing.
 
 ## Activate installment testing in Square Sandbox
 
