@@ -12,5 +12,6 @@ declare namespace Cloudflare {
     CF_ACCESS_AUD?: string;
     ADMIN_OWNER_EMAIL?: string;
     TURNSTILE_SECRET_KEY?: string;
+    ACCEPTANCE_IP_HASH_KEY?: string;
   }
 }
