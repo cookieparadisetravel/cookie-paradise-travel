@@ -263,7 +263,7 @@ export default function Home() {
             </p>
             <div className="mt-7 flex items-start gap-3 rounded-2xl border border-white/15 bg-white/5 p-5 text-sm leading-6 text-white/75">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--gold)]" />
-              <span>Requesting a spot is free. After your booking is accepted, a <strong className="text-white">$500 nonrefundable deposit per traveler</strong> reserves your place. One month later, the remaining balance is divided into equal monthly installments, with final payment completed no later than 90 days before departure. Bookings accepted within 90 days require full payment.</span>
+              <span>Requesting a spot is free. No payment is collected until Trung confirms your departure.</span>
             </div>
           </div>
           <div className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/5">
