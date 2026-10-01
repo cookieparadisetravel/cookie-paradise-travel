@@ -7,6 +7,7 @@ import { requireOwner } from "@/lib/owner-auth";
 import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
+import { TravelerListInvitationAction } from "./traveler-list-invitation-action";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { todayInIndiana } from "@/lib/payment-schedule";
 
@@ -155,6 +156,9 @@ export default async function InquiryDashboard({ searchParams }: { searchParams:
                 <span><strong>Owner alert:</strong> {item.ownerNotificationStatus.replaceAll("_", " ")}</span>
               </div>
               {item.notes && <div className="mt-5 rounded-2xl bg-[var(--cream)] p-4"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--orange)]">Notes</p><p className="mt-2 whitespace-pre-wrap leading-7">{item.notes}</p></div>}
+              <div className="mt-5">
+                <TravelerListInvitationAction inquiryId={item.id} expectedPartySize={item.partySize} currentTravelerCount={(travelersByInquiry.get(item.id) ?? []).length} />
+              </div>
               <div className="mt-5">
                 <TravelerAgreementManager inquiryId={item.id} expectedPartySize={item.partySize} initialTravelers={travelersByInquiry.get(item.id) ?? []} agreementActive={agreementReadiness.agreementActive} acceptedTravelerIds={agreementReadiness.acceptedTravelerIds} />
               </div>
