@@ -43,8 +43,8 @@ Use a test inquiry and email addresses you control. Do not use real traveler dat
 6. Complete every required acknowledgement and submit the adult acceptance. Confirm the same link cannot be accepted twice.
 7. Create and open the minor's link. Confirm the parent or guardian name and relationship are required, then submit the acceptance.
 8. Return to `/admin/inquiries` and refresh. Confirm every traveler shows **Current agreement accepted** and the invoice lock is removed only after all required travelers have accepted.
-9. Enter the confirmed total booking price and review the confirmation screen. Confirm it states that issuing the invoice records the Company's acceptance of the booking.
-10. Create the Square Sandbox invoice. Confirm the percentage and amount are correct for the departure date, the customer receives only a Sandbox invoice, and the dashboard stores the Square link and status.
+9. Enter the confirmed total booking price and review the confirmation screen. Confirm it states that issuing the invoice records the Company's acceptance of the booking and shows the correct monthly payment schedule.
+10. Create the Square Sandbox invoice. Confirm it charges the $500-per-traveler reservation deposit, or the full booking price when accepted within 90 days of departure. Confirm the customer receives only a Sandbox invoice and the dashboard stores the Square link and status.
 11. In Square Sandbox, make a test payment. Confirm the signed webhook updates the dashboard without allowing an older event to replace a newer invoice version.
 
 ## Pass criteria
@@ -55,6 +55,8 @@ Use a test inquiry and email addresses you control. Do not use real traveler dat
 - The acceptance record contains the immutable agreement version and document hash.
 - A minor acceptance records the guardian as signer.
 - Square invoicing remains locked until the traveler count and current-version acceptance count both equal the inquiry party size.
+- The dashboard calculates equal monthly balance installments beginning one month after acceptance and completing no later than 90 days before departure.
+- The initial Square invoice collects only the reservation deposit unless the booking is accepted within 90 days of departure. Future installment invoices or authorized automatic charges require separate implementation and testing.
 - The Square environment remains Sandbox for the entire test.
 
 ## After testing
