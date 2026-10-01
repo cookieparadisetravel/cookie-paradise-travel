@@ -8,6 +8,7 @@ import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
+import { todayInIndiana } from "@/lib/payment-schedule";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -31,12 +32,6 @@ const stateLabels: Record<string, string> = {
   WA: "Washington",
 };
 
-function daysUntilDeparture(departure: string, referenceTime: number) {
-  const departureTime = Date.parse(`${departure}T12:00:00Z`);
-  if (!Number.isFinite(departureTime)) return null;
-  return Math.ceil((departureTime - referenceTime) / 86_400_000);
-}
-
 export default async function InquiryDashboard() {
   const owner = await requireOwner("/admin/inquiries");
   if (!owner) notFound();
@@ -58,6 +53,7 @@ export default async function InquiryDashboard() {
   // This forced-dynamic server page intentionally snapshots time once per request.
   // eslint-disable-next-line react-hooks/purity
   const referenceTime = Date.now();
+  const acceptanceDate = todayInIndiana(new Date(referenceTime));
   const newCount = inquiries.filter((item) => item.status === "new").length;
   const consentCount = inquiries.filter((item) => item.marketingConsent).length;
 
@@ -121,7 +117,7 @@ export default async function InquiryDashboard() {
                   id={item.id}
                   partySize={item.partySize}
                   departure={item.departure}
-                  daysUntilDeparture={daysUntilDeparture(item.departure, referenceTime)}
+                  acceptanceDate={acceptanceDate}
                   email={item.email}
                   initialStatus={item.squareDepositInvoiceStatus}
                   initialUrl={item.squareDepositInvoiceUrl}
