@@ -15,6 +15,16 @@ The agreement system is intentionally locked while `currentTravelerAgreement` is
 
 5. Confirm `SQUARE_ENVIRONMENT` remains `sandbox` in `wrangler.jsonc` throughout testing.
 
+## Activate installment testing in Square Sandbox
+
+Square treats the production seller and the Sandbox test seller as separate accounts. A Square Plus trial on the live travel-company account does not activate installment requests in Sandbox.
+
+1. Open the Square Developer Console and select the application's default Sandbox test account.
+2. Choose **Square Dashboard** for that test account.
+3. In the Sandbox Dashboard, open **Invoices > Learn more** and start the Invoices Plus trial.
+4. If Square asks for a Sandbox payment method, use Square's published Sandbox test-card details rather than a real card.
+5. Repeat this setup for any additional Sandbox test account used with the website.
+
 ## Activate the approved agreement
 
 1. Replace `currentTravelerAgreement = null` in `lib/traveler-agreement.ts` with an `AgreementDocument` containing the approved text exactly as approved.
@@ -44,7 +54,7 @@ Use a test inquiry and email addresses you control. Do not use real traveler dat
 7. Create and open the minor's link. Confirm the parent or guardian name and relationship are required, then submit the acceptance.
 8. Return to `/admin/inquiries` and refresh. Confirm every traveler shows **Current agreement accepted** and the invoice lock is removed only after all required travelers have accepted.
 9. Enter the confirmed total booking price and review the confirmation screen. Confirm it states that issuing the invoice records the Company's acceptance of the booking and shows the correct monthly payment schedule.
-10. Create the Square Sandbox invoice. Confirm it charges the $500-per-traveler reservation deposit, or the full booking price when accepted within 90 days of departure. Confirm the customer receives only a Sandbox invoice and the dashboard stores the Square link and status.
+10. Create the Square Sandbox invoice. Confirm the single invoice contains the $500-per-traveler reservation deposit plus every scheduled installment, or one full-payment request when accepted within 90 days of departure. Confirm the customer receives only a Sandbox invoice and the dashboard stores the Square link and status.
 11. In Square Sandbox, make a test payment. Confirm the signed webhook updates the dashboard without allowing an older event to replace a newer invoice version.
 
 ## Pass criteria
@@ -56,7 +66,7 @@ Use a test inquiry and email addresses you control. Do not use real traveler dat
 - A minor acceptance records the guardian as signer.
 - Square invoicing remains locked until the traveler count and current-version acceptance count both equal the inquiry party size.
 - The dashboard calculates equal monthly balance installments beginning one month after acceptance and completing no later than 90 days before departure.
-- The initial Square invoice collects only the reservation deposit unless the booking is accepted within 90 days of departure. Future installment invoices or authorized automatic charges require separate implementation and testing.
+- One Square invoice contains the reservation deposit and all scheduled installments unless the booking is accepted within 90 days of departure. Automatic card charges remain disabled.
 - The Square environment remains Sandbox for the entire test.
 
 ## After testing
