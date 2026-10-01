@@ -35,6 +35,7 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
     }
   }
   const amount = (paymentPlan?.initialAmountCents ?? 0) / 100;
+  const total = (paymentPlan ? bookingTotalCents : 0) / 100;
   const alreadyCreated = ["unpaid", "paid", "scheduled", "partially_paid"].includes(status);
   const retrying = status !== "not_created";
 
@@ -80,9 +81,10 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
         <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady} className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => setBookingTotal(event.target.value)} placeholder="Enter total including supplements" /></span>
       </label>
       {paymentPlan && <div className="mt-3 rounded-xl border border-[var(--line)] bg-white p-3 text-sm text-[var(--ink)]">
-        <p className="font-bold">{paymentPlan.paymentType === "deposit" ? "Reservation-deposit invoice" : "Full-payment invoice"}: ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
+        <p className="font-bold">{paymentPlan.paymentType === "deposit" ? "Single payment-plan invoice" : "Full-payment invoice"}: ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} total</p>
+        <p className="mt-1 leading-6 text-[var(--muted-ink)]">Due when sent: ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{paymentPlan.paymentType === "deposit" ? " nonrefundable reservation deposit" : " full payment"}.</p>
         {paymentPlan.installments.length > 0 && <p className="mt-1 leading-6 text-[var(--muted-ink)]">Remaining balance: ${(paymentPlan.remainingBalanceCents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} in {paymentPlan.installments.length} installment{paymentPlan.installments.length === 1 ? "" : "s"}, from {formatDate(paymentPlan.installments[0].dueDate)} through {formatDate(paymentPlan.installments.at(-1)!.dueDate)}.</p>}
-        {paymentPlan.installments.length > 0 && <p className="mt-2 text-xs leading-5 text-[var(--muted-ink)]">This invoice collects only the reservation deposit. Send the later installment invoices according to the schedule below; automatic card charges are not enabled.</p>}
+        {paymentPlan.installments.length > 0 && <p className="mt-2 text-xs leading-5 text-[var(--muted-ink)]">Square will place the deposit and every installment on this one invoice and send a reminder seven days before each installment is due. Automatic card charges are not enabled.</p>}
         {paymentPlan.paymentType === "deposit" && paymentPlan.installments.length === 0 && <p className="mt-1 text-[var(--muted-ink)]">The reservation deposit covers the full confirmed booking total.</p>}
       </div>}
       {paymentPlanError && <p className="mt-2 text-sm font-semibold text-red-700">{paymentPlanError}</p>}
@@ -92,7 +94,7 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
         </button>
       ) : (
         <div className="mt-3 rounded-xl border border-[var(--orange)]/30 bg-white p-4">
-          <p className="text-sm leading-6 text-[var(--ink)]">This action records Cookie Paradise Travel Company’s acceptance of the booking. Square will create a <strong>${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> {paymentPlan?.paymentType === "deposit" ? "reservation-deposit" : "full-payment"} invoice and email it to <strong>{email}</strong>. This action sends a real Sandbox invoice.</p>
+          <p className="text-sm leading-6 text-[var(--ink)]">This action records Cookie Paradise Travel Company’s acceptance of the booking. Square will create one <strong>${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> invoice and email it to <strong>{email}</strong>. {paymentPlan?.paymentType === "deposit" ? `The first $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is due now; the remaining payments follow the schedule below.` : "The full amount is due now."} This action sends a real Sandbox invoice.</p>
           {paymentPlan && paymentPlan.installments.length > 0 && <div className="mt-3 rounded-lg bg-[var(--cream)] p-3 text-xs leading-5 text-[var(--ink)]">
             <p className="font-bold">Planned monthly balance payments</p>
             <ol className="mt-1 grid gap-x-4 sm:grid-cols-2">
