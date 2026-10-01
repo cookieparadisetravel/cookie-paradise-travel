@@ -1,9 +1,9 @@
 "use client";
 
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowRight, CheckCircle2, Loader2, X } from "lucide-react";
 import {
-  Dialog, DialogContent, DialogDescription, DialogHeader,
+  Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader,
   DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
 import {
@@ -237,7 +237,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       <DialogTrigger className={triggerClasses}>
         {triggerLabel}{!compact && <ArrowRight className="h-4 w-4" />}
       </DialogTrigger>
-      <DialogContent className="max-h-[92vh] overflow-y-auto border-0 bg-[var(--sand)] p-0 sm:max-w-2xl">
+      <DialogContent showCloseButton={false} className="max-h-[92vh] overflow-y-auto border-0 bg-[var(--sand)] p-0 sm:max-w-2xl">
         {status === "success" ? (
           <div className="p-8 text-center sm:p-12">
             <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--orange)]" />
@@ -249,18 +249,61 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
           </div>
         ) : (
           <>
-            <DialogHeader className="bg-[var(--navy)] px-6 py-7 text-left text-white sm:px-8">
+            <DialogHeader className="relative bg-[var(--navy)] px-6 py-7 pr-16 text-left text-white sm:px-8 sm:pr-20">
+              <DialogClose className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70" aria-label="Close request form">
+                <X className="h-5 w-5" />
+              </DialogClose>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Vietnam 2027</p>
               <DialogTitle className="font-serif text-3xl">Request a place</DialogTitle>
               <DialogDescription className="text-sm leading-6 text-white/70">
                 Tell us which departure works for you. No payment is collected and this form does not confirm a reservation.
               </DialogDescription>
             </DialogHeader>
-            <form onSubmit={submit} noValidate className="grid gap-5 p-6 sm:grid-cols-2 sm:p-8">
+            <form onSubmit={submit} noValidate className="grid gap-4 p-6 sm:grid-cols-2 sm:gap-5 sm:p-8">
               <label className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
                 Website
                 <input name="website" type="text" tabIndex={-1} autoComplete="off" />
               </label>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--orange)] sm:col-span-2">Your trip</p>
+              <div className="field-label">Preferred departure
+                <Select value={departure} onValueChange={(value) => {
+                  setDeparture(value ?? "");
+                  clearFieldError("departure");
+                }} required>
+                  <SelectTrigger
+                    className={`field-input h-12 w-full ${fieldErrors.departure ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
+                    aria-invalid={Boolean(fieldErrors.departure)}
+                    aria-describedby={fieldErrors.departure ? "departure-error" : undefined}
+                    data-field="departure"
+                  ><SelectValue placeholder="Choose a date" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="2027-06-01">June 1, 2027</SelectItem>
+                    <SelectItem value="2027-06-29">June 29, 2027</SelectItem>
+                    <SelectItem value="2027-07-27">July 27, 2027</SelectItem>
+                    <SelectItem value="flexible">I’m flexible</SelectItem>
+                  </SelectContent>
+                </Select>
+                {fieldErrors.departure && <span id="departure-error" className="mt-1 text-xs font-semibold text-red-700">{fieldErrors.departure}</span>}
+              </div>
+              <div className="field-label">Travelers
+                <Select value={partySize} onValueChange={(value) => setPartySize(value ?? "1")}>
+                  <SelectTrigger className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[1, 2, 3, 4, 5, 6].map((count) => <SelectItem key={count} value={String(count)}>{count}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="field-label sm:col-span-2">Room preference
+                <Select value={room} onValueChange={(value) => setRoom(value ?? "shared")}>
+                  <SelectTrigger className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="shared">Shared double/twin room</SelectItem>
+                    <SelectItem value="private">Private room (+$399 per traveler)</SelectItem>
+                    <SelectItem value="unsure">Not sure yet</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <p className="mt-2 border-t border-[var(--line)] pt-5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--orange)] sm:col-span-2">Your details</p>
               <label className="field-label">First Name
                 <input
                   className={`field-input ${fieldErrors.firstName ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
@@ -323,44 +366,6 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 />
                 {fieldErrors.phone && <span id="phone-error" className="mt-1 text-xs font-semibold text-red-700">{fieldErrors.phone}</span>}
               </label>
-              <div className="field-label">Preferred departure
-                <Select value={departure} onValueChange={(value) => {
-                  setDeparture(value ?? "");
-                  clearFieldError("departure");
-                }} required>
-                  <SelectTrigger
-                    className={`field-input h-12 w-full ${fieldErrors.departure ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
-                    aria-invalid={Boolean(fieldErrors.departure)}
-                    aria-describedby={fieldErrors.departure ? "departure-error" : undefined}
-                    data-field="departure"
-                  ><SelectValue placeholder="Choose a date" /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2027-06-01">June 1, 2027</SelectItem>
-                    <SelectItem value="2027-06-29">June 29, 2027</SelectItem>
-                    <SelectItem value="2027-07-27">July 27, 2027</SelectItem>
-                    <SelectItem value="flexible">I’m flexible</SelectItem>
-                  </SelectContent>
-                </Select>
-                {fieldErrors.departure && <span id="departure-error" className="mt-1 text-xs font-semibold text-red-700">{fieldErrors.departure}</span>}
-              </div>
-              <div className="field-label">Travelers
-                <Select value={partySize} onValueChange={(value) => setPartySize(value ?? "1")}>
-                  <SelectTrigger className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {[1, 2, 3, 4, 5, 6].map((count) => <SelectItem key={count} value={String(count)}>{count}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="field-label sm:col-span-2">Room preference
-                <Select value={room} onValueChange={(value) => setRoom(value ?? "shared")}>
-                  <SelectTrigger className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="shared">Shared double/twin room</SelectItem>
-                    <SelectItem value="private">Private room (+$399 per traveler)</SelectItem>
-                    <SelectItem value="unsure">Not sure yet</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <label className="field-label sm:col-span-2">Questions or notes <span className="font-normal text-[var(--muted-ink)]">(optional)</span>
                 <textarea className="field-input min-h-24 resize-y py-3" name="notes" maxLength={1000} />
               </label>
@@ -379,14 +384,14 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                     clearFieldError("contactConsent");
                   }}
                 />
-                <span><strong className="mb-1 inline-block rounded-full bg-[var(--orange)] px-2.5 py-0.5 text-xs uppercase tracking-[0.08em] text-white">Required</strong><br />I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.{fieldErrors.contactConsent && <span id="contact-consent-error" className="mt-2 block text-xs font-semibold text-red-700">{fieldErrors.contactConsent}</span>}</span>
+                <span><span className="font-bold text-red-700" aria-hidden="true">* </span>I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.{fieldErrors.contactConsent && <span id="contact-consent-error" className="mt-2 block text-xs font-semibold text-red-700">{fieldErrors.contactConsent}</span>}</span>
               </label>
-              <label className="flex items-start gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 text-sm leading-6 text-[var(--ink)] sm:col-span-2">
+              <label className="flex items-start gap-3 text-xs leading-5 text-[var(--ink)] sm:col-span-2">
                 <input className="mt-1 h-4 w-4 accent-[var(--orange)]" type="checkbox" name="marketingConsent" value="yes" />
                 <span><strong>Email me occasional travel news and future trip announcements.</strong><br /><span className="text-[var(--muted-ink)]">Optional. You can unsubscribe at any time.</span></span>
               </label>
-              <div className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:col-span-2">
-                <label className="flex items-start gap-3 text-sm leading-6 text-[var(--ink)]">
+              <div className="sm:col-span-2">
+                <label className="flex items-start gap-3 text-xs leading-5 text-[var(--ink)]">
                   <input
                     className="mt-1 h-4 w-4 accent-[var(--orange)]"
                     type="checkbox"
@@ -399,7 +404,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                       }
                     }}
                   />
-                  <span><strong>I live in a state that may require seller-of-travel registration.</strong><br /><span className="text-[var(--muted-ink)]">Select this if you reside in California, Florida, Hawaii or Washington. This helps us determine whether we can proceed with a future booking.</span></span>
+                  <span><strong>I live in a state that may require seller-of-travel registration.</strong><br /><span className="text-[var(--muted-ink)]">Check if you live in CA, FL, HI, MD, or WA.</span></span>
                 </label>
                 {sellerOfTravelStateResident && (
                   <div className="field-label mt-4">State of residence <span className="text-red-700">*</span>
@@ -417,6 +422,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                         <SelectItem value="CA">California</SelectItem>
                         <SelectItem value="FL">Florida</SelectItem>
                         <SelectItem value="HI">Hawaii</SelectItem>
+                        <SelectItem value="MD">Maryland</SelectItem>
                         <SelectItem value="WA">Washington</SelectItem>
                       </SelectContent>
                     </Select>
