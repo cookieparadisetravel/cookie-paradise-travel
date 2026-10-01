@@ -1,4 +1,6 @@
 import { env } from "cloudflare:workers";
+import type { PaymentInstallment } from "@/lib/payment-schedule";
+import { todayInIndiana } from "@/lib/payment-schedule";
 
 const SQUARE_API_VERSION = "2026-09-16";
 
@@ -51,17 +53,6 @@ function splitName(fullName: string) {
   };
 }
 
-function todayInIndiana() {
-  const parts = new Intl.DateTimeFormat("en-US", {
-    timeZone: "America/Indiana/Indianapolis",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).formatToParts(new Date());
-  const values = Object.fromEntries(parts.map((part) => [part.type, part.value]));
-  return `${values.year}-${values.month}-${values.day}`;
-}
-
 function requireSquareAmount(value: unknown) {
   const amount = typeof value === "number"
     ? value
@@ -98,24 +89,24 @@ export async function createSquareDepositOrder(input: {
   inquiryId: number;
   customerId: string;
   amountCents: number;
-  paymentPercent: 50 | 100;
+  paymentType: "deposit" | "full";
 }) {
   const { locationId } = squareConfig();
   const result = await squareRequest<{
     order?: { id?: string; total_money?: { amount?: number | string } };
   }>("/v2/orders", { body: {
-    idempotency_key: `cpt-inquiry-${input.inquiryId}-deposit-order-v1`,
+    idempotency_key: `cpt-inquiry-${input.inquiryId}-reservation-order-v2-${input.amountCents}`,
     order: {
       location_id: locationId,
       customer_id: input.customerId,
       reference_id: `deposit-inquiry-${input.inquiryId}`,
       line_items: [{
-        name: input.paymentPercent === 50 ? "Vietnam 2027 initial payment" : "Vietnam 2027 full payment",
+        name: input.paymentType === "deposit" ? "Vietnam 2027 reservation deposit" : "Vietnam 2027 full payment",
         quantity: "1",
         base_price_money: { amount: input.amountCents, currency: "USD" },
-        note: input.paymentPercent === 50
-          ? "50% of the confirmed booking price. The first $500 per traveler is a nonrefundable reservation deposit. The remaining balance is due 90 days before departure."
-          : "Full payment required because the booking is being accepted within 90 days of departure. The first $500 per traveler is a nonrefundable reservation deposit.",
+        note: input.paymentType === "deposit"
+          ? "Nonrefundable $500 reservation deposit per traveler, subject to the Traveler Agreement. The remaining balance follows the monthly payment schedule and is paid in full no later than 90 days before departure."
+          : "Full payment required because the booking is being accepted within 90 days of departure. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement.",
       }],
     },
   } });
@@ -141,12 +132,14 @@ export async function createSquareDepositInvoice(input: {
   partySize: number;
   departure: string;
   amountCents: number;
-  paymentPercent: 50 | 100;
+  paymentType: "deposit" | "full";
+  installments: PaymentInstallment[];
+  finalPaymentDeadline: string;
 }) {
   const { locationId } = squareConfig();
   const amount = input.amountCents / 100;
   const result = await squareRequest<{ invoice?: { id?: string; version?: number } }>("/v2/invoices", { body: {
-    idempotency_key: `cpt-inquiry-${input.inquiryId}-deposit-invoice-v1`,
+    idempotency_key: `cpt-inquiry-${input.inquiryId}-reservation-invoice-v2-${input.amountCents}`,
     invoice: {
       location_id: locationId,
       order_id: input.orderId,
@@ -164,10 +157,10 @@ export async function createSquareDepositInvoice(input: {
         buy_now_pay_later: false,
         cash_app_pay: false,
       },
-      title: input.paymentPercent === 50 ? "Vietnam 2027 — 50% initial payment" : "Vietnam 2027 — full payment",
-      description: input.paymentPercent === 50
-        ? `Initial payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}, equal to 50% of the confirmed booking price. The first $500 per traveler is a nonrefundable reservation deposit. The remaining 50% is due 90 days before departure.`
-        : `Full payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Full payment is required because this booking is being accepted within 90 days of departure. The first $500 per traveler is a nonrefundable reservation deposit.`,
+      title: input.paymentType === "deposit" ? "Vietnam 2027 — reservation deposit" : "Vietnam 2027 — full payment",
+      description: input.paymentType === "deposit"
+        ? depositInvoiceDescription(input.partySize, amount, input.installments, input.finalPaymentDeadline)
+        : `Full payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Full payment is required because this booking is being accepted within 90 days of departure. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`,
       ...(input.departure !== "flexible" ? { sale_or_service_date: input.departure } : {}),
       store_payment_method_enabled: false,
     },
@@ -189,7 +182,7 @@ export async function publishSquareInvoice(input: {
     `/v2/invoices/${encodeURIComponent(input.invoiceId)}/publish`,
     { body: {
       version: input.version,
-      idempotency_key: `cpt-inquiry-${input.inquiryId}-deposit-publish-v1`,
+      idempotency_key: `cpt-inquiry-${input.inquiryId}-reservation-publish-v2-${input.version}`,
     } },
   );
   if (!result.invoice?.id || result.invoice.version === undefined) {
@@ -200,6 +193,31 @@ export async function publishSquareInvoice(input: {
     status: result.invoice.status?.toLowerCase() || "published",
     version: result.invoice.version,
   };
+}
+
+function depositInvoiceDescription(
+  partySize: number,
+  amount: number,
+  installments: PaymentInstallment[],
+  finalPaymentDeadline: string,
+) {
+  const travelerLabel = `${partySize} traveler${partySize === 1 ? "" : "s"}`;
+  const schedule = installments.length === 0
+    ? "No remaining balance is scheduled."
+    : installments.length === 1
+      ? `The remaining balance is due in one payment on ${formatInvoiceDate(installments[0].dueDate)}.`
+      : `The remaining balance is divided into ${installments.length} monthly installments beginning ${formatInvoiceDate(installments[0].dueDate)}; the final installment is due ${formatInvoiceDate(installments.at(-1)!.dueDate)}.`;
+  return `Reservation deposit for ${travelerLabel}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, 90 days before departure. No payment surcharge is added.`;
+}
+
+function formatInvoiceDate(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(year, month - 1, day)));
 }
 
 export async function getSquareInvoiceVersion(invoiceId: string) {
