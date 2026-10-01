@@ -1,20 +1,35 @@
 "use client";
 
 import { useState } from "react";
-import { Check, Copy, Link2, Loader2, UsersRound } from "lucide-react";
+import { Check, Copy, Link2, Loader2, Mail, UsersRound } from "lucide-react";
 
 type Props = {
   inquiryId: number;
   expectedPartySize: number;
   currentTravelerCount: number;
+  primaryContactName: string;
+  primaryContactEmail: string;
 };
 
-export function TravelerListInvitationAction({ inquiryId, expectedPartySize, currentTravelerCount }: Props) {
+export function TravelerListInvitationAction({ inquiryId, expectedPartySize, currentTravelerCount, primaryContactName, primaryContactEmail }: Props) {
   const [creating, setCreating] = useState(false);
   const [invitationUrl, setInvitationUrl] = useState("");
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const remaining = Math.max(0, expectedPartySize - currentTravelerCount);
+  const emailSubject = "Secure traveler-list link for your Vietnam trip";
+  const emailBody = `Hi ${primaryContactName},
+
+To continue your group's reservation, please use the secure link below to provide the legal names and email addresses of the other travelers in your party:
+
+${invitationUrl}
+
+The link expires in seven days and can be submitted once. Please do not enter passport, medical or payment information.
+
+Thank you,
+Trung
+Cookie Paradise Travel Company`;
+  const emailHref = `mailto:${encodeURIComponent(primaryContactEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
   async function createInvitation() {
     setCreating(true);
@@ -66,6 +81,9 @@ export function TravelerListInvitationAction({ inquiryId, expectedPartySize, cur
             <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationUrl} />
           </label>
           <div className="flex flex-wrap gap-2">
+            <a className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-xs font-bold text-white" href={emailHref}>
+              <Mail className="h-3.5 w-3.5" /> Email secure link
+            </a>
             <button className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-3 py-2 text-xs font-bold text-white" type="button" onClick={copyInvitation}>
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? "Copied" : "Copy link"}
             </button>
