@@ -7,18 +7,17 @@ type Props = {
   inquiryId: number;
   expectedPartySize: number;
   currentTravelerCount: number;
-  primaryContactName: string;
-  primaryContactEmail: string;
 };
 
-export function TravelerListInvitationAction({ inquiryId, expectedPartySize, currentTravelerCount, primaryContactName, primaryContactEmail }: Props) {
+export function TravelerListInvitationAction({ inquiryId, expectedPartySize, currentTravelerCount }: Props) {
   const [creating, setCreating] = useState(false);
   const [invitationUrl, setInvitationUrl] = useState("");
+  const [primaryContact, setPrimaryContact] = useState({ name: "", email: "" });
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState("");
   const remaining = Math.max(0, expectedPartySize - currentTravelerCount);
   const emailSubject = "Secure traveler-list link for your Vietnam trip";
-  const emailBody = `Hi ${primaryContactName},
+  const emailBody = `Hi ${primaryContact.name},
 
 To continue your group's reservation, please use the secure link below to provide the legal names and email addresses of the other travelers in your party:
 
@@ -29,7 +28,7 @@ The link expires in seven days and can be submitted once. Please do not enter pa
 Thank you,
 Trung
 Cookie Paradise Travel Company`;
-  const emailHref = `mailto:${encodeURIComponent(primaryContactEmail)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+  const emailHref = `mailto:${encodeURIComponent(primaryContact.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
   async function createInvitation() {
     setCreating(true);
@@ -37,9 +36,10 @@ Cookie Paradise Travel Company`;
     setCopied(false);
     try {
       const response = await fetch(`/api/admin/inquiries/${inquiryId}/traveler-list-invitation`, { method: "POST" });
-      const payload = await response.json() as { error?: string; invitationUrl?: string };
-      if (!response.ok || !payload.invitationUrl) throw new Error(payload.error || "The traveler-list link could not be created.");
+      const payload = await response.json() as { error?: string; invitationUrl?: string; primaryContactName?: string; primaryContactEmail?: string };
+      if (!response.ok || !payload.invitationUrl || !payload.primaryContactName || !payload.primaryContactEmail) throw new Error(payload.error || "The traveler-list link could not be created.");
       setInvitationUrl(payload.invitationUrl);
+      setPrimaryContact({ name: payload.primaryContactName, email: payload.primaryContactEmail });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The traveler-list link could not be created.");
     } finally {
