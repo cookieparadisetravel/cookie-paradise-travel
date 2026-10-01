@@ -43,6 +43,7 @@ npx wrangler secret put MAILERLITE_API_TOKEN
 npx wrangler secret put MAILERLITE_GROUP_ID
 npx wrangler secret put OWNER_NOTIFICATION_WEBHOOK_URL
 npx wrangler secret put TURNSTILE_SECRET_KEY
+npx wrangler secret put ACCEPTANCE_IP_HASH_KEY
 npx wrangler secret put SQUARE_ACCESS_TOKEN
 npx wrangler secret put SQUARE_WEBHOOK_SIGNATURE_KEY
 ```
@@ -96,3 +97,7 @@ After deployment:
 3. Confirm Turnstile, owner notification and optional MailerLite signup work.
 4. Send a Square sandbox webhook test and confirm it receives a successful response.
 5. Use Square sandbox only until the live Square account and business review are complete.
+
+## 9. Activate and test traveler agreements
+
+Do not activate the agreement until the final version has been approved for use. Follow [TRAVELER-AGREEMENT-ACTIVATION.md](./TRAVELER-AGREEMENT-ACTIVATION.md) to version the approved text, test one adult and one minor acceptance, confirm the invoice lock, and create a Square Sandbox invoice.
