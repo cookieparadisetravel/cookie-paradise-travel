@@ -1,8 +1,9 @@
 import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { bookingRequests } from "@/db/schema";
 import { getDb } from "@/db";
-import { isOwnerRequest } from "@/lib/owner-auth";
+import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
+import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import {
   createSquareCustomer,
   createSquareDepositInvoice,
@@ -20,7 +21,8 @@ function daysUntilDeparture(departure: string) {
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!hasValidOrigin(request)) return Response.json({ error: "Invalid request origin" }, { status: 403 });
-  if (!(await isOwnerRequest())) return Response.json({ error: "Not authorized" }, { status: 403 });
+  const owner = await requireOwner("/admin/inquiries");
+  if (!owner) return Response.json({ error: "Not authorized" }, { status: 403 });
 
   const { id: rawId } = await context.params;
   const id = Number(rawId);
@@ -29,6 +31,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   const db = getDb();
   const [inquiry] = await db.select().from(bookingRequests).where(eq(bookingRequests.id, id)).limit(1);
   if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+
+  const agreementReadiness = await getAgreementReadiness(id, inquiry.partySize);
+  if (!agreementReadiness.readyForInvoice) {
+    return Response.json({
+      error: `Payment invoice is locked. ${agreementReadiness.message}`,
+      agreementReadiness,
+    }, { status: 409 });
+  }
 
   const body = await request.json().catch(() => null) as { bookingTotalDollars?: unknown } | null;
   const bookingTotalDollars = typeof body?.bookingTotalDollars === "number" ? body.bookingTotalDollars : NaN;
@@ -152,6 +162,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       published = await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion });
     }
 
+    const companyAcceptedAt = inquiry.companyAcceptedAt ?? new Date().toISOString();
     await db.update(bookingRequests).set({
       squareDepositInvoiceStatus: published.status,
       squareDepositInvoiceVersion: published.version,
@@ -159,6 +170,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       squareDepositInvoiceUrl: published.publicUrl,
       squareDepositCreatedAt: new Date().toISOString(),
       squareDepositClaimedAt: null,
+      companyAcceptedAt,
+      companyAcceptedBy: inquiry.companyAcceptedBy ?? owner.email,
     }).where(eq(bookingRequests.id, id));
 
     return Response.json({
