@@ -8,7 +8,7 @@ import { z } from "zod";
 
 const validDepartures = new Set(["2027-06-01", "2027-06-29", "2027-07-27", "flexible"]);
 const validRooms = new Set(["shared", "private", "unsure"]);
-const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "WA"]);
+const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
 const emailSchema = z.string().email().max(180);
 
 type TurnstileVerification = {
