@@ -88,24 +88,24 @@ export async function createSquareCustomer(input: {
 export async function createSquareDepositOrder(input: {
   inquiryId: number;
   customerId: string;
-  amountCents: number;
+  bookingTotalCents: number;
   paymentType: "deposit" | "full";
 }) {
   const { locationId } = squareConfig();
   const result = await squareRequest<{
     order?: { id?: string; total_money?: { amount?: number | string } };
   }>("/v2/orders", { body: {
-    idempotency_key: `cpt-inquiry-${input.inquiryId}-reservation-order-v2-${input.amountCents}`,
+    idempotency_key: `cpt-inquiry-${input.inquiryId}-payment-plan-order-v3-${input.bookingTotalCents}`,
     order: {
       location_id: locationId,
       customer_id: input.customerId,
-      reference_id: `deposit-inquiry-${input.inquiryId}`,
+      reference_id: `booking-inquiry-${input.inquiryId}`,
       line_items: [{
-        name: input.paymentType === "deposit" ? "Vietnam 2027 reservation deposit" : "Vietnam 2027 full payment",
+        name: "Vietnam 2027 trip booking",
         quantity: "1",
-        base_price_money: { amount: input.amountCents, currency: "USD" },
+        base_price_money: { amount: input.bookingTotalCents, currency: "USD" },
         note: input.paymentType === "deposit"
-          ? "Nonrefundable $500 reservation deposit per traveler, subject to the Traveler Agreement. The remaining balance follows the monthly payment schedule and is paid in full no later than 90 days before departure."
+          ? "The Square invoice includes the nonrefundable $500 reservation deposit per traveler and the scheduled monthly balance installments, subject to the Traveler Agreement."
           : "Full payment required because the booking is being accepted within 90 days of departure. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement.",
       }],
     },
@@ -131,24 +131,23 @@ export async function createSquareDepositInvoice(input: {
   orderId: string;
   partySize: number;
   departure: string;
-  amountCents: number;
+  bookingTotalCents: number;
+  initialAmountCents: number;
   paymentType: "deposit" | "full";
   installments: PaymentInstallment[];
   finalPaymentDeadline: string;
 }) {
   const { locationId } = squareConfig();
-  const amount = input.amountCents / 100;
+  const bookingTotal = input.bookingTotalCents / 100;
+  const initialAmount = input.initialAmountCents / 100;
+  const paymentRequests = buildPaymentRequests(input);
   const result = await squareRequest<{ invoice?: { id?: string; version?: number } }>("/v2/invoices", { body: {
-    idempotency_key: `cpt-inquiry-${input.inquiryId}-reservation-invoice-v2-${input.amountCents}`,
+    idempotency_key: `cpt-inquiry-${input.inquiryId}-payment-plan-invoice-v3-${input.bookingTotalCents}`,
     invoice: {
       location_id: locationId,
       order_id: input.orderId,
       primary_recipient: { customer_id: input.customerId },
-      payment_requests: [{
-        request_type: "BALANCE",
-        due_date: todayInIndiana(),
-        automatic_payment_source: "NONE",
-      }],
+      payment_requests: paymentRequests,
       delivery_method: "EMAIL",
       accepted_payment_methods: {
         card: true,
@@ -157,10 +156,10 @@ export async function createSquareDepositInvoice(input: {
         buy_now_pay_later: false,
         cash_app_pay: false,
       },
-      title: input.paymentType === "deposit" ? "Vietnam 2027 — reservation deposit" : "Vietnam 2027 — full payment",
+      title: input.paymentType === "deposit" ? "Vietnam 2027 — payment plan" : "Vietnam 2027 — full payment",
       description: input.paymentType === "deposit"
-        ? depositInvoiceDescription(input.partySize, amount, input.installments, input.finalPaymentDeadline)
-        : `Full payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Full payment is required because this booking is being accepted within 90 days of departure. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`,
+        ? depositInvoiceDescription(input.partySize, initialAmount, bookingTotal, input.installments, input.finalPaymentDeadline)
+        : `Full payment for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. Full payment is required because this booking is being accepted within 90 days of departure. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`,
       ...(input.departure !== "flexible" ? { sale_or_service_date: input.departure } : {}),
       store_payment_method_enabled: false,
     },
@@ -197,7 +196,8 @@ export async function publishSquareInvoice(input: {
 
 function depositInvoiceDescription(
   partySize: number,
-  amount: number,
+  depositAmount: number,
+  bookingTotal: number,
   installments: PaymentInstallment[],
   finalPaymentDeadline: string,
 ) {
@@ -207,7 +207,58 @@ function depositInvoiceDescription(
     : installments.length === 1
       ? `The remaining balance is due in one payment on ${formatInvoiceDate(installments[0].dueDate)}.`
       : `The remaining balance is divided into ${installments.length} monthly installments beginning ${formatInvoiceDate(installments[0].dueDate)}; the final installment is due ${formatInvoiceDate(installments.at(-1)!.dueDate)}.`;
-  return `Reservation deposit for ${travelerLabel}: $${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })} ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, 90 days before departure. No payment surcharge is added.`;
+  return `Total booking price for ${travelerLabel}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first payment is a $${depositAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} reservation deposit ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, 90 days before departure. No payment surcharge is added.`;
+}
+
+function buildPaymentRequests(input: {
+  paymentType: "deposit" | "full";
+  initialAmountCents: number;
+  installments: PaymentInstallment[];
+}) {
+  if (input.paymentType === "full" || input.installments.length === 0) {
+    return [{
+      request_type: "BALANCE",
+      due_date: todayInIndiana(),
+      automatic_payment_source: "NONE",
+    }];
+  }
+
+  const deposit = {
+    request_type: "DEPOSIT",
+    due_date: todayInIndiana(),
+    fixed_amount_requested_money: {
+      amount: input.initialAmountCents,
+      currency: "USD",
+    },
+    automatic_payment_source: "NONE",
+  };
+
+  if (input.installments.length === 1) {
+    return [deposit, {
+      request_type: "BALANCE",
+      due_date: input.installments[0].dueDate,
+      automatic_payment_source: "NONE",
+      reminders: paymentReminders(),
+    }];
+  }
+
+  return [deposit, ...input.installments.map((installment) => ({
+    request_type: "INSTALLMENT",
+    due_date: installment.dueDate,
+    fixed_amount_requested_money: {
+      amount: installment.amountCents,
+      currency: "USD",
+    },
+    automatic_payment_source: "NONE",
+    reminders: paymentReminders(),
+  }))];
+}
+
+function paymentReminders() {
+  return [{
+    relative_scheduled_days: -7,
+    message: "Your Cookie Paradise Travel Company installment is due in one week.",
+  }];
 }
 
 function formatInvoiceDate(value: string) {
