@@ -7,6 +7,7 @@ import { requireOwner } from "@/lib/owner-auth";
 import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
+import { getAgreementReadiness } from "@/lib/agreement-readiness";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -49,6 +50,11 @@ export default async function InquiryDashboard() {
     existing.push(traveler);
     travelersByInquiry.set(traveler.bookingRequestId, existing);
   }
+  const agreementReadinessEntries = await Promise.all(inquiries.map(async (inquiry) => [
+    inquiry.id,
+    await getAgreementReadiness(inquiry.id, inquiry.partySize),
+  ] as const));
+  const agreementReadinessByInquiry = new Map(agreementReadinessEntries);
   // This forced-dynamic server page intentionally snapshots time once per request.
   // eslint-disable-next-line react-hooks/purity
   const referenceTime = Date.now();
@@ -80,7 +86,10 @@ export default async function InquiryDashboard() {
               <h2 className="font-serif text-2xl">No inquiries yet</h2>
               <p className="mt-2 text-[var(--muted-ink)]">New “Request a spot” submissions will appear here.</p>
             </div>
-          ) : inquiries.map((item) => (
+          ) : inquiries.map((item) => {
+            const agreementReadiness = agreementReadinessByInquiry.get(item.id);
+            if (!agreementReadiness) return null;
+            return (
             <article key={item.id} className="rounded-3xl border border-[var(--line)] bg-white p-5 shadow-sm sm:p-7">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                 <div>
@@ -105,7 +114,7 @@ export default async function InquiryDashboard() {
               </div>
               {item.notes && <div className="mt-5 rounded-2xl bg-[var(--cream)] p-4"><p className="text-xs font-bold uppercase tracking-[0.15em] text-[var(--orange)]">Notes</p><p className="mt-2 whitespace-pre-wrap leading-7">{item.notes}</p></div>}
               <div className="mt-5">
-                <TravelerAgreementManager inquiryId={item.id} expectedPartySize={item.partySize} initialTravelers={travelersByInquiry.get(item.id) ?? []} />
+                <TravelerAgreementManager inquiryId={item.id} expectedPartySize={item.partySize} initialTravelers={travelersByInquiry.get(item.id) ?? []} agreementActive={agreementReadiness.agreementActive} acceptedTravelerIds={agreementReadiness.acceptedTravelerIds} />
               </div>
               <div className="mt-5">
                 <DepositInvoiceAction
@@ -116,10 +125,12 @@ export default async function InquiryDashboard() {
                   email={item.email}
                   initialStatus={item.squareDepositInvoiceStatus}
                   initialUrl={item.squareDepositInvoiceUrl}
+                  agreementReady={agreementReadiness.readyForInvoice}
+                  agreementReadinessMessage={agreementReadiness.message}
                 />
               </div>
             </article>
-          ))}
+          )})}
         </div>
       </div>
     </main>

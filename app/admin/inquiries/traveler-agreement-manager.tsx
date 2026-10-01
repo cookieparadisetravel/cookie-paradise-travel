@@ -17,6 +17,8 @@ type Props = {
   inquiryId: number;
   expectedPartySize: number;
   initialTravelers: Traveler[];
+  agreementActive: boolean;
+  acceptedTravelerIds: number[];
 };
 
 const emptyForm = {
@@ -28,13 +30,15 @@ const emptyForm = {
   guardianRelationship: "",
 };
 
-export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers }: Props) {
+export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers, agreementActive, acceptedTravelerIds }: Props) {
   const [travelerList, setTravelerList] = useState(initialTravelers);
   const [form, setForm] = useState(emptyForm);
   const [showForm, setShowForm] = useState(initialTravelers.length < expectedPartySize);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const complete = travelerList.length >= expectedPartySize;
+  const acceptedIds = new Set(acceptedTravelerIds);
+  const acceptedCount = travelerList.filter((traveler) => acceptedIds.has(traveler.id)).length;
 
   async function addTraveler(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -64,7 +68,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]"><ShieldCheck className="h-4 w-4 text-[var(--orange)]" /> Traveler agreements</p>
-          <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">Add every traveler separately. Each adult will later receive an individual agreement link; a parent or guardian will accept for a minor.</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">Add every traveler separately. Each adult receives an individual agreement link; a parent or guardian accepts for a minor. Square invoicing remains locked until all required acceptances are recorded.</p>
         </div>
         <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${complete ? "bg-emerald-100 text-emerald-900" : "bg-white text-[var(--ink)]"}`}>
           {travelerList.length} of {expectedPartySize} entered
@@ -86,7 +90,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                   )}
                 </div>
               </div>
-              <p className="mt-3 flex items-center gap-2 text-xs font-semibold text-[var(--muted-ink)]"><CheckCircle2 className="h-3.5 w-3.5" /> Agreement invitation not yet enabled</p>
+              <p className={`mt-3 flex items-center gap-2 text-xs font-semibold ${acceptedIds.has(traveler.id) ? "text-emerald-800" : "text-[var(--muted-ink)]"}`}><CheckCircle2 className="h-3.5 w-3.5" /> {acceptedIds.has(traveler.id) ? "Current agreement accepted" : agreementActive ? "Agreement acceptance pending" : "Agreement invitation not yet enabled"}</p>
             </div>
           ))}
         </div>
@@ -118,7 +122,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
         </form>
       )}
 
-      {complete && <p className="mt-4 rounded-xl border border-[var(--gold)]/50 bg-[var(--gold)]/15 p-3 text-sm font-semibold text-[var(--ink)]">All traveler records are ready. Secure agreement links will be enabled only after the final agreement receives legal approval.</p>}
+      {complete && <p className="mt-4 rounded-xl border border-[var(--gold)]/50 bg-[var(--gold)]/15 p-3 text-sm font-semibold text-[var(--ink)]">{agreementActive ? `${acceptedCount} of ${expectedPartySize} traveler agreements accepted.` : "All traveler records are ready. Secure agreement links will be enabled only after the final agreement receives legal approval."}</p>}
     </section>
   );
 }
