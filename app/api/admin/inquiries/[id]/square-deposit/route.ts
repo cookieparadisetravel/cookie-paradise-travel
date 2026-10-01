@@ -57,7 +57,6 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       error: error instanceof Error ? error.message : "The payment schedule could not be calculated.",
     }, { status: 400 });
   }
-  const amountCents = paymentPlan.initialAmountCents;
   const claimTimestamp = new Date().toISOString();
   const staleClaimBefore = new Date(Date.now() - 5 * 60_000).toISOString();
   const claimableStatus = ["not_created", "error", "draft"].includes(inquiry.squareDepositInvoiceStatus);
@@ -114,7 +113,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       const order = await createSquareDepositOrder({
         inquiryId: id,
         customerId,
-        amountCents,
+        bookingTotalCents,
         paymentType: paymentPlan.paymentType,
       });
       orderId = order.id;
@@ -125,14 +124,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       }).where(eq(bookingRequests.id, id));
     }
 
-    if (squareOrderAmountCents !== amountCents) {
+    if (squareOrderAmountCents !== bookingTotalCents) {
       await db.update(bookingRequests).set({
         squareDepositInvoiceStatus: "error",
         squareDepositAmountCents: squareOrderAmountCents,
         squareDepositClaimedAt: null,
       }).where(eq(bookingRequests.id, id));
       return Response.json({
-        error: `Square already has an order for $${(squareOrderAmountCents / 100).toFixed(2)}. The entered payment would be $${(amountCents / 100).toFixed(2)}. Use the original confirmed booking total or resolve the existing Square order before retrying.`,
+        error: `Square already has an order for a $${(squareOrderAmountCents / 100).toFixed(2)} total booking price. The entered total is $${(bookingTotalCents / 100).toFixed(2)}. Use the original confirmed booking total or resolve the existing Square order before retrying.`,
       }, { status: 409 });
     }
 
@@ -145,7 +144,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         orderId,
         partySize: inquiry.partySize,
         departure: inquiry.departure,
-        amountCents: squareOrderAmountCents,
+        bookingTotalCents: squareOrderAmountCents,
+        initialAmountCents: paymentPlan.initialAmountCents,
         paymentType: paymentPlan.paymentType,
         installments: paymentPlan.installments,
         finalPaymentDeadline: paymentPlan.finalPaymentDeadline,
@@ -188,7 +188,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
     return Response.json({
       ok: true,
-      amountCents: squareOrderAmountCents,
+      bookingTotalCents: squareOrderAmountCents,
+      amountDueNowCents: paymentPlan.initialAmountCents,
       paymentType: paymentPlan.paymentType,
       installments: paymentPlan.installments,
       finalPaymentDeadline: paymentPlan.finalPaymentDeadline,
@@ -201,9 +202,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
       squareDepositInvoiceStatus: "error",
       squareDepositClaimedAt: null,
     }).where(eq(bookingRequests.id, id));
-    const message = error instanceof Error && error.message === "Square is not fully configured."
+    const errorMessage = error instanceof Error ? error.message : "";
+    const message = errorMessage === "Square is not fully configured."
       ? "Square is not fully configured yet. Add the Sandbox access token and try again."
-      : "Square could not create the invoice. No second invoice will be created on retry.";
+      : /subscription|INSTALLMENT/iu.test(errorMessage)
+        ? "The Square Sandbox test account does not have an active Invoices Plus trial. Activate it inside the Sandbox Square Dashboard, then retry."
+        : `Square could not create the invoice. No second invoice will be created on retry.${errorMessage ? ` ${errorMessage}` : ""}`;
     return Response.json({ error: message }, { status: 502 });
   }
 }
