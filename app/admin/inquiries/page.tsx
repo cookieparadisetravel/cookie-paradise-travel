@@ -32,9 +32,30 @@ const stateLabels: Record<string, string> = {
   WA: "Washington",
 };
 
-export default async function InquiryDashboard() {
+const inquiryStatuses = ["new", "contacted", "qualified", "waitlist", "closed"] as const;
+
+const statusLabels: Record<(typeof inquiryStatuses)[number], string> = {
+  new: "New",
+  contacted: "Follow-up sent",
+  qualified: "Ready to book",
+  waitlist: "Waitlist",
+  closed: "Closed",
+};
+
+type DashboardSearchParams = {
+  q?: string | string[];
+  status?: string | string[];
+};
+
+export default async function InquiryDashboard({ searchParams }: { searchParams: Promise<DashboardSearchParams> }) {
   const owner = await requireOwner("/admin/inquiries");
   if (!owner) notFound();
+
+  const params = await searchParams;
+  const searchValue = Array.isArray(params.q) ? params.q[0] ?? "" : params.q ?? "";
+  const normalizedSearch = searchValue.trim().toLowerCase();
+  const requestedStatus = Array.isArray(params.status) ? params.status[0] ?? "all" : params.status ?? "all";
+  const selectedStatus = inquiryStatuses.includes(requestedStatus as (typeof inquiryStatuses)[number]) ? requestedStatus : "all";
 
   const db = getDb();
   const inquiries = await db.select().from(bookingRequests).orderBy(desc(bookingRequests.createdAt));
@@ -54,8 +75,13 @@ export default async function InquiryDashboard() {
   // eslint-disable-next-line react-hooks/purity
   const referenceTime = Date.now();
   const acceptanceDate = todayInIndiana(new Date(referenceTime));
-  const newCount = inquiries.filter((item) => item.status === "new").length;
+  const statusCounts = Object.fromEntries(inquiryStatuses.map((status) => [status, inquiries.filter((item) => item.status === status).length])) as Record<(typeof inquiryStatuses)[number], number>;
   const consentCount = inquiries.filter((item) => item.marketingConsent).length;
+  const visibleInquiries = inquiries.filter((item) => {
+    if (selectedStatus !== "all" && item.status !== selectedStatus) return false;
+    if (!normalizedSearch) return true;
+    return [item.fullName, item.email, item.phone].some((value) => value.toLowerCase().includes(normalizedSearch));
+  });
 
   return (
     <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
@@ -70,19 +96,39 @@ export default async function InquiryDashboard() {
       </header>
 
       <div className="mx-auto max-w-7xl px-5 py-8 sm:px-8 sm:py-12">
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">All inquiries</p><p className="mt-1 font-serif text-3xl">{inquiries.length}</p></div>
-          <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">New</p><p className="mt-1 font-serif text-3xl">{newCount}</p></div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">New</p><p className="mt-1 font-serif text-3xl">{statusCounts.new}</p></div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">Follow-up sent</p><p className="mt-1 font-serif text-3xl">{statusCounts.contacted}</p></div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">Ready to book</p><p className="mt-1 font-serif text-3xl">{statusCounts.qualified}</p></div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">Waitlist</p><p className="mt-1 font-serif text-3xl">{statusCounts.waitlist}</p></div>
+          <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">Closed</p><p className="mt-1 font-serif text-3xl">{statusCounts.closed}</p></div>
           <div className="rounded-2xl border border-[var(--line)] bg-white p-5"><p className="text-sm text-[var(--muted-ink)]">Marketing consent</p><p className="mt-1 font-serif text-3xl">{consentCount}</p></div>
         </div>
 
+        <form className="mt-8 grid gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 sm:grid-cols-[1fr_auto_auto] sm:items-end" method="get">
+          <label className="text-sm font-semibold text-[var(--ink)]">Search inquiries
+            <input className="mt-1 w-full rounded-xl border border-[var(--input)] px-3 py-2 outline-none focus:border-[var(--orange)]" defaultValue={searchValue} name="q" placeholder="Name, email or phone" type="search" />
+          </label>
+          <label className="text-sm font-semibold text-[var(--ink)]">Stage
+            <select className="mt-1 w-full rounded-xl border border-[var(--input)] bg-white px-3 py-2 outline-none focus:border-[var(--orange)]" defaultValue={selectedStatus} name="status">
+              <option value="all">All stages</option>
+              {inquiryStatuses.map((status) => <option key={status} value={status}>{statusLabels[status]}</option>)}
+            </select>
+          </label>
+          <div className="flex gap-2">
+            <button className="rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white" type="submit">Apply</button>
+            {(normalizedSearch || selectedStatus !== "all") && <a className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-bold text-[var(--ink)]" href="/admin/inquiries">Clear</a>}
+          </div>
+        </form>
+
         <div className="mt-8 space-y-5">
-          {inquiries.length === 0 ? (
+          {visibleInquiries.length === 0 ? (
             <div className="rounded-3xl border border-dashed border-[var(--input)] bg-white p-10 text-center">
-              <h2 className="font-serif text-2xl">No inquiries yet</h2>
-              <p className="mt-2 text-[var(--muted-ink)]">New “Request a spot” submissions will appear here.</p>
+              <h2 className="font-serif text-2xl">{inquiries.length === 0 ? "No inquiries yet" : "No matching inquiries"}</h2>
+              <p className="mt-2 text-[var(--muted-ink)]">{inquiries.length === 0 ? "New “Request a spot” submissions will appear here." : "Try another search or clear the current filters."}</p>
             </div>
-          ) : inquiries.map((item) => {
+          ) : visibleInquiries.map((item) => {
             const agreementReadiness = agreementReadinessByInquiry.get(item.id);
             if (!agreementReadiness) return null;
             return (
