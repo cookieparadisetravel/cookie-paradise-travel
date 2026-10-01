@@ -50,6 +50,21 @@ export const travelers = sqliteTable("travelers", {
   index("travelers_booking_request_idx").on(table.bookingRequestId),
 ]);
 
+export const travelerListInvitations = sqliteTable("traveler_list_invitations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bookingRequestId: integer("booking_request_id")
+    .notNull()
+    .references(() => bookingRequests.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  completedAt: text("completed_at"),
+  revokedAt: text("revoked_at"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  uniqueIndex("traveler_list_invitations_token_hash_unique").on(table.tokenHash),
+  index("traveler_list_invitations_booking_request_idx").on(table.bookingRequestId),
+]);
+
 export const agreementInvitations = sqliteTable("agreement_invitations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   travelerId: integer("traveler_id")
