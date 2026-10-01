@@ -28,6 +28,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   if (invitation.status !== "ready") {
     return Response.json({ error: "This traveler-list link is invalid, expired or unavailable." }, { status: invitation.status === "expired" ? 410 : 404 });
   }
+  const { bookingRequestId, invitationId, partySize, remainingTravelerCount } = invitation;
 
   let body: unknown;
   try {
@@ -43,8 +44,8 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   if (!parsed.success) {
     return Response.json({ error: parsed.error.issues[0]?.message ?? "Enter valid traveler information." }, { status: 400 });
   }
-  if (parsed.data.travelers.length !== invitation.remainingTravelerCount) {
-    return Response.json({ error: `Enter exactly ${invitation.remainingTravelerCount} remaining traveler${invitation.remainingTravelerCount === 1 ? "" : "s"}.` }, { status: 400 });
+  if (parsed.data.travelers.length !== remainingTravelerCount) {
+    return Response.json({ error: `Enter exactly ${remainingTravelerCount} remaining traveler${remainingTravelerCount === 1 ? "" : "s"}.` }, { status: 400 });
   }
 
   const normalizedTravelers = parsed.data.travelers.map((traveler) => ({
@@ -61,24 +62,53 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   }
 
   const db = getDb();
-  const existingTravelers = await db.select({ firstName: travelers.firstName, lastName: travelers.lastName, email: travelers.email })
-    .from(travelers)
-    .where(eq(travelers.bookingRequestId, invitation.bookingRequestId));
-  const existingKeys = new Set(existingTravelers.map((traveler) => `${traveler.firstName.toLowerCase()}\u0000${traveler.lastName.toLowerCase()}\u0000${traveler.email.toLowerCase()}`));
-  if (submittedKeys.some((key) => existingKeys.has(key))) {
-    return Response.json({ error: "A submitted traveler is already listed for this booking." }, { status: 409 });
-  }
-
   const completedAt = new Date().toISOString();
-  await db.insert(travelers).values(normalizedTravelers.map((traveler) => ({
-    bookingRequestId: invitation.bookingRequestId,
-    ...traveler,
-  })));
-  await db.update(travelerListInvitations).set({ completedAt }).where(and(
-    eq(travelerListInvitations.id, invitation.invitationId),
+  const claimedInvitations = await db.update(travelerListInvitations).set({ completedAt }).where(and(
+    eq(travelerListInvitations.id, invitationId),
     isNull(travelerListInvitations.completedAt),
     isNull(travelerListInvitations.revokedAt),
-  ));
+  )).returning({ id: travelerListInvitations.id });
+
+  if (claimedInvitations.length === 0) {
+    return Response.json({ error: "This traveler list has already been submitted." }, { status: 409 });
+  }
+
+  async function releaseClaim() {
+    await db.update(travelerListInvitations).set({ completedAt: null }).where(and(
+      eq(travelerListInvitations.id, invitationId),
+      eq(travelerListInvitations.completedAt, completedAt),
+      isNull(travelerListInvitations.revokedAt),
+    ));
+  }
+
+  try {
+    const existingTravelers = await db.select({ firstName: travelers.firstName, lastName: travelers.lastName, email: travelers.email })
+      .from(travelers)
+      .where(eq(travelers.bookingRequestId, bookingRequestId));
+
+    if (existingTravelers.length + normalizedTravelers.length > partySize) {
+      await releaseClaim();
+      return Response.json({ error: "These travelers would exceed the party size for this booking." }, { status: 409 });
+    }
+
+    const existingKeys = new Set(existingTravelers.map((traveler) => `${traveler.firstName.toLowerCase()}\u0000${traveler.lastName.toLowerCase()}\u0000${traveler.email.toLowerCase()}`));
+    if (submittedKeys.some((key) => existingKeys.has(key))) {
+      await releaseClaim();
+      return Response.json({ error: "A submitted traveler is already listed for this booking." }, { status: 409 });
+    }
+
+    await db.insert(travelers).values(normalizedTravelers.map((traveler) => ({
+      bookingRequestId,
+      ...traveler,
+    })));
+  } catch {
+    try {
+      await releaseClaim();
+    } catch {
+      return Response.json({ error: "Traveler information could not be saved, and the secure link could not be restored. Please contact Cookie Paradise Travel Company for a new link." }, { status: 500 });
+    }
+    return Response.json({ error: "Traveler information could not be saved. Please try again." }, { status: 500 });
+  }
 
   return Response.json({ completedAt }, { status: 201 });
 }
