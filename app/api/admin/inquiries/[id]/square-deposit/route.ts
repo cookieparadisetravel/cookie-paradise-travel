@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
+import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
 import {
   createSquareCustomer,
   createSquareDepositInvoice,
@@ -12,12 +13,6 @@ import {
   getSquareOrderAmountCents,
   publishSquareInvoice,
 } from "@/lib/square";
-
-function daysUntilDeparture(departure: string) {
-  const departureTime = Date.parse(`${departure}T12:00:00Z`);
-  if (!Number.isFinite(departureTime)) return null;
-  return Math.ceil((departureTime - Date.now()) / 86_400_000);
-}
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!hasValidOrigin(request)) return Response.json({ error: "Invalid request origin" }, { status: 403 });
@@ -48,11 +43,21 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (inquiry.departure === "flexible") {
     return Response.json({ error: "Assign a specific departure before creating a payment invoice." }, { status: 400 });
   }
-  const daysRemaining = daysUntilDeparture(inquiry.departure);
-  if (daysRemaining === null) return Response.json({ error: "The departure date is invalid." }, { status: 400 });
-  const paymentPercent: 50 | 100 = daysRemaining <= 90 ? 100 : 50;
   const bookingTotalCents = Math.round(bookingTotalDollars * 100);
-  const amountCents = paymentPercent === 50 ? Math.round(bookingTotalCents / 2) : bookingTotalCents;
+  let paymentPlan;
+  try {
+    paymentPlan = createPaymentPlan({
+      bookingTotalCents,
+      partySize: inquiry.partySize,
+      departure: inquiry.departure,
+      acceptanceDate: todayInIndiana(),
+    });
+  } catch (error) {
+    return Response.json({
+      error: error instanceof Error ? error.message : "The payment schedule could not be calculated.",
+    }, { status: 400 });
+  }
+  const amountCents = paymentPlan.initialAmountCents;
   const claimTimestamp = new Date().toISOString();
   const staleClaimBefore = new Date(Date.now() - 5 * 60_000).toISOString();
   const claimableStatus = ["not_created", "error", "draft"].includes(inquiry.squareDepositInvoiceStatus);
@@ -64,7 +69,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (inquiry.squareDepositInvoiceStatus === "creating") {
       return Response.json({ error: "Invoice creation is already in progress. Try again after five minutes." }, { status: 409 });
     }
-    return Response.json({ error: "A deposit invoice already exists for this inquiry." }, { status: 409 });
+    return Response.json({ error: "A payment invoice already exists for this inquiry." }, { status: 409 });
   }
 
   const [claimed] = await db.update(bookingRequests).set({
@@ -106,7 +111,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     if (orderId) {
       squareOrderAmountCents = await getSquareOrderAmountCents(orderId);
     } else {
-      const order = await createSquareDepositOrder({ inquiryId: id, customerId, amountCents, paymentPercent });
+      const order = await createSquareDepositOrder({
+        inquiryId: id,
+        customerId,
+        amountCents,
+        paymentType: paymentPlan.paymentType,
+      });
       orderId = order.id;
       squareOrderAmountCents = order.amountCents;
       await db.update(bookingRequests).set({
@@ -136,7 +146,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         partySize: inquiry.partySize,
         departure: inquiry.departure,
         amountCents: squareOrderAmountCents,
-        paymentPercent,
+        paymentType: paymentPlan.paymentType,
+        installments: paymentPlan.installments,
+        finalPaymentDeadline: paymentPlan.finalPaymentDeadline,
       });
       invoiceId = draft.id;
       invoiceVersion = draft.version;
@@ -177,7 +189,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return Response.json({
       ok: true,
       amountCents: squareOrderAmountCents,
-      paymentPercent,
+      paymentType: paymentPlan.paymentType,
+      installments: paymentPlan.installments,
+      finalPaymentDeadline: paymentPlan.finalPaymentDeadline,
       publicUrl: published.publicUrl,
       status: published.status,
     });
