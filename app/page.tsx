@@ -1,8 +1,9 @@
 import {
-  ArrowRight, Check, ChevronDown, Clock3, Compass, MapPin, Plane,
-  ShieldCheck, Sparkles, Users, Utensils,
+  ArrowRight, Calendar, Check, ChevronDown, Clock3, Compass, MapPin, Plane,
+  ShieldCheck, Sparkles, Tag, Users, Utensils,
 } from "lucide-react";
 import { BookingDialog } from "./components/booking-dialog";
+import { MobileBookBar } from "./components/mobile-book-bar";
 
 const itinerary = [
   ["01", "Arrive in Ho Chi Minh City", "A private airport welcome, hotel transfer and an easy first evening to settle in."],
@@ -99,7 +100,7 @@ export default function Home() {
               alt="Cookie Paradise"
               className="h-5 w-auto max-w-[5.8rem] rounded-sm shadow-sm sm:h-7 sm:max-w-none lg:h-8"
             />
-            <span className="block shrink-0 border-l border-white/30 pl-2 text-[0.5rem] font-bold uppercase leading-3 tracking-[0.12em] text-white/85 sm:pl-3 sm:text-[0.66rem] sm:leading-4 sm:tracking-[0.2em]">
+            <span className="block shrink-0 border-l border-white/30 pl-2 text-[0.625rem] font-bold uppercase leading-3 tracking-[0.12em] text-white/85 sm:pl-3 sm:text-[0.66rem] sm:leading-4 sm:tracking-[0.2em]">
               Travel<br />Company
             </span>
           </a>
@@ -125,14 +126,14 @@ export default function Home() {
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.96)_0%,rgba(45,29,16,.76)_50%,rgba(45,29,16,.22)_100%)]" />
         <div className="mx-auto flex min-h-[760px] max-w-7xl items-end px-5 pb-16 pt-36 sm:px-8 sm:pb-24">
           <div className="max-w-3xl">
-            <p className="mb-5 flex items-center gap-3 text-sm font-bold uppercase tracking-[0.28em] text-[var(--gold)]">
+            <p className="mb-5 flex items-center gap-2 whitespace-nowrap text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--gold)] sm:gap-3 sm:text-sm sm:tracking-[0.28em]">
               <span className="h-px w-10 bg-[var(--gold)]" /> Small-group Vietnam • 2027
             </p>
             <h1 className="max-w-3xl font-serif text-5xl leading-[0.96] tracking-[-0.045em] sm:text-7xl lg:text-[5.8rem]">
               Southern Charms &amp; Central Heritage
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
-              Eight thoughtfully paced days from the energy of Saigon through Mekong waterways and imperial Huế to lantern-lit Hội An—created by Trung Le and hosted by Trung or a trusted Cookie Paradise Travel Company host.
+              Eight thoughtfully paced days from Saigon and the Mekong to imperial Huế and lantern-lit Hội An, personally hosted by Trung Le.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <BookingDialog triggerLabel="Request your spot" />
@@ -144,6 +145,8 @@ export default function Home() {
               <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[var(--gold)]" /> 8 days / 7 nights</span>
               <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[var(--gold)]" /> 8–15 travelers</span>
               <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[var(--gold)]" /> Saigon to Hội An</span>
+              <span className="flex items-center gap-2 font-semibold text-white"><Tag className="h-4 w-4 text-[var(--gold)]" /> From $2,500–$2,875 per person</span>
+              <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-[var(--gold)]" /> Departs Jun 1, Jun 29 or Jul 27, 2027</span>
             </div>
           </div>
         </div>
@@ -183,16 +186,34 @@ export default function Home() {
               <p className="mt-3 leading-7 text-white/70">Each departure is hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides.</p>
             </div>
           </div>
-          <ol className="relative border-l border-[var(--orange)]/35 pl-7 sm:pl-10">
-            {itinerary.map(([day, title, description]) => (
-              <li key={day} className="relative pb-10 last:pb-0">
-                <span className="absolute -left-[2.55rem] top-0 grid h-8 w-8 place-items-center rounded-full bg-[var(--gold)] text-xs font-extrabold text-[var(--orange)] sm:-left-[3.55rem]">{day}</span>
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--orange)]">Day {Number(day)}</p>
-                <h3 className="mt-2 font-serif text-2xl sm:text-3xl">{title}</h3>
-                <p className="mt-3 max-w-2xl leading-7 text-[var(--muted-ink)]">{description}</p>
-              </li>
+          <div id="daily-schedule" className="scroll-mt-6 space-y-4">
+            {detailedItinerary.map((day, index) => (
+              <details key={day.day} open={index === 0} className="group overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--sand)]">
+                <summary className="flex cursor-pointer list-none items-start gap-4 px-5 py-5 sm:px-7 [&::-webkit-details-marker]:hidden">
+                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--gold)] text-sm font-extrabold text-[var(--orange)]">{day.day}</span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-serif text-xl sm:text-2xl">{day.title}</span>
+                    <span className="mt-1 block text-sm leading-6 text-[var(--muted-ink)]">{itinerary[index][2]}</span>
+                    <span className="mt-1 block text-xs font-semibold uppercase tracking-[0.08em] text-[var(--orange)]">{day.meals}</span>
+                  </span>
+                  <ChevronDown className="mt-1 h-5 w-5 shrink-0 text-[var(--orange)] transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="border-t border-[var(--line)] bg-white px-5 py-6 sm:px-7">
+                  <ol className="space-y-6">
+                    {day.events.map(([time, title, description]) => (
+                      <li key={`${day.day}-${time}`} className="grid gap-2 sm:grid-cols-[10rem_1fr] sm:gap-6">
+                        <p className="schedule-time text-sm text-[var(--orange)]">{time}</p>
+                        <div>
+                          <h3 className="font-bold text-[var(--ink)]">{title}</h3>
+                          <p className="mt-1 leading-7 text-[var(--muted-ink)]">{description}</p>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
+                </div>
+              </details>
             ))}
-          </ol>
+          </div>
         </div>
       </section>
 
@@ -232,43 +253,6 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="daily-schedule" className="border-y border-[var(--line)] bg-white py-20 sm:py-28">
-        <div className="mx-auto max-w-5xl px-5 sm:px-8">
-          <p className="eyebrow">Detailed itinerary</p>
-          <h2 className="section-title">The journey, down to the hour.</h2>
-          <p className="mt-5 max-w-3xl text-lg leading-8 text-[var(--muted-ink)]">
-            Expand each day for the planned timing, activities and meals. Times are local and approximate; final schedules may change with flights, weather and local operating conditions.
-          </p>
-          <div className="mt-10 space-y-4">
-            {detailedItinerary.map((day, index) => (
-              <details key={day.day} open={index === 0} className="group overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--sand)]">
-                <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-5 sm:px-7 [&::-webkit-details-marker]:hidden">
-                  <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--gold)] text-sm font-extrabold text-[var(--orange)]">{day.day}</span>
-                  <span className="min-w-0 flex-1">
-                    <span className="block font-serif text-xl sm:text-2xl">{day.title}</span>
-                    <span className="mt-1 block text-sm text-[var(--muted-ink)]">{day.meals}</span>
-                  </span>
-                  <ChevronDown className="h-5 w-5 shrink-0 text-[var(--orange)] transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="border-t border-[var(--line)] bg-white px-5 py-6 sm:px-7">
-                  <ol className="space-y-6">
-                    {day.events.map(([time, title, description]) => (
-                      <li key={`${day.day}-${time}`} className="grid gap-2 sm:grid-cols-[10rem_1fr] sm:gap-6">
-                        <p className="schedule-time text-sm text-[var(--orange)]">{time}</p>
-                        <div>
-                          <h3 className="font-bold text-[var(--ink)]">{title}</h3>
-                          <p className="mt-1 leading-7 text-[var(--muted-ink)]">{description}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-              </details>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section id="pricing" className="bg-[var(--navy)] py-20 text-white sm:py-28">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:items-center">
           <div>
@@ -279,7 +263,7 @@ export default function Home() {
             </p>
             <div className="mt-7 flex items-start gap-3 rounded-2xl border border-white/15 bg-white/5 p-5 text-sm leading-6 text-white/75">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--gold)]" />
-              No payment is collected on this preview site. Submitting the form only requests a place on a departure.
+              Requesting a spot is free. No payment is collected until Trung confirms your departure.
             </div>
           </div>
           <div className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/5">
@@ -333,7 +317,7 @@ export default function Home() {
         </div>
       </section>
 
-      <footer className="bg-[var(--navy)] px-5 py-10 text-white/65 sm:px-8">
+      <footer className="bg-[var(--navy)] px-5 pb-28 pt-10 text-white/65 sm:px-8 md:pb-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <img
@@ -347,6 +331,7 @@ export default function Home() {
           <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
         </div>
       </footer>
+      <MobileBookBar />
     </main>
   );
 }
