@@ -18,7 +18,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const db = getDb();
-  const [inquiry] = await db.select({ id: bookingRequests.id, partySize: bookingRequests.partySize })
+  const [inquiry] = await db.select({
+    id: bookingRequests.id,
+    partySize: bookingRequests.partySize,
+    fullName: bookingRequests.fullName,
+    email: bookingRequests.email,
+  })
     .from(bookingRequests)
     .where(eq(bookingRequests.id, bookingRequestId))
     .limit(1);
@@ -44,7 +49,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   await db.insert(travelerListInvitations).values({ bookingRequestId, tokenHash, expiresAt });
 
   const invitationUrl = new URL(`/traveler-list/${encodeURIComponent(token)}`, request.url).toString();
-  return Response.json({ invitationUrl, expiresAt }, { status: 201 });
+  return Response.json({
+    invitationUrl,
+    expiresAt,
+    primaryContactName: inquiry.fullName,
+    primaryContactEmail: inquiry.email,
+  }, { status: 201 });
 }
 
 function createInvitationToken() {
