@@ -24,11 +24,14 @@ export default async function TravelerListPage({ params }: { params: Promise<{ t
   return (
     <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)] sm:py-12">
       <div className="mx-auto max-w-4xl">
-        <header className="mb-7 flex items-center justify-between gap-5">
+        <header className="mb-7 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-5">
           {/* This local wordmark is intentionally rendered at its intrinsic aspect ratio. */}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <Link href="/" aria-label="Cookie Paradise Travel Company home"><img className="h-auto w-52 sm:w-64" src="/cookie-paradise-logo.png" alt="Cookie Paradise Travel Company" /></Link>
-          <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-ink)]"><LockKeyhole className="h-4 w-4" /> Secure traveler list</p>
+          <Link className="flex min-w-0 items-center gap-2 sm:gap-3" href="/" aria-label="Cookie Paradise Travel Company home">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img className="h-auto w-40 rounded-sm sm:w-52" src="/cookie-paradise-logo.png" alt="Cookie Paradise" />
+            <span className="shrink-0 border-l border-[var(--line)] pl-2 text-[0.65rem] font-bold uppercase leading-3 tracking-[0.14em] text-[var(--orange)] sm:pl-3 sm:text-xs sm:leading-4 sm:tracking-[0.18em]">Travel<br />Company</span>
+          </Link>
+          <p className="flex items-center gap-2 whitespace-nowrap text-xs font-bold uppercase tracking-[0.14em] text-[var(--muted-ink)]"><LockKeyhole className="h-4 w-4" /> Secure traveler list</p>
         </header>
 
         {(result.status === "invalid" || result.status === "revoked") && <StatusCard icon="alert" title="This traveler-list link is unavailable">The link is invalid, has been replaced or was revoked. Please contact Cookie Paradise Travel Company for a new secure link.</StatusCard>}
