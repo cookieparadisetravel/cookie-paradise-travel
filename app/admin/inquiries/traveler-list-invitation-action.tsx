@@ -14,6 +14,7 @@ export function TravelerListInvitationAction({ inquiryId, expectedPartySize, cur
   const [invitationUrl, setInvitationUrl] = useState("");
   const [primaryContact, setPrimaryContact] = useState({ name: "", email: "" });
   const [copied, setCopied] = useState(false);
+  const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const [error, setError] = useState("");
   const remaining = Math.max(0, expectedPartySize - currentTravelerCount);
   const emailSubject = "Secure traveler-list link for your Vietnam trip";
@@ -28,7 +29,7 @@ The link expires in seven days and can be submitted once. Please do not enter pa
 Thank you,
 Trung
 Cookie Paradise Travel Company`;
-  const emailHref = `mailto:${encodeURIComponent(primaryContact.email)}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
+  const gmailHref = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(primaryContact.email)}&su=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(emailBody)}`;
 
   async function createInvitation() {
     setCreating(true);
@@ -58,6 +59,16 @@ Cookie Paradise Travel Company`;
     }
   }
 
+  async function copyEmailDraft() {
+    try {
+      await navigator.clipboard.writeText(`To: ${primaryContact.email}\nSubject: ${emailSubject}\n\n${emailBody}`);
+      setEmailDraftCopied(true);
+      window.setTimeout(() => setEmailDraftCopied(false), 2000);
+    } catch {
+      setError("Copy failed. Copy the secure link and prepare the email manually.");
+    }
+  }
+
   return (
     <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -81,9 +92,12 @@ Cookie Paradise Travel Company`;
             <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationUrl} />
           </label>
           <div className="flex flex-wrap gap-2">
-            <a className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-xs font-bold text-white" href={emailHref}>
-              <Mail className="h-3.5 w-3.5" /> Email secure link
+            <a className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-xs font-bold text-white" href={gmailHref} target="_blank" rel="noreferrer">
+              <Mail className="h-3.5 w-3.5" /> Open Gmail draft
             </a>
+            <button className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]" type="button" onClick={copyEmailDraft}>
+              {emailDraftCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{emailDraftCopied ? "Email draft copied" : "Copy email draft"}
+            </button>
             <button className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-3 py-2 text-xs font-bold text-white" type="button" onClick={copyInvitation}>
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? "Copied" : "Copy link"}
             </button>
