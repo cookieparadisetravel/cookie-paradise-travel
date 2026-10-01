@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { CheckCircle2, Loader2, Plus, ShieldCheck, UserRound } from "lucide-react";
+import { Check, CheckCircle2, Copy, Link2, Loader2, Plus, ShieldCheck, UserRound } from "lucide-react";
 
 type Traveler = {
   id: number;
@@ -36,6 +36,10 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
   const [showForm, setShowForm] = useState(initialTravelers.length < expectedPartySize);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [invitationLinks, setInvitationLinks] = useState<Record<number, string>>({});
+  const [invitationErrors, setInvitationErrors] = useState<Record<number, string>>({});
+  const [creatingInvitationFor, setCreatingInvitationFor] = useState<number | null>(null);
+  const [copiedTravelerId, setCopiedTravelerId] = useState<number | null>(null);
   const complete = travelerList.length >= expectedPartySize;
   const acceptedIds = new Set(acceptedTravelerIds);
   const acceptedCount = travelerList.filter((traveler) => acceptedIds.has(traveler.id)).length;
@@ -60,6 +64,40 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
       setError(cause instanceof Error ? cause.message : "The traveler could not be added.");
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function createInvitation(travelerId: number) {
+    setCreatingInvitationFor(travelerId);
+    setInvitationErrors((current) => ({ ...current, [travelerId]: "" }));
+    try {
+      const response = await fetch(`/api/admin/inquiries/${inquiryId}/travelers/${travelerId}/agreement-invitation`, {
+        method: "POST",
+      });
+      const payload = await response.json() as { error?: string; invitationUrl?: string };
+      if (!response.ok || !payload.invitationUrl) {
+        throw new Error(payload.error || "The secure agreement link could not be created.");
+      }
+      setInvitationLinks((current) => ({ ...current, [travelerId]: payload.invitationUrl! }));
+    } catch (cause) {
+      setInvitationErrors((current) => ({
+        ...current,
+        [travelerId]: cause instanceof Error ? cause.message : "The secure agreement link could not be created.",
+      }));
+    } finally {
+      setCreatingInvitationFor(null);
+    }
+  }
+
+  async function copyInvitation(travelerId: number) {
+    const invitationUrl = invitationLinks[travelerId];
+    if (!invitationUrl) return;
+    try {
+      await navigator.clipboard.writeText(invitationUrl);
+      setCopiedTravelerId(travelerId);
+      window.setTimeout(() => setCopiedTravelerId((current) => current === travelerId ? null : current), 2000);
+    } catch {
+      setInvitationErrors((current) => ({ ...current, [travelerId]: "Copy failed. Select and copy the link manually." }));
     }
   }
 
@@ -91,6 +129,32 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                 </div>
               </div>
               <p className={`mt-3 flex items-center gap-2 text-xs font-semibold ${acceptedIds.has(traveler.id) ? "text-emerald-800" : "text-[var(--muted-ink)]"}`}><CheckCircle2 className="h-3.5 w-3.5" /> {acceptedIds.has(traveler.id) ? "Current agreement accepted" : agreementActive ? "Agreement acceptance pending" : "Agreement invitation not yet enabled"}</p>
+              {!acceptedIds.has(traveler.id) && (
+                <div className="mt-3">
+                  {!invitationLinks[traveler.id] ? (
+                    <button
+                      disabled={!agreementActive || creatingInvitationFor === traveler.id}
+                      className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-45"
+                      type="button"
+                      onClick={() => createInvitation(traveler.id)}
+                    >
+                      {creatingInvitationFor === traveler.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />}
+                      Create secure link
+                    </button>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="block text-xs font-semibold text-[var(--ink)]">Copy this link now. It is shown only in this browser session.
+                        <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationLinks[traveler.id]} />
+                      </label>
+                      <button className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-3 py-2 text-xs font-bold text-white" type="button" onClick={() => copyInvitation(traveler.id)}>
+                        {copiedTravelerId === traveler.id ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                        {copiedTravelerId === traveler.id ? "Copied" : "Copy link"}
+                      </button>
+                    </div>
+                  )}
+                  {invitationErrors[traveler.id] && <p className="mt-2 text-xs font-semibold text-red-700">{invitationErrors[traveler.id]}</p>}
+                </div>
+              )}
             </div>
           ))}
         </div>
