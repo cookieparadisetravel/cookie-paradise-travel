@@ -14,6 +14,8 @@ export type PaymentPlan = {
   installments: PaymentInstallment[];
 };
 
+export type PaymentPreference = "payment_plan" | "full";
+
 export function createPaymentPlan(input: {
   bookingTotalCents: number;
   partySize: number;
@@ -88,6 +90,24 @@ export function createPaymentPlan(input: {
     remainingBalanceCents,
     finalPaymentDeadline,
     installments,
+  };
+}
+
+export function applyPaymentPreference(
+  paymentPlan: PaymentPlan,
+  bookingTotalCents: number,
+  paymentPreference: PaymentPreference,
+): PaymentPlan {
+  if (paymentPlan.paymentType === "full" || paymentPreference === "payment_plan") {
+    return paymentPlan;
+  }
+
+  return {
+    ...paymentPlan,
+    paymentType: "full",
+    initialAmountCents: bookingTotalCents,
+    remainingBalanceCents: 0,
+    installments: [],
   };
 }
 

@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { CheckCircle2, ExternalLink, Loader2, LockKeyhole } from "lucide-react";
-import { createPaymentPlan } from "@/lib/payment-schedule";
+import {
+  applyPaymentPreference,
+  createPaymentPlan,
+  type PaymentPreference,
+} from "@/lib/payment-schedule";
 
 type Props = {
   id: number;
@@ -23,13 +27,15 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [bookingTotal, setBookingTotal] = useState("");
+  const [paymentPreference, setPaymentPreference] = useState<PaymentPreference>("payment_plan");
   const bookingTotalNumber = Number(bookingTotal);
   const bookingTotalCents = Math.round(bookingTotalNumber * 100);
   let paymentPlan = null;
   let paymentPlanError = "";
   if (Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0 && departure !== "flexible") {
     try {
-      paymentPlan = createPaymentPlan({ bookingTotalCents, partySize, departure, acceptanceDate });
+      const standardPaymentPlan = createPaymentPlan({ bookingTotalCents, partySize, departure, acceptanceDate });
+      paymentPlan = applyPaymentPreference(standardPaymentPlan, bookingTotalCents, paymentPreference);
     } catch (cause) {
       paymentPlanError = cause instanceof Error ? cause.message : "The payment schedule could not be calculated.";
     }
@@ -46,7 +52,7 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
       const response = await fetch(`/api/admin/inquiries/${id}/square-deposit`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bookingTotalDollars: bookingTotalNumber }),
+        body: JSON.stringify({ bookingTotalDollars: bookingTotalNumber, paymentPreference }),
       });
       const payload = await response.json() as { error?: string; publicUrl?: string | null; status?: string };
       if (!response.ok) throw new Error(payload.error || "Square could not create the invoice.");
@@ -80,6 +86,21 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
         Confirmed total booking price
         <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady} className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => setBookingTotal(event.target.value)} placeholder="Enter total including supplements" /></span>
       </label>
+      {paymentPlan && paymentPlan.finalPaymentDeadline > acceptanceDate && paymentPlan.depositAmountCents < bookingTotalCents && (
+        <fieldset className="mt-3">
+          <legend className="text-sm font-semibold text-[var(--ink)]">Customer payment preference</legend>
+          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-3 ${paymentPreference === "payment_plan" ? "border-[var(--orange)] ring-1 ring-[var(--orange)]" : "border-[var(--line)]"}`}>
+              <input checked={paymentPreference === "payment_plan"} className="mt-1 accent-[var(--orange)]" disabled={!agreementReady} name={`payment-preference-${id}`} onChange={() => setPaymentPreference("payment_plan")} type="radio" />
+              <span><span className="block text-sm font-bold text-[var(--ink)]">Deposit + monthly installments</span><span className="mt-1 block text-xs leading-5 text-[var(--muted-ink)]">$500 per traveler now, then the remaining balance monthly.</span></span>
+            </label>
+            <label className={`flex cursor-pointer items-start gap-3 rounded-xl border bg-white p-3 ${paymentPreference === "full" ? "border-[var(--orange)] ring-1 ring-[var(--orange)]" : "border-[var(--line)]"}`}>
+              <input checked={paymentPreference === "full"} className="mt-1 accent-[var(--orange)]" disabled={!agreementReady} name={`payment-preference-${id}`} onChange={() => setPaymentPreference("full")} type="radio" />
+              <span><span className="block text-sm font-bold text-[var(--ink)]">Pay in full now</span><span className="mt-1 block text-xs leading-5 text-[var(--muted-ink)]">The entire confirmed booking total is due when the invoice is sent.</span></span>
+            </label>
+          </div>
+        </fieldset>
+      )}
       {paymentPlan && <div className="mt-3 rounded-xl border border-[var(--line)] bg-white p-3 text-sm text-[var(--ink)]">
         <p className="font-bold">{paymentPlan.paymentType === "deposit" ? "Single payment-plan invoice" : "Full-payment invoice"}: ${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} total</p>
         <p className="mt-1 leading-6 text-[var(--muted-ink)]">Due when sent: ${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}{paymentPlan.paymentType === "deposit" ? " nonrefundable reservation deposit" : " full payment"}.</p>

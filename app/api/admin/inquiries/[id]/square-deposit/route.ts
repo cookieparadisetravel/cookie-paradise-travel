@@ -4,7 +4,12 @@ import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
-import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
+import {
+  applyPaymentPreference,
+  createPaymentPlan,
+  todayInIndiana,
+  type PaymentPreference,
+} from "@/lib/payment-schedule";
 import {
   createSquareCustomer,
   createSquareDepositInvoice,
@@ -35,7 +40,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }, { status: 409 });
   }
 
-  const body = await request.json().catch(() => null) as { bookingTotalDollars?: unknown } | null;
+  const body = await request.json().catch(() => null) as {
+    bookingTotalDollars?: unknown;
+    paymentPreference?: unknown;
+  } | null;
   const bookingTotalDollars = typeof body?.bookingTotalDollars === "number" ? body.bookingTotalDollars : NaN;
   if (!Number.isFinite(bookingTotalDollars) || bookingTotalDollars <= 0 || bookingTotalDollars > 100_000) {
     return Response.json({ error: "Enter the confirmed total booking price before creating the invoice." }, { status: 400 });
@@ -43,16 +51,21 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (inquiry.departure === "flexible") {
     return Response.json({ error: "Assign a specific departure before creating a payment invoice." }, { status: 400 });
   }
+  if (body?.paymentPreference !== "payment_plan" && body?.paymentPreference !== "full") {
+    return Response.json({ error: "Choose whether the customer will pay in full or use the payment plan." }, { status: 400 });
+  }
+  const paymentPreference = body.paymentPreference as PaymentPreference;
   const bookingTotalCents = Math.round(bookingTotalDollars * 100);
   const acceptanceDate = todayInIndiana();
   let paymentPlan;
   try {
-    paymentPlan = createPaymentPlan({
+    const standardPaymentPlan = createPaymentPlan({
       bookingTotalCents,
       partySize: inquiry.partySize,
       departure: inquiry.departure,
       acceptanceDate,
     });
+    paymentPlan = applyPaymentPreference(standardPaymentPlan, bookingTotalCents, paymentPreference);
   } catch (error) {
     return Response.json({
       error: error instanceof Error ? error.message : "The payment schedule could not be calculated.",
@@ -164,6 +177,16 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     let published: { status: string; publicUrl: string | null; version: number };
     if (invoiceVersion === undefined) {
       const existingInvoice = await getSquareInvoiceVersion(invoiceId);
+      if (existingInvoice.paymentType !== paymentPlan.paymentType) {
+        await db.update(bookingRequests).set({
+          squareDepositInvoiceStatus: "error",
+          squareDepositClaimedAt: null,
+        }).where(eq(bookingRequests.id, id));
+        const existingLabel = existingInvoice.paymentType === "full" ? "full-payment" : "payment-plan";
+        return Response.json({
+          error: `Square already has a ${existingLabel} draft for this inquiry. Retry using that same payment preference, or cancel the draft in Square before changing the preference.`,
+        }, { status: 409 });
+      }
       invoiceVersion = existingInvoice.version;
       published = existingInvoice.status === "draft"
         ? await publishSquareInvoice({ inquiryId: id, invoiceId, version: invoiceVersion })

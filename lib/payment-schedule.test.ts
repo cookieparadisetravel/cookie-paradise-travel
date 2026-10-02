@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createPaymentPlan, type PaymentPlan } from "./payment-schedule.ts";
+import { applyPaymentPreference, createPaymentPlan, type PaymentPlan } from "./payment-schedule.ts";
 
 type PaymentPlanInput = Parameters<typeof createPaymentPlan>[0];
 
@@ -204,4 +204,31 @@ test("rejects a departure on or before the acceptance date", () => {
       message: "The departure date must be after the booking acceptance date.",
     });
   }
+});
+
+test("converts an eligible installment schedule to full payment", () => {
+  const standardPlan = createPaymentPlan({
+    acceptanceDate: "2026-10-01",
+    departure: "2027-06-01",
+    bookingTotalCents: 1_725_000,
+    partySize: 6,
+  });
+  const fullPaymentPlan = applyPaymentPreference(standardPlan, 1_725_000, "full");
+
+  assert.equal(fullPaymentPlan.paymentType, "full");
+  assert.equal(fullPaymentPlan.initialAmountCents, 1_725_000);
+  assert.equal(fullPaymentPlan.remainingBalanceCents, 0);
+  assert.deepEqual(fullPaymentPlan.installments, []);
+  assert.equal(fullPaymentPlan.depositAmountCents, 300_000);
+});
+
+test("keeps the standard schedule when the customer selects installments", () => {
+  const standardPlan = createPaymentPlan({
+    acceptanceDate: "2026-10-01",
+    departure: "2027-06-01",
+    bookingTotalCents: 1_725_000,
+    partySize: 6,
+  });
+
+  assert.strictEqual(applyPaymentPreference(standardPlan, 1_725_000, "payment_plan"), standardPlan);
 });
