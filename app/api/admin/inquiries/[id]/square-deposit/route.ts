@@ -44,13 +44,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return Response.json({ error: "Assign a specific departure before creating a payment invoice." }, { status: 400 });
   }
   const bookingTotalCents = Math.round(bookingTotalDollars * 100);
+  const acceptanceDate = todayInIndiana();
   let paymentPlan;
   try {
     paymentPlan = createPaymentPlan({
       bookingTotalCents,
       partySize: inquiry.partySize,
       departure: inquiry.departure,
-      acceptanceDate: todayInIndiana(),
+      acceptanceDate,
     });
   } catch (error) {
     return Response.json({
@@ -144,6 +145,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
         orderId,
         partySize: inquiry.partySize,
         departure: inquiry.departure,
+        acceptanceDate,
         bookingTotalCents: squareOrderAmountCents,
         initialAmountCents: paymentPlan.initialAmountCents,
         paymentType: paymentPlan.paymentType,
