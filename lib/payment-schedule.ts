@@ -31,6 +31,9 @@ export function createPaymentPlan(input: {
   const departureDate = parseDateOnly(departure);
   const acceptedDate = parseDateOnly(acceptanceDate);
   if (!departureDate || !acceptedDate) throw new Error("The payment schedule dates are invalid.");
+  if (departureDate.getTime() <= acceptedDate.getTime()) {
+    throw new Error("The departure date must be after the booking acceptance date.");
+  }
 
   const finalPaymentDate = addDays(departureDate, -90);
   const finalPaymentDeadline = formatDateOnly(finalPaymentDate);
