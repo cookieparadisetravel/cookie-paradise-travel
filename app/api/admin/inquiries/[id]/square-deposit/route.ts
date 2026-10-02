@@ -208,7 +208,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     const message = errorMessage === "Square is not fully configured."
       ? "Square is not fully configured yet. Add the Sandbox access token and try again."
       : /subscription|INSTALLMENT/iu.test(errorMessage)
-        ? "The Square Sandbox test account does not have an active Invoices Plus trial. Activate it inside the Sandbox Square Dashboard, then retry."
+        ? `Square rejected the installment invoice.${errorMessage ? ` Square said: ${errorMessage}` : ""}`
         : `Square could not create the invoice. No second invoice will be created on retry.${errorMessage ? ` ${errorMessage}` : ""}`;
     return Response.json({ error: message }, { status: 502 });
   }
