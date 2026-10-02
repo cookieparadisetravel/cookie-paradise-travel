@@ -1,3 +1,4 @@
+import { env } from "cloudflare:workers";
 import { and, eq } from "drizzle-orm";
 import { agreementAcceptances, travelers } from "@/db/schema";
 import { getDb } from "@/db";
@@ -13,12 +14,30 @@ export type AgreementReadiness = {
   message: string;
 };
 
+function sandboxAgreementBypassEnabled() {
+  const runtime = env as unknown as Record<string, string | undefined>;
+  return runtime.SQUARE_ENV === "sandbox"
+    && runtime.ALLOW_SANDBOX_INVOICE_WITHOUT_AGREEMENT === "true";
+}
+
 export async function getAgreementReadiness(bookingRequestId: number, expectedPartySize: number): Promise<AgreementReadiness> {
   const db = getDb();
   const travelerRecords = await db
     .select({ id: travelers.id })
     .from(travelers)
     .where(eq(travelers.bookingRequestId, bookingRequestId));
+
+  if (sandboxAgreementBypassEnabled()) {
+    return {
+      agreementActive: false,
+      expectedPartySize,
+      travelerCount: travelerRecords.length,
+      acceptedCount: 0,
+      acceptedTravelerIds: [],
+      readyForInvoice: true,
+      message: "Sandbox-only agreement bypass is enabled for invoice testing.",
+    };
+  }
 
   if (!currentTravelerAgreement) {
     return {
