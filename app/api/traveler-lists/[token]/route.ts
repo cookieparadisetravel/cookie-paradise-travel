@@ -2,6 +2,7 @@ import { and, eq, isNull } from "drizzle-orm";
 import { z } from "zod";
 import { travelerListInvitations, travelers } from "@/db/schema";
 import { getDb } from "@/db";
+import { sendOwnerTravelerListNotification } from "@/lib/owner-notification";
 import { getTravelerListInvitation } from "@/lib/traveler-list-invitation";
 
 const travelerSchema = z.object({
@@ -108,6 +109,19 @@ export async function POST(request: Request, context: { params: Promise<{ token:
       return Response.json({ error: "Traveler information could not be saved, and the secure link could not be restored. Please contact Cookie Paradise Travel Company for a new link." }, { status: 500 });
     }
     return Response.json({ error: "Traveler information could not be saved. Please try again." }, { status: 500 });
+  }
+
+  const ownerNotificationStatus = await sendOwnerTravelerListNotification({
+    inquiryId: bookingRequestId,
+    primaryContactName: invitation.primaryContactName,
+    departure: invitation.departure,
+    travelerCount: normalizedTravelers.length,
+  });
+  if (ownerNotificationStatus === "error") {
+    console.error("Traveler list was saved, but the owner notification could not be delivered", {
+      bookingRequestId,
+      invitationId,
+    });
   }
 
   return Response.json({ completedAt }, { status: 201 });
