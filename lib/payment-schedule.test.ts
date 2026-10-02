@@ -192,3 +192,16 @@ test("rejects invalid calendar dates", () => {
     message: "The payment schedule dates are invalid.",
   });
 });
+
+test("rejects a departure on or before the acceptance date", () => {
+  for (const departure of ["2027-06-01", "2027-05-31"]) {
+    assert.throws(() => createPaymentPlan({
+      acceptanceDate: "2027-06-01",
+      departure,
+      bookingTotalCents: 1_000_000,
+      partySize: 2,
+    }), {
+      message: "The departure date must be after the booking acceptance date.",
+    });
+  }
+});
