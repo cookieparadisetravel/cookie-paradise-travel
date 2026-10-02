@@ -19,7 +19,7 @@
   ],
   "vars": {
     "SQUARE_ENV": "sandbox",
-    "ALLOW_SANDBOX_INVOICE_WITHOUT_AGREEMENT": "false",
+    "ALLOW_SANDBOX_INVOICE_WITHOUT_AGREEMENT": "true",
     "SQUARE_APPLICATION_ID": "sandbox-sq0idb-LXRKY7_IJOLJU8Ec0rk_SQ",
     "SQUARE_LOCATION_ID": "LF9EW4W95QPA7",
     "SQUARE_WEBHOOK_NOTIFICATION_URL": "https://cookieparadisetravel.com/api/square/webhook"
