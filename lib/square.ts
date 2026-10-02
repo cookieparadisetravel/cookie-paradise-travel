@@ -1,6 +1,5 @@
 import { env } from "cloudflare:workers";
 import type { PaymentInstallment } from "@/lib/payment-schedule";
-import { todayInIndiana } from "@/lib/payment-schedule";
 
 const SQUARE_API_VERSION = "2026-09-16";
 
@@ -131,6 +130,7 @@ export async function createSquareDepositInvoice(input: {
   orderId: string;
   partySize: number;
   departure: string;
+  acceptanceDate: string;
   bookingTotalCents: number;
   initialAmountCents: number;
   paymentType: "deposit" | "full";
@@ -142,7 +142,7 @@ export async function createSquareDepositInvoice(input: {
   const initialAmount = input.initialAmountCents / 100;
   const paymentRequests = buildPaymentRequests(input);
   const result = await squareRequest<{ invoice?: { id?: string; version?: number } }>("/v2/invoices", { body: {
-    idempotency_key: `cpt-inquiry-${input.inquiryId}-payment-plan-invoice-v3-${input.bookingTotalCents}`,
+    idempotency_key: `cpt-inquiry-${input.inquiryId}-payment-plan-invoice-v3-${input.bookingTotalCents}-${input.acceptanceDate}`,
     invoice: {
       location_id: locationId,
       order_id: input.orderId,
@@ -214,18 +214,19 @@ function buildPaymentRequests(input: {
   paymentType: "deposit" | "full";
   initialAmountCents: number;
   installments: PaymentInstallment[];
+  acceptanceDate: string;
 }) {
   if (input.paymentType === "full" || input.installments.length === 0) {
     return [{
       request_type: "BALANCE",
-      due_date: todayInIndiana(),
+      due_date: input.acceptanceDate,
       automatic_payment_source: "NONE",
     }];
   }
 
   const deposit = {
     request_type: "DEPOSIT",
-    due_date: todayInIndiana(),
+    due_date: input.acceptanceDate,
     fixed_amount_requested_money: {
       amount: input.initialAmountCents,
       currency: "USD",
@@ -238,7 +239,7 @@ function buildPaymentRequests(input: {
       request_type: "BALANCE",
       due_date: input.installments[0].dueDate,
       automatic_payment_source: "NONE",
-      reminders: paymentReminders(),
+      ...paymentReminderFields(input.installments[0].dueDate, input.acceptanceDate),
     }];
   }
 
@@ -250,8 +251,15 @@ function buildPaymentRequests(input: {
       currency: "USD",
     },
     automatic_payment_source: "NONE",
-    reminders: paymentReminders(),
+    ...paymentReminderFields(installment.dueDate, input.acceptanceDate),
   }))];
+}
+
+function paymentReminderFields(dueDate: string, acceptanceDate: string) {
+  const dueTime = Date.parse(`${dueDate}T00:00:00Z`);
+  const acceptanceTime = Date.parse(`${acceptanceDate}T00:00:00Z`);
+  const daysUntilDue = (dueTime - acceptanceTime) / 86_400_000;
+  return daysUntilDue >= 8 ? { reminders: paymentReminders() } : {};
 }
 
 function paymentReminders() {
