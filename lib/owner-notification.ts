@@ -14,6 +14,13 @@ type InquiryNotification = {
   residenceState: string | null;
 };
 
+type TravelerListNotification = {
+  inquiryId: number;
+  primaryContactName: string;
+  departure: string;
+  travelerCount: number;
+};
+
 export type OwnerNotificationStatus = "sent" | "not_configured" | "error";
 
 export async function sendOwnerInquiryNotification(input: InquiryNotification): Promise<OwnerNotificationStatus> {
@@ -34,6 +41,28 @@ export async function sendOwnerInquiryNotification(input: InquiryNotification): 
     return response.ok ? "sent" : "error";
   } catch (error) {
     console.error("Owner inquiry notification failed", error);
+    return "error";
+  }
+}
+
+export async function sendOwnerTravelerListNotification(input: TravelerListNotification): Promise<OwnerNotificationStatus> {
+  const runtimeEnv = env as unknown as Record<string, string | undefined>;
+  const webhookUrl = runtimeEnv.OWNER_NOTIFICATION_WEBHOOK_URL;
+  if (!webhookUrl) return "not_configured";
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        event: "traveler_list.submitted",
+        submittedAt: new Date().toISOString(),
+        travelerList: input,
+      }),
+    });
+    return response.ok ? "sent" : "error";
+  } catch (error) {
+    console.error("Owner traveler-list notification failed", error);
     return "error";
   }
 }
