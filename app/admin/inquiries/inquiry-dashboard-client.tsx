@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
@@ -31,6 +31,8 @@ import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
 type Props = {
   inquiries: DashboardInquiry[];
   acceptanceDate: string;
+  initialDetailSection?: DetailSection;
+  initialInquiryId?: number;
   ownerEmail: string;
   squareMode: SquareMode;
 };
@@ -42,6 +44,18 @@ type SortOption = "attention" | "newest" | "oldest" | "departure" | "name";
 
 const activeStatuses = new Set(["new", "contacted", "qualified"]);
 const generatedLinkCacheKey = "cookie-paradise-admin-generated-links-v1";
+const dashboardListStateKey = "cookie-paradise-admin-inquiry-list-state-v1";
+
+type DashboardListState = {
+  mainTab: MainTab;
+  attentionFilter: AttentionFilter;
+  search: string;
+  stage: string;
+  departure: string;
+  sort: SortOption;
+  scrollY: number;
+  focusedInquiryId: number;
+};
 
 type GeneratedLinkCache = {
   travelerLists: Record<number, GeneratedInvitationDraft>;
@@ -71,7 +85,7 @@ const stageLabels: Record<string, string> = {
   closed: "Closed",
 };
 
-export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, squareMode }: Props) {
+export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetailSection, initialInquiryId, ownerEmail, squareMode }: Props) {
   const router = useRouter();
   const [mainTab, setMainTab] = useState<MainTab>("active");
   const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>(null);
@@ -79,19 +93,17 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
   const [stage, setStage] = useState("all");
   const [departure, setDeparture] = useState("all");
   const [sort, setSort] = useState<SortOption>("attention");
-  const [selectedInquiryId, setSelectedInquiryId] = useState<number | null>(null);
-  const [detailSection, setDetailSection] = useState<DetailSection>("overview");
+  const [listStateToRestore, setListStateToRestore] = useState<DashboardListState | null>(null);
+  const selectedInquiryId = initialInquiryId ?? null;
+  const [detailSection, setDetailSection] = useState<DetailSection>(() => initialDetailSection
+    ?? (initialInquiryId && inquiries[0] ? workflowFor(inquiries[0]).section : "overview"));
   const [refreshing, setRefreshing] = useState(false);
   const [generatedLinks, setGeneratedLinks] = useState<GeneratedLinkCache>(readGeneratedLinkCache);
-  const listScrollPosition = useRef(0);
-  const restoreListScroll = useRef(false);
   const detailBackButton = useRef<HTMLButtonElement>(null);
+  const loadedListState = useRef(false);
+  const restoredListPosition = useRef(false);
 
   const selectedInquiry = inquiries.find((inquiry) => inquiry.id === selectedInquiryId) ?? null;
-  const closeInquiry = useCallback(() => {
-    restoreListScroll.current = true;
-    setSelectedInquiryId(null);
-  }, []);
   const validatedGeneratedLinks = useMemo<GeneratedLinkCache>(() => ({
     travelerLists: generatedLinks.travelerLists,
     paymentChoices: Object.fromEntries(Object.entries(generatedLinks.paymentChoices).filter(([rawInquiryId, draft]) => {
@@ -108,15 +120,36 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
     if (selectedInquiryId !== null) {
       window.scrollTo({ top: 0, behavior: "auto" });
       detailBackButton.current?.focus();
-      return;
     }
-    if (!restoreListScroll.current) return;
-    restoreListScroll.current = false;
-    const scrollPosition = listScrollPosition.current;
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => window.scrollTo({ top: scrollPosition, behavior: "auto" }));
-    });
   }, [selectedInquiryId]);
+
+  useEffect(() => {
+    if (selectedInquiryId !== null || loadedListState.current) return;
+    loadedListState.current = true;
+    const savedState = readDashboardListState();
+    if (!savedState) return;
+    const frame = window.requestAnimationFrame(() => {
+      setMainTab(savedState.mainTab);
+      setAttentionFilter(savedState.attentionFilter);
+      setSearch(savedState.search);
+      setStage(savedState.stage);
+      setDeparture(savedState.departure);
+      setSort(savedState.sort);
+      setListStateToRestore(savedState);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [selectedInquiryId]);
+
+  useEffect(() => {
+    if (selectedInquiryId !== null || restoredListPosition.current || !listStateToRestore) return;
+    restoredListPosition.current = true;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: listStateToRestore.scrollY, behavior: "auto" });
+        document.getElementById(`inquiry-row-${listStateToRestore.focusedInquiryId}`)?.focus({ preventScroll: true });
+      });
+    });
+  }, [listStateToRestore, selectedInquiryId]);
   const activeInquiries = inquiries.filter((inquiry) => activeStatuses.has(inquiry.status));
   const attentionCounts = {
     new: activeInquiries.filter((inquiry) => inquiry.status === "new").length,
@@ -162,9 +195,35 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
   }
 
   function openInquiry(inquiry: DashboardInquiry, section?: DetailSection) {
-    listScrollPosition.current = window.scrollY;
-    setSelectedInquiryId(inquiry.id);
-    setDetailSection(section ?? workflowFor(inquiry).section);
+    const nextSection = section ?? workflowFor(inquiry).section;
+    const listState: DashboardListState = {
+      mainTab,
+      attentionFilter,
+      search,
+      stage,
+      departure,
+      sort,
+      scrollY: window.scrollY,
+      focusedInquiryId: inquiry.id,
+    };
+    window.sessionStorage.setItem(dashboardListStateKey, JSON.stringify(listState));
+    router.push(`/admin/inquiries/${inquiry.id}?section=${nextSection}`);
+  }
+
+  function closeInquiry() {
+    const listState = readDashboardListState();
+    if (listState?.focusedInquiryId === selectedInquiryId) {
+      router.back();
+      return;
+    }
+    router.push("/admin/inquiries");
+  }
+
+  function changeDetailSection(section: DetailSection) {
+    setDetailSection(section);
+    if (selectedInquiryId !== null) {
+      router.replace(`/admin/inquiries/${selectedInquiryId}?section=${section}`, { scroll: false });
+    }
   }
 
   function refresh() {
@@ -181,7 +240,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
             <div className="hidden rounded-xl bg-[var(--gold)] px-3 py-2 font-black text-[var(--ink)] sm:block">Cookie Paradise</div>
             <div>
               <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.2em] text-[var(--orange)]">Owner dashboard</p>
-              <h1 className="font-serif text-2xl font-bold sm:text-3xl">Inquiries</h1>
+              <h1 className="font-serif text-2xl font-bold sm:text-3xl">{selectedInquiry ? "Inquiry details" : "Inquiries"}</h1>
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -204,7 +263,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
           backButtonRef={detailBackButton}
           inquiry={selectedInquiry}
           onClose={closeInquiry}
-          onSectionChange={setDetailSection}
+          onSectionChange={changeDetailSection}
           paymentChoiceDraft={validatedGeneratedLinks.paymentChoices[selectedInquiry.id]}
           onPaymentChoiceDraftChange={(draft) => setGeneratedLinks((current) => ({ ...current, paymentChoices: { ...current.paymentChoices, [selectedInquiry.id]: draft } }))}
           section={detailSection}
@@ -317,7 +376,7 @@ function InquiryList({ inquiries, onOpen, squareMode }: { inquiries: DashboardIn
           const workflow = workflowFor(inquiry);
           const acceptedCount = acceptedAgreementCount(inquiry);
           return (
-            <button key={inquiry.id} className="group grid w-full gap-3 px-4 py-4 text-left hover:bg-[var(--gold)]/8 focus-visible:bg-[var(--gold)]/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--gold)]/45 sm:px-5 xl:grid-cols-[minmax(210px,1.35fr)_minmax(145px,.8fr)_130px_minmax(175px,1fr)_155px_minmax(190px,1fr)] xl:items-center xl:gap-4" onClick={() => onOpen(inquiry)} type="button">
+            <button id={`inquiry-row-${inquiry.id}`} key={inquiry.id} className="group grid w-full gap-3 px-4 py-4 text-left hover:bg-[var(--gold)]/8 focus-visible:bg-[var(--gold)]/10 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--gold)]/45 sm:px-5 xl:grid-cols-[minmax(210px,1.35fr)_minmax(145px,.8fr)_130px_minmax(175px,1fr)_155px_minmax(190px,1fr)] xl:items-center xl:gap-4" onClick={() => onOpen(inquiry)} type="button">
               <div className="min-w-0">
                 <div className="flex items-center gap-2"><span className="truncate font-bold text-[var(--ink)]">{inquiry.fullName}</span><span className="text-xs font-semibold text-[var(--muted-ink)]">#{inquiry.id}</span></div>
                 <p className="truncate text-sm text-[var(--muted-ink)]">{inquiry.email}</p>
@@ -377,15 +436,15 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
             </div>
           </div>
 
-          <nav aria-label="Inquiry detail sections" className="mt-4 flex overflow-x-auto border-t border-[var(--line)]">
+          <nav aria-label="Inquiry detail sections" className="mt-4 flex overflow-x-auto border-t border-[var(--line)]" role="tablist">
             {(["overview", "travelers", "payments", "activity"] as const).map((value) => (
-              <button key={value} className={`min-h-12 whitespace-nowrap border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/30 sm:px-5 ${section === value ? "border-[var(--gold)] text-[var(--ink)]" : "border-transparent text-[var(--muted-ink)]"}`} onClick={() => onSectionChange(value)} type="button">{detailSectionLabel(value)}</button>
+              <button aria-controls={`inquiry-panel-${value}`} aria-selected={section === value} id={`inquiry-tab-${value}`} key={value} className={`min-h-12 whitespace-nowrap border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/30 sm:px-5 ${section === value ? "border-[var(--gold)] text-[var(--ink)]" : "border-transparent text-[var(--muted-ink)]"}`} onClick={() => onSectionChange(value)} role="tab" type="button">{detailSectionLabel(value)}</button>
             ))}
           </nav>
         </header>
       </section>
 
-        <div className="mt-5">
+        <div aria-labelledby={`inquiry-tab-${section}`} className="mt-5" id={`inquiry-panel-${section}`} role="tabpanel" tabIndex={0}>
           {section === "overview" && <OverviewSection inquiry={inquiry} squareMode={squareMode} />}
           {section === "travelers" && (
             <div className="space-y-4">
@@ -530,7 +589,7 @@ function departureLabel(value: string) { return departureLabels[value] ?? value;
 function departureSortValue(value: string) { if (value === "flexible") return Number.MAX_SAFE_INTEGER; const parsed = Date.parse(`${value}T00:00:00Z`); return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER - 1; }
 function readableValue(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 function formatTimestamp(value: string | null) { if (!value) return "Not recorded"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Not recorded"; return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" }); }
-function detailSectionLabel(section: DetailSection) { return section === "travelers" ? "Travelers & agreements" : section === "activity" ? "Activity / admin" : section[0].toUpperCase() + section.slice(1); }
+function detailSectionLabel(section: DetailSection) { return section[0].toUpperCase() + section.slice(1); }
 function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) { return filter === "new" ? "New inquiries" : filter === "missing_travelers" ? "Missing traveler details" : filter === "agreements" ? "Agreements incomplete" : "Invoice issues"; }
 function compareInquiries(a: DashboardInquiry, b: DashboardInquiry, sort: SortOption) {
   if (sort === "newest") return b.createdAt.localeCompare(a.createdAt);
@@ -583,5 +642,35 @@ function readGeneratedLinkCache(): GeneratedLinkCache {
     return isGeneratedLinkCache(parsed) ? parsed : empty;
   } catch {
     return empty;
+  }
+}
+
+function isDashboardListState(value: unknown): value is DashboardListState {
+  if (!value || typeof value !== "object") return false;
+  const state = value as Record<string, unknown>;
+  const validMainTabs: MainTab[] = ["active", "all", "waitlist", "closed"];
+  const validAttentionFilters: AttentionFilter[] = [null, "new", "missing_travelers", "agreements", "invoice_issues"];
+  const validSortOptions: SortOption[] = ["attention", "newest", "oldest", "departure", "name"];
+  return validMainTabs.includes(state.mainTab as MainTab)
+    && validAttentionFilters.includes(state.attentionFilter as AttentionFilter)
+    && typeof state.search === "string"
+    && typeof state.stage === "string"
+    && typeof state.departure === "string"
+    && validSortOptions.includes(state.sort as SortOption)
+    && typeof state.scrollY === "number"
+    && Number.isFinite(state.scrollY)
+    && Number.isInteger(state.focusedInquiryId)
+    && Number(state.focusedInquiryId) > 0;
+}
+
+function readDashboardListState(): DashboardListState | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const cached = window.sessionStorage.getItem(dashboardListStateKey);
+    if (!cached) return null;
+    const parsed = JSON.parse(cached) as unknown;
+    return isDashboardListState(parsed) ? parsed : null;
+  } catch {
+    return null;
   }
 }
