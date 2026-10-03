@@ -44,11 +44,16 @@ npx wrangler secret put MAILERLITE_GROUP_ID
 npx wrangler secret put OWNER_NOTIFICATION_WEBHOOK_URL
 npx wrangler secret put TURNSTILE_SECRET_KEY
 npx wrangler secret put ACCEPTANCE_IP_HASH_KEY
+npx wrangler secret put ACCEPTANCE_RECORD_SIGNING_KEY
+npx wrangler secret put AGREEMENT_OTP_HASH_KEY
+npx wrangler secret put MAILERSEND_API_TOKEN
 npx wrangler secret put SQUARE_ACCESS_TOKEN
 npx wrangler secret put SQUARE_WEBHOOK_SIGNATURE_KEY
 ```
 
-Square's sandbox environment, application ID, location ID and webhook notification URL are non-secret values configured in `wrangler.jsonc`.
+Use separate, randomly generated values for `ACCEPTANCE_IP_HASH_KEY`, `ACCEPTANCE_RECORD_SIGNING_KEY` and `AGREEMENT_OTP_HASH_KEY`. Square's sandbox settings and the verified MailerSend sender identity are non-secret values configured in `wrangler.jsonc`.
+
+Before agreement invitations are activated, verify `cookieparadisetravel.com` as a sending domain in MailerSend and create an API token. The site uses MailerSend only for secure agreement links, verification codes and signed PDF copies; MailerLite remains the marketing-email provider.
 
 ## 4. Configure the Square webhook
 
@@ -96,7 +101,8 @@ After deployment:
 2. Confirm the inquiry appears in the Access-protected `/admin/inquiries` dashboard.
 3. Confirm Turnstile, owner notification and optional MailerLite signup work.
 4. Send a Square sandbox webhook test and confirm it receives a successful response.
-5. Use Square sandbox only until the live Square account and business review are complete.
+5. Confirm the Worker has a Browser Rendering binding named `BROWSER`; `wrangler.jsonc` declares it for agreement PDF generation.
+6. Use Square sandbox only until the live Square account and business review are complete.
 
 ## 9. Activate and test traveler agreements
 

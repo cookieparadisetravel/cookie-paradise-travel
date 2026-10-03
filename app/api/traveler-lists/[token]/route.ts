@@ -4,18 +4,21 @@ import { travelerListInvitations, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { sendOwnerTravelerListNotification } from "@/lib/owner-notification";
 import { getTravelerListInvitation } from "@/lib/traveler-list-invitation";
+import { isValidPastDate } from "@/lib/agreement-acceptance-record";
 
 const travelerSchema = z.object({
   firstName: z.string().trim().min(1, "Enter each traveler's legal first name.").max(80),
   lastName: z.string().trim().min(1, "Enter each traveler's legal last name.").max(80),
   email: z.string().trim().email("Enter a valid traveler or guardian email address.").max(254),
   travelerType: z.enum(["adult", "minor"]),
+  dateOfBirth: z.string().trim().max(10).optional().default(""),
   guardianLegalName: z.string().trim().max(160).optional().default(""),
   guardianRelationship: z.string().trim().max(80).optional().default(""),
 }).superRefine((value, context) => {
   if (value.travelerType !== "minor") return;
   if (!value.guardianLegalName) context.addIssue({ code: z.ZodIssueCode.custom, path: ["guardianLegalName"], message: "Enter the parent or guardian's legal name." });
   if (!value.guardianRelationship) context.addIssue({ code: z.ZodIssueCode.custom, path: ["guardianRelationship"], message: "Enter the parent or guardian's relationship to the minor." });
+  if (!isValidPastDate(value.dateOfBirth)) context.addIssue({ code: z.ZodIssueCode.custom, path: ["dateOfBirth"], message: "Enter the minor traveler's valid date of birth." });
 });
 
 const submissionSchema = z.object({
@@ -54,6 +57,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     lastName: traveler.lastName,
     email: traveler.email.toLowerCase(),
     travelerType: traveler.travelerType,
+    dateOfBirth: traveler.travelerType === "minor" ? traveler.dateOfBirth : null,
     guardianLegalName: traveler.travelerType === "minor" ? traveler.guardianLegalName : null,
     guardianRelationship: traveler.travelerType === "minor" ? traveler.guardianRelationship : null,
   }));

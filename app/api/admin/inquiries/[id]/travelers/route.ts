@@ -4,12 +4,14 @@ import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { isOwnerRequest } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
+import { isValidPastDate } from "@/lib/agreement-acceptance-record";
 
 const travelerSchema = z.object({
   firstName: z.string().trim().min(1).max(80),
   lastName: z.string().trim().min(1).max(80),
   email: z.string().trim().email().max(254),
   travelerType: z.enum(["adult", "minor"]),
+  dateOfBirth: z.string().trim().max(10).optional().default(""),
   guardianLegalName: z.string().trim().max(160).optional().default(""),
   guardianRelationship: z.string().trim().max(80).optional().default(""),
 }).superRefine((value, context) => {
@@ -19,6 +21,9 @@ const travelerSchema = z.object({
   }
   if (!value.guardianRelationship) {
     context.addIssue({ code: z.ZodIssueCode.custom, path: ["guardianRelationship"], message: "Enter the parent or guardian's relationship to the minor." });
+  }
+  if (!isValidPastDate(value.dateOfBirth)) {
+    context.addIssue({ code: z.ZodIssueCode.custom, path: ["dateOfBirth"], message: "Enter the minor traveler's valid date of birth." });
   }
 });
 
@@ -79,6 +84,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     lastName: value.lastName,
     email: normalizedEmail,
     travelerType: value.travelerType,
+    dateOfBirth: value.travelerType === "minor" ? value.dateOfBirth : null,
     guardianLegalName: value.travelerType === "minor" ? value.guardianLegalName : null,
     guardianRelationship: value.travelerType === "minor" ? value.guardianRelationship : null,
   }).returning();

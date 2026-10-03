@@ -1,5 +1,5 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { agreementAcceptances, agreementInvitations, travelers } from "@/db/schema";
+import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import {
   currentTravelerAgreement,
@@ -11,12 +11,20 @@ import {
 export type AgreementInvitationView = {
   invitationId: number;
   travelerId: number;
+  bookingRequestId: number;
+  departure: string;
   firstName: string;
   lastName: string;
   email: string;
   travelerType: string;
+  dateOfBirth: string | null;
   guardianLegalName: string | null;
   guardianRelationship: string | null;
+  recipientEmail: string;
+  verificationCodeSentAt: string | null;
+  verificationCodeExpiresAt: string | null;
+  verificationAttempts: number;
+  emailVerifiedAt: string | null;
   expiresAt: string;
 };
 
@@ -43,12 +51,20 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
     .select({
       invitationId: agreementInvitations.id,
       travelerId: travelers.id,
+      bookingRequestId: travelers.bookingRequestId,
+      departure: bookingRequests.departure,
       firstName: travelers.firstName,
       lastName: travelers.lastName,
       email: travelers.email,
       travelerType: travelers.travelerType,
+      dateOfBirth: travelers.dateOfBirth,
       guardianLegalName: travelers.guardianLegalName,
       guardianRelationship: travelers.guardianRelationship,
+      recipientEmail: agreementInvitations.recipientEmail,
+      verificationCodeSentAt: agreementInvitations.verificationCodeSentAt,
+      verificationCodeExpiresAt: agreementInvitations.verificationCodeExpiresAt,
+      verificationAttempts: agreementInvitations.verificationAttempts,
+      emailVerifiedAt: agreementInvitations.emailVerifiedAt,
       agreementVersion: agreementInvitations.agreementVersion,
       agreementDocumentHash: agreementInvitations.agreementDocumentHash,
       expiresAt: agreementInvitations.expiresAt,
@@ -57,6 +73,7 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
     })
     .from(agreementInvitations)
     .innerJoin(travelers, eq(agreementInvitations.travelerId, travelers.id))
+    .innerJoin(bookingRequests, eq(travelers.bookingRequestId, bookingRequests.id))
     .where(eq(agreementInvitations.tokenHash, tokenHash))
     .limit(1);
 
@@ -85,12 +102,20 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
     invitation: {
       invitationId: record.invitationId,
       travelerId: record.travelerId,
+      bookingRequestId: record.bookingRequestId,
+      departure: record.departure,
       firstName: record.firstName,
       lastName: record.lastName,
       email: record.email,
       travelerType: record.travelerType,
+      dateOfBirth: record.dateOfBirth,
       guardianLegalName: record.guardianLegalName,
       guardianRelationship: record.guardianRelationship,
+      recipientEmail: record.recipientEmail ?? record.email,
+      verificationCodeSentAt: record.verificationCodeSentAt,
+      verificationCodeExpiresAt: record.verificationCodeExpiresAt,
+      verificationAttempts: record.verificationAttempts,
+      emailVerifiedAt: record.emailVerifiedAt,
       expiresAt: record.expiresAt,
     },
     agreementHash,

@@ -9,6 +9,9 @@
   "compatibility_date": "2026-09-26",
   "compatibility_flags": ["nodejs_compat"],
   "observability": { "enabled": true },
+  "browser": {
+    "binding": "BROWSER"
+  },
   "d1_databases": [
     {
       "binding": "DB",
@@ -22,6 +25,8 @@
     "ALLOW_SANDBOX_INVOICE_WITHOUT_AGREEMENT": "true",
     "SQUARE_APPLICATION_ID": "sandbox-sq0idb-LXRKY7_IJOLJU8Ec0rk_SQ",
     "SQUARE_LOCATION_ID": "LF9EW4W95QPA7",
-    "SQUARE_WEBHOOK_NOTIFICATION_URL": "https://cookieparadisetravel.com/api/square/webhook"
+    "SQUARE_WEBHOOK_NOTIFICATION_URL": "https://cookieparadisetravel.com/api/square/webhook",
+    "MAILERSEND_FROM_EMAIL": "trung@cookieparadisetravel.com",
+    "MAILERSEND_FROM_NAME": "Cookie Paradise Travel Company"
   }
 }

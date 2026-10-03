@@ -3,6 +3,7 @@ import { agreementAcceptances, agreementInvitations, travelers } from "@/db/sche
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
+import { sendAgreementInvitationEmail } from "@/lib/mailersend-transactional";
 import {
   currentTravelerAgreement,
   hashAgreementDocument,
@@ -35,7 +36,14 @@ export async function POST(
   }
 
   const db = getDb();
-  const [traveler] = await db.select({ id: travelers.id })
+  const [traveler] = await db.select({
+    id: travelers.id,
+    firstName: travelers.firstName,
+    lastName: travelers.lastName,
+    email: travelers.email,
+    travelerType: travelers.travelerType,
+    guardianLegalName: travelers.guardianLegalName,
+  })
     .from(travelers)
     .where(and(
       eq(travelers.id, travelerId),
@@ -70,20 +78,50 @@ export async function POST(
       isNull(agreementInvitations.revokedAt),
     ));
 
-  await db.insert(agreementInvitations).values({
+  const [invitation] = await db.insert(agreementInvitations).values({
     travelerId,
     tokenHash,
     agreementVersion: currentTravelerAgreement.version,
     agreementDocumentHash: agreementHash,
+    recipientEmail: traveler.email.trim().toLowerCase(),
     expiresAt,
-  });
+  }).returning({ id: agreementInvitations.id });
 
   const invitationUrl = new URL(
     `/traveler-agreement/${encodeURIComponent(token)}`,
     request.url,
   ).toString();
 
-  return Response.json({ invitationUrl, expiresAt }, { status: 201 });
+  try {
+    const delivery = await sendAgreementInvitationEmail({
+      toEmail: traveler.email,
+      toName: traveler.travelerType === "minor"
+        ? traveler.guardianLegalName || `${traveler.firstName} ${traveler.lastName}`
+        : `${traveler.firstName} ${traveler.lastName}`,
+      travelerName: `${traveler.firstName} ${traveler.lastName}`,
+      invitationUrl,
+      expiresAt,
+    });
+    await db.update(agreementInvitations)
+      .set({
+        invitationEmailSentAt: delivery.sentAt,
+        invitationEmailMessageId: delivery.messageId,
+      })
+      .where(eq(agreementInvitations.id, invitation.id));
+
+    return Response.json({
+      sentTo: traveler.email,
+      sentAt: delivery.sentAt,
+      expiresAt,
+    }, { status: 201 });
+  } catch (cause) {
+    await db.update(agreementInvitations)
+      .set({ revokedAt: new Date().toISOString() })
+      .where(eq(agreementInvitations.id, invitation.id));
+    return Response.json({
+      error: cause instanceof Error ? cause.message : "The agreement email could not be sent.",
+    }, { status: 502 });
+  }
 }
 
 function createInvitationToken() {

@@ -8,6 +8,7 @@ type TravelerForm = {
   lastName: string;
   email: string;
   travelerType: "adult" | "minor";
+  dateOfBirth: string;
   guardianLegalName: string;
   guardianRelationship: string;
 };
@@ -17,6 +18,7 @@ const emptyTraveler = (): TravelerForm => ({
   lastName: "",
   email: "",
   travelerType: "adult",
+  dateOfBirth: "",
   guardianLegalName: "",
   guardianRelationship: "",
 });
@@ -88,9 +90,10 @@ export function TravelerListForm({ token, primaryContactName, departure, remaini
             <div className="mt-5 grid gap-4 sm:grid-cols-2">
               <label className="text-sm font-semibold">Legal first name<input required maxLength={80} autoComplete="given-name" className="mt-1 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.firstName} onChange={(event) => updateTraveler(index, { firstName: event.target.value })} /></label>
               <label className="text-sm font-semibold">Legal last name<input required maxLength={80} autoComplete="family-name" className="mt-1 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.lastName} onChange={(event) => updateTraveler(index, { lastName: event.target.value })} /></label>
-              <label className="text-sm font-semibold">Traveler type<select className="mt-1 w-full rounded-xl border border-[var(--input)] bg-white px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.travelerType} onChange={(event) => updateTraveler(index, { travelerType: event.target.value as "adult" | "minor", guardianLegalName: "", guardianRelationship: "" })}><option value="adult">Adult</option><option value="minor">Minor</option></select></label>
+              <label className="text-sm font-semibold">Traveler type<select className="mt-1 w-full rounded-xl border border-[var(--input)] bg-white px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.travelerType} onChange={(event) => updateTraveler(index, { travelerType: event.target.value as "adult" | "minor", dateOfBirth: "", guardianLegalName: "", guardianRelationship: "" })}><option value="adult">Adult</option><option value="minor">Minor</option></select></label>
               <label className="text-sm font-semibold">{traveler.travelerType === "minor" ? "Parent or guardian email" : "Traveler email"}<input required type="email" maxLength={254} autoComplete="email" className="mt-1 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.email} onChange={(event) => updateTraveler(index, { email: event.target.value })} /></label>
               {traveler.travelerType === "minor" && <>
+                <label className="text-sm font-semibold">Minor traveler date of birth<input required type="date" className="mt-1 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.dateOfBirth} onChange={(event) => updateTraveler(index, { dateOfBirth: event.target.value })} /></label>
                 <label className="text-sm font-semibold">Parent or guardian legal name<input required maxLength={160} className="mt-1 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.guardianLegalName} onChange={(event) => updateTraveler(index, { guardianLegalName: event.target.value })} /></label>
                 <label className="text-sm font-semibold">Relationship to minor<input required maxLength={80} placeholder="Parent, legal guardian, etc." className="mt-1 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={traveler.guardianRelationship} onChange={(event) => updateTraveler(index, { guardianRelationship: event.target.value })} /></label>
               </>}
