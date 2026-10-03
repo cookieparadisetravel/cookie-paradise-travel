@@ -21,6 +21,14 @@ type TravelerListNotification = {
   travelerCount: number;
 };
 
+type PaymentPreferenceNotification = {
+  inquiryId: number;
+  primaryContactName: string;
+  departure: string;
+  bookingTotalCents: number;
+  paymentPreference: "payment_plan" | "full";
+};
+
 export type OwnerNotificationStatus = "sent" | "not_configured" | "error";
 
 export async function sendOwnerInquiryNotification(input: InquiryNotification): Promise<OwnerNotificationStatus> {
@@ -63,6 +71,28 @@ export async function sendOwnerTravelerListNotification(input: TravelerListNotif
     return response.ok ? "sent" : "error";
   } catch (error) {
     console.error("Owner traveler-list notification failed", error);
+    return "error";
+  }
+}
+
+export async function sendOwnerPaymentPreferenceNotification(input: PaymentPreferenceNotification): Promise<OwnerNotificationStatus> {
+  const runtimeEnv = env as unknown as Record<string, string | undefined>;
+  const webhookUrl = runtimeEnv.OWNER_NOTIFICATION_WEBHOOK_URL;
+  if (!webhookUrl) return "not_configured";
+
+  try {
+    const response = await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        event: "payment_preference.submitted",
+        submittedAt: new Date().toISOString(),
+        paymentPreference: input,
+      }),
+    });
+    return response.ok ? "sent" : "error";
+  } catch (error) {
+    console.error("Owner payment-preference notification failed", error);
     return "error";
   }
 }

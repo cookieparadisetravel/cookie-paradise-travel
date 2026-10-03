@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { applyPaymentPreference, createPaymentPlan, type PaymentPlan } from "./payment-schedule.ts";
+import {
+  applyPaymentPreference,
+  createPaymentPlan,
+  getFinalPaymentDeadline,
+  isFullPaymentRequired,
+  type PaymentPlan,
+} from "./payment-schedule.ts";
 
 type PaymentPlanInput = Parameters<typeof createPaymentPlan>[0];
 
@@ -231,4 +237,10 @@ test("keeps the standard schedule when the customer selects installments", () =>
   });
 
   assert.strictEqual(applyPaymentPreference(standardPlan, 1_725_000, "payment_plan"), standardPlan);
+});
+
+test("identifies when the secure payment choice must require full payment", () => {
+  assert.equal(isFullPaymentRequired("2027-06-01", "2027-03-02"), false);
+  assert.equal(isFullPaymentRequired("2027-06-01", "2027-03-03"), true);
+  assert.equal(getFinalPaymentDeadline("2027-06-01", "2026-10-01"), "2027-03-03");
 });

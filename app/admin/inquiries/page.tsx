@@ -8,6 +8,7 @@ import { StatusSelect } from "./status-select";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
 import { TravelerListInvitationAction } from "./traveler-list-invitation-action";
+import { PaymentPreferenceInvitationAction } from "./payment-preference-invitation-action";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { todayInIndiana } from "@/lib/payment-schedule";
 
@@ -163,6 +164,17 @@ export default async function InquiryDashboard({ searchParams }: { searchParams:
                 <TravelerAgreementManager inquiryId={item.id} expectedPartySize={item.partySize} initialTravelers={travelersByInquiry.get(item.id) ?? []} agreementActive={agreementReadiness.agreementActive} acceptedTravelerIds={agreementReadiness.acceptedTravelerIds} />
               </div>
               <div className="mt-5">
+                <PaymentPreferenceInvitationAction
+                  inquiryId={item.id}
+                  agreementReady={agreementReadiness.readyForInvoice}
+                  agreementReadinessMessage={agreementReadiness.message}
+                  initialBookingTotalCents={item.confirmedBookingTotalCents}
+                  initialPaymentPreference={item.paymentPreference}
+                  initialSelectedAt={item.paymentPreferenceSelectedAt}
+                  invoiceExists={Boolean(item.squareDepositInvoiceId)}
+                />
+              </div>
+              <div className="mt-5">
                 <DepositInvoiceAction
                   id={item.id}
                   partySize={item.partySize}
@@ -173,6 +185,9 @@ export default async function InquiryDashboard({ searchParams }: { searchParams:
                   initialUrl={item.squareDepositInvoiceUrl}
                   agreementReady={agreementReadiness.readyForInvoice}
                   agreementReadinessMessage={agreementReadiness.message}
+                  confirmedBookingTotalCents={item.confirmedBookingTotalCents}
+                  initialPaymentPreference={item.paymentPreference}
+                  paymentPreferenceSelectedAt={item.paymentPreferenceSelectedAt}
                 />
               </div>
             </article>

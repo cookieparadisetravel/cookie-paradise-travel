@@ -19,6 +19,9 @@ export const bookingRequests = sqliteTable("booking_requests", {
   marketingConsentedAt: text("marketing_consented_at"),
   mailerLiteStatus: text("mailerlite_status").notNull().default("not_requested"),
   ownerNotificationStatus: text("owner_notification_status").notNull().default("pending"),
+  confirmedBookingTotalCents: integer("confirmed_booking_total_cents"),
+  paymentPreference: text("payment_preference"),
+  paymentPreferenceSelectedAt: text("payment_preference_selected_at"),
   squareCustomerId: text("square_customer_id"),
   squareDepositOrderId: text("square_deposit_order_id"),
   squareDepositInvoiceId: text("square_deposit_invoice_id"),
@@ -63,6 +66,22 @@ export const travelerListInvitations = sqliteTable("traveler_list_invitations", 
 }, (table) => [
   uniqueIndex("traveler_list_invitations_token_hash_unique").on(table.tokenHash),
   index("traveler_list_invitations_booking_request_idx").on(table.bookingRequestId),
+]);
+
+export const paymentPreferenceInvitations = sqliteTable("payment_preference_invitations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bookingRequestId: integer("booking_request_id")
+    .notNull()
+    .references(() => bookingRequests.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  createdBy: text("created_by"),
+  expiresAt: text("expires_at").notNull(),
+  completedAt: text("completed_at"),
+  revokedAt: text("revoked_at"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  uniqueIndex("payment_preference_invitations_token_hash_unique").on(table.tokenHash),
+  index("payment_preference_invitations_booking_request_idx").on(table.bookingRequestId),
 ]);
 
 export const agreementInvitations = sqliteTable("agreement_invitations", {

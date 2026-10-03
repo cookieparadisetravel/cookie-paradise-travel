@@ -30,15 +30,8 @@ export function createPaymentPlan(input: {
     throw new Error("The traveler count is invalid.");
   }
 
-  const departureDate = parseDateOnly(departure);
-  const acceptedDate = parseDateOnly(acceptanceDate);
-  if (!departureDate || !acceptedDate) throw new Error("The payment schedule dates are invalid.");
-  if (departureDate.getTime() <= acceptedDate.getTime()) {
-    throw new Error("The departure date must be after the booking acceptance date.");
-  }
+  const { acceptedDate, finalPaymentDate, finalPaymentDeadline } = paymentDates(departure, acceptanceDate);
 
-  const finalPaymentDate = addDays(departureDate, -90);
-  const finalPaymentDeadline = formatDateOnly(finalPaymentDate);
   const depositAmountCents = RESERVATION_DEPOSIT_CENTS_PER_TRAVELER * partySize;
   if (bookingTotalCents < depositAmountCents) {
     throw new Error(`The confirmed booking total cannot be less than the $${(depositAmountCents / 100).toLocaleString("en-US")} reservation deposit.`);
@@ -93,6 +86,15 @@ export function createPaymentPlan(input: {
   };
 }
 
+export function isFullPaymentRequired(departure: string, acceptanceDate: string) {
+  const { acceptedDate, finalPaymentDate } = paymentDates(departure, acceptanceDate);
+  return acceptedDate.getTime() >= finalPaymentDate.getTime();
+}
+
+export function getFinalPaymentDeadline(departure: string, acceptanceDate: string) {
+  return paymentDates(departure, acceptanceDate).finalPaymentDeadline;
+}
+
 export function applyPaymentPreference(
   paymentPlan: PaymentPlan,
   bookingTotalCents: number,
@@ -129,6 +131,22 @@ function parseDateOnly(value: string) {
   return date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day
     ? date
     : null;
+}
+
+function paymentDates(departure: string, acceptanceDate: string) {
+  const departureDate = parseDateOnly(departure);
+  const acceptedDate = parseDateOnly(acceptanceDate);
+  if (!departureDate || !acceptedDate) throw new Error("The payment schedule dates are invalid.");
+  if (departureDate.getTime() <= acceptedDate.getTime()) {
+    throw new Error("The departure date must be after the booking acceptance date.");
+  }
+  const finalPaymentDate = addDays(departureDate, -90);
+  return {
+    departureDate,
+    acceptedDate,
+    finalPaymentDate,
+    finalPaymentDeadline: formatDateOnly(finalPaymentDate),
+  };
 }
 
 function formatDateOnly(value: Date) {

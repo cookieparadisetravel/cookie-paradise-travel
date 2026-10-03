@@ -1,0 +1,1 @@
+ALTER TABLE `payment_preference_invitations` ADD `created_by` text;
