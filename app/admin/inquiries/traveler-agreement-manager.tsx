@@ -1,7 +1,9 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 import { CheckCircle2, Link2, Loader2, MailCheck, Plus, ShieldCheck, UserRound } from "lucide-react";
+import type { AgreementInvitationDelivery } from "./dashboard-types";
 
 type Traveler = {
   id: number;
@@ -20,6 +22,7 @@ type Props = {
   initialTravelers: Traveler[];
   agreementActive: boolean;
   acceptedTravelerIds: number[];
+  initialInvitationDeliveries: Record<number, AgreementInvitationDelivery>;
 };
 
 const emptyForm = {
@@ -32,16 +35,18 @@ const emptyForm = {
   guardianRelationship: "",
 };
 
-export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers, agreementActive, acceptedTravelerIds }: Props) {
+export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries }: Props) {
+  const router = useRouter();
   const [travelerList, setTravelerList] = useState(initialTravelers);
   const [form, setForm] = useState(emptyForm);
-  const [showForm, setShowForm] = useState(initialTravelers.length < expectedPartySize);
+  const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
-  const [invitationDeliveries, setInvitationDeliveries] = useState<Record<number, string>>({});
+  const [invitationDeliveries, setInvitationDeliveries] = useState<Record<number, AgreementInvitationDelivery>>(initialInvitationDeliveries);
   const [invitationErrors, setInvitationErrors] = useState<Record<number, string>>({});
   const [creatingInvitationFor, setCreatingInvitationFor] = useState<number | null>(null);
-  const complete = travelerList.length >= expectedPartySize;
+  const complete = travelerList.length === expectedPartySize;
+  const travelerCountMismatch = travelerList.length > expectedPartySize;
   const acceptedIds = new Set(acceptedTravelerIds);
   const acceptedCount = travelerList.filter((traveler) => acceptedIds.has(traveler.id)).length;
 
@@ -61,6 +66,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
       setTravelerList(nextList);
       setForm(emptyForm);
       if (nextList.length >= expectedPartySize) setShowForm(false);
+      router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The traveler could not be added.");
     } finally {
@@ -75,11 +81,21 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
       const response = await fetch(`/api/admin/inquiries/${inquiryId}/travelers/${travelerId}/agreement-invitation`, {
         method: "POST",
       });
-      const payload = await response.json() as { error?: string; sentTo?: string };
-      if (!response.ok || !payload.sentTo) {
+      const payload = await response.json() as { error?: string; sentTo?: string; sentAt?: string; expiresAt?: string };
+      if (!response.ok || !payload.sentTo || !payload.sentAt || !payload.expiresAt) {
         throw new Error(payload.error || "The secure agreement email could not be sent.");
       }
-      setInvitationDeliveries((current) => ({ ...current, [travelerId]: payload.sentTo! }));
+      setInvitationDeliveries((current) => ({
+        ...current,
+        [travelerId]: {
+          email: payload.sentTo!,
+          sentAt: payload.sentAt!,
+          expiresAt: payload.expiresAt!,
+          revokedAt: null,
+          acceptedAt: null,
+        },
+      }));
+      router.refresh();
     } catch (cause) {
       setInvitationErrors((current) => ({
         ...current,
@@ -97,10 +113,12 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
           <p className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]"><ShieldCheck className="h-4 w-4 text-[var(--orange)]" /> Traveler agreements</p>
           <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">Add every traveler separately. Each adult receives an individual agreement link; a parent or guardian accepts for a minor. Square invoicing remains locked until all required acceptances are recorded.</p>
         </div>
-        <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${complete ? "bg-emerald-100 text-emerald-900" : "bg-white text-[var(--ink)]"}`}>
+        <span className={`w-fit rounded-full px-3 py-1 text-xs font-bold ${travelerCountMismatch ? "bg-red-100 text-red-900" : complete ? "bg-emerald-100 text-emerald-900" : "bg-white text-[var(--ink)]"}`}>
           {travelerList.length} of {expectedPartySize} entered
         </span>
       </div>
+
+      {travelerCountMismatch && <p role="alert" className="mt-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm font-semibold text-red-900">Traveler-count mismatch: this booking has {travelerList.length} traveler records for a party of {expectedPartySize}. Agreement and payment steps remain blocked until the extra record is resolved.</p>}
 
       {travelerList.length > 0 && (
         <div className="mt-4 grid gap-3 lg:grid-cols-2">
@@ -131,7 +149,13 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                       Email secure link
                     </button>
                   ) : (
-                    <p className="flex items-start gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold leading-5 text-emerald-900"><MailCheck className="mt-0.5 h-4 w-4 shrink-0" /> Secure agreement link emailed to {invitationDeliveries[traveler.id]}.</p>
+                    <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-semibold leading-5 text-emerald-900">
+                      <p className="flex items-start gap-2"><MailCheck className="mt-0.5 h-4 w-4 shrink-0" /> <span>Agreement email recorded as sent to {invitationDeliveries[traveler.id].email} on {formatTimestamp(invitationDeliveries[traveler.id].sentAt)}.</span></p>
+                      <details className="mt-2 text-[var(--ink)]">
+                        <summary className="cursor-pointer font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">More options</summary>
+                        <button disabled={!agreementActive || creatingInvitationFor === traveler.id} className="mt-2 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-bold disabled:opacity-45" type="button" onClick={() => createInvitation(traveler.id)}>{creatingInvitationFor === traveler.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />} Send replacement email</button>
+                      </details>
+                    </div>
                   )}
                   {invitationErrors[traveler.id] && <p className="mt-2 text-xs font-semibold text-red-700">{invitationErrors[traveler.id]}</p>}
                 </div>
@@ -141,13 +165,13 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
         </div>
       )}
 
-      {!complete && !showForm && (
+      {!complete && !travelerCountMismatch && !showForm && (
         <button className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white" onClick={() => setShowForm(true)}>
           <Plus className="h-4 w-4" /> Add traveler
         </button>
       )}
 
-      {!complete && showForm && (
+      {!complete && !travelerCountMismatch && showForm && (
         <form className="mt-4 rounded-xl border border-[var(--line)] bg-white p-4" onSubmit={addTraveler}>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-sm font-semibold text-[var(--ink)]">First name<input required maxLength={80} className="mt-1 w-full rounded-xl border border-[var(--input)] px-3 py-2 outline-none focus:border-[var(--orange)]" value={form.firstName} onChange={(event) => setForm({ ...form, firstName: event.target.value })} /></label>
@@ -171,4 +195,12 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
       {complete && <p className="mt-4 rounded-xl border border-[var(--gold)]/50 bg-[var(--gold)]/15 p-3 text-sm font-semibold text-[var(--ink)]">{agreementActive ? `${acceptedCount} of ${expectedPartySize} traveler agreements accepted.` : "All traveler records are ready. Secure agreement links will be enabled only after the final agreement receives legal approval."}</p>}
     </section>
   );
+}
+
+function formatTimestamp(value: string) {
+  return new Date(value).toLocaleString("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+    timeZone: "America/Indiana/Indianapolis",
+  });
 }

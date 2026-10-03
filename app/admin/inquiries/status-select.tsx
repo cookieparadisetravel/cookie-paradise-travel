@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 const options = [
   ["new", "New"],
@@ -11,6 +12,7 @@ const options = [
 ] as const;
 
 export function StatusSelect({ id, initialStatus }: { id: number; initialStatus: string }) {
+  const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
@@ -30,6 +32,7 @@ export function StatusSelect({ id, initialStatus }: { id: number; initialStatus:
       });
       if (!response.ok) throw new Error("Status update failed");
       setSaved(true);
+      router.refresh();
     } catch {
       setStatus(previous);
       setError(true);

@@ -1,18 +1,26 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, Copy, Link2, Loader2, Mail, UsersRound } from "lucide-react";
+import type { GeneratedInvitationDraft } from "./dashboard-types";
 
 type Props = {
   inquiryId: number;
   expectedPartySize: number;
   currentTravelerCount: number;
+  initialGeneratedDraft?: GeneratedInvitationDraft;
+  onGeneratedDraftChange?: (draft: GeneratedInvitationDraft) => void;
 };
 
-export function TravelerListInvitationAction({ inquiryId, expectedPartySize, currentTravelerCount }: Props) {
+export function TravelerListInvitationAction({ inquiryId, expectedPartySize, currentTravelerCount, initialGeneratedDraft, onGeneratedDraftChange }: Props) {
+  const router = useRouter();
   const [creating, setCreating] = useState(false);
-  const [invitationUrl, setInvitationUrl] = useState("");
-  const [primaryContact, setPrimaryContact] = useState({ name: "", email: "" });
+  const [invitationUrl, setInvitationUrl] = useState(initialGeneratedDraft?.invitationUrl ?? "");
+  const [primaryContact, setPrimaryContact] = useState({
+    name: initialGeneratedDraft?.primaryContactName ?? "",
+    email: initialGeneratedDraft?.primaryContactEmail ?? "",
+  });
   const [copied, setCopied] = useState(false);
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const [error, setError] = useState("");
@@ -41,6 +49,12 @@ Cookie Paradise Travel Company`;
       if (!response.ok || !payload.invitationUrl || !payload.primaryContactName || !payload.primaryContactEmail) throw new Error(payload.error || "The traveler-list link could not be created.");
       setInvitationUrl(payload.invitationUrl);
       setPrimaryContact({ name: payload.primaryContactName, email: payload.primaryContactEmail });
+      onGeneratedDraftChange?.({
+        invitationUrl: payload.invitationUrl,
+        primaryContactName: payload.primaryContactName,
+        primaryContactEmail: payload.primaryContactEmail,
+      });
+      router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The traveler-list link could not be created.");
     } finally {
@@ -79,7 +93,9 @@ Cookie Paradise Travel Company`;
         <span className="w-fit rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold text-[var(--ink)]">{currentTravelerCount} of {expectedPartySize} entered</span>
       </div>
 
-      {remaining === 0 ? (
+      {currentTravelerCount > expectedPartySize ? (
+        <p role="alert" className="mt-4 rounded-xl border border-red-300 bg-red-50 p-3 text-sm font-semibold text-red-900">Traveler-count mismatch: {currentTravelerCount} records exist for a party of {expectedPartySize}. Resolve the extra traveler record before continuing.</p>
+      ) : remaining === 0 ? (
         <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">The traveler list is complete.</p>
       ) : !invitationUrl ? (
         <button disabled={creating} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50" type="button" onClick={createInvitation}>
@@ -87,14 +103,17 @@ Cookie Paradise Travel Company`;
           {creating ? "Creating…" : `Create traveler-list link for ${remaining}`}
         </button>
       ) : (
-        <div className="mt-4 space-y-2">
-          <label className="block text-xs font-semibold text-[var(--ink)]">Copy this link now. Creating a new link will revoke this one.
-            <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationUrl} />
-          </label>
-          <div className="flex flex-wrap gap-2">
-            <a className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-xs font-bold text-white" href={gmailHref} target="_blank" rel="noreferrer">
-              <Mail className="h-3.5 w-3.5" /> Open Gmail draft
-            </a>
+        <div className="mt-4">
+          <a className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white" href={gmailHref} target="_blank" rel="noreferrer">
+            <Mail className="h-4 w-4" /> Open Gmail draft
+          </a>
+          <p className="mt-2 text-xs text-[var(--muted-ink)]">Opening a draft does not mean the message was sent.</p>
+          <details className="mt-3 rounded-xl border border-[var(--line)] bg-white p-3">
+            <summary className="cursor-pointer text-xs font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">Copy or replace link</summary>
+            <label className="mt-3 block text-xs font-semibold text-[var(--ink)]">Secure link
+              <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationUrl} />
+            </label>
+            <div className="mt-3 flex flex-wrap gap-2">
             <button className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]" type="button" onClick={copyEmailDraft}>
               {emailDraftCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{emailDraftCopied ? "Email draft copied" : "Copy email draft"}
             </button>
@@ -102,7 +121,8 @@ Cookie Paradise Travel Company`;
               {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? "Copied" : "Copy link"}
             </button>
             <button className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]" type="button" onClick={createInvitation}>Replace link</button>
-          </div>
+            </div>
+          </details>
         </div>
       )}
       {error && <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{error}</p>}

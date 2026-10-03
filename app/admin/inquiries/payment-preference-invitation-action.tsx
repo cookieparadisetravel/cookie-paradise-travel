@@ -1,8 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Check, CheckCircle2, Copy, Link2, Loader2, LockKeyhole, Mail, WalletCards } from "lucide-react";
-import type { PaymentPreference } from "@/lib/payment-schedule";
+import type { PaymentPreferenceGeneratedDraft } from "./dashboard-types";
+import {
+  createPaymentPreferenceClientState,
+  formatBookingTotal,
+  reconcilePaymentPreferenceClientState,
+  samePaymentPreferenceServerSnapshot,
+  type PaymentPreferenceServerSnapshot,
+} from "./payment-preference-state";
 
 type Props = {
   inquiryId: number;
@@ -12,6 +20,8 @@ type Props = {
   initialPaymentPreference: string | null;
   initialSelectedAt: string | null;
   invoiceExists: boolean;
+  initialGeneratedDraft?: PaymentPreferenceGeneratedDraft;
+  onGeneratedDraftChange?: (draft: PaymentPreferenceGeneratedDraft) => void;
 };
 
 export function PaymentPreferenceInvitationAction({
@@ -22,21 +32,49 @@ export function PaymentPreferenceInvitationAction({
   initialPaymentPreference,
   initialSelectedAt,
   invoiceExists,
+  initialGeneratedDraft,
+  onGeneratedDraftChange,
 }: Props) {
+  const router = useRouter();
+  const serverSnapshot: PaymentPreferenceServerSnapshot = {
+    bookingTotalCents: initialBookingTotalCents,
+    paymentPreference: initialPaymentPreference,
+    selectedAt: initialSelectedAt,
+    invoiceExists,
+  };
   const [creating, setCreating] = useState(false);
-  const [bookingTotal, setBookingTotal] = useState(initialBookingTotalCents ? (initialBookingTotalCents / 100).toFixed(2) : "");
-  const [paymentPreference, setPaymentPreference] = useState<PaymentPreference | null>(isPaymentPreference(initialPaymentPreference) ? initialPaymentPreference : null);
-  const [selectedAt, setSelectedAt] = useState(initialSelectedAt);
-  const [invitationUrl, setInvitationUrl] = useState("");
-  const [primaryContact, setPrimaryContact] = useState({ name: "", email: "" });
+  const [previousServerSnapshot, setPreviousServerSnapshot] = useState(serverSnapshot);
+  const [clientState, setClientState] = useState(() => createPaymentPreferenceClientState(serverSnapshot));
+  const [generatedDraft, setGeneratedDraft] = useState(initialGeneratedDraft);
+  const [previousGeneratedDraftId, setPreviousGeneratedDraftId] = useState(initialGeneratedDraft?.invitationId ?? null);
   const [copied, setCopied] = useState(false);
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const [error, setError] = useState("");
+  if (!samePaymentPreferenceServerSnapshot(previousServerSnapshot, serverSnapshot)) {
+    setPreviousServerSnapshot(serverSnapshot);
+    setClientState((current) => reconcilePaymentPreferenceClientState(current, serverSnapshot));
+  }
+  const generatedDraftId = initialGeneratedDraft?.invitationId ?? null;
+  if (previousGeneratedDraftId !== generatedDraftId) {
+    setPreviousGeneratedDraftId(generatedDraftId);
+    setGeneratedDraft(initialGeneratedDraft);
+  }
+  const bookingTotal = clientState.bookingTotal;
+  const paymentPreference = clientState.paymentPreference;
+  const selectedAt = clientState.selectedAt;
+  const invitationUrl = generatedDraft?.invitationUrl ?? "";
+  const primaryContact = {
+    name: generatedDraft?.primaryContactName ?? "",
+    email: generatedDraft?.primaryContactEmail ?? "",
+  };
   const bookingTotalNumber = Number(bookingTotal);
   const canCreate = agreementReady && !invoiceExists && Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0;
   const formattedTotal = Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0
     ? bookingTotalNumber.toLocaleString("en-US", { style: "currency", currency: "USD" })
     : "the confirmed booking total";
+  const persistedTotal = initialBookingTotalCents && initialBookingTotalCents > 0
+    ? (initialBookingTotalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
+    : "Not recorded";
   const emailSubject = "Choose your payment option for your Vietnam trip";
   const emailBody = `Hi ${primaryContact.name},
 
@@ -68,15 +106,31 @@ Cookie Paradise Travel Company`;
         primaryContactName?: string;
         primaryContactEmail?: string;
         bookingTotalCents?: number;
+        invitationId?: number;
+        createdAt?: string;
+        expiresAt?: string;
       };
-      if (!response.ok || !payload.invitationUrl || !payload.primaryContactName || !payload.primaryContactEmail) {
+      if (!response.ok || !payload.invitationUrl || !payload.primaryContactName || !payload.primaryContactEmail || !payload.invitationId || !payload.createdAt || !payload.expiresAt) {
         throw new Error(payload.error || "The payment-choice link could not be created.");
       }
-      setInvitationUrl(payload.invitationUrl);
-      setPrimaryContact({ name: payload.primaryContactName, email: payload.primaryContactEmail });
-      setPaymentPreference(null);
-      setSelectedAt(null);
-      if (payload.bookingTotalCents) setBookingTotal((payload.bookingTotalCents / 100).toFixed(2));
+      const nextDraft: PaymentPreferenceGeneratedDraft = {
+        invitationUrl: payload.invitationUrl,
+        primaryContactName: payload.primaryContactName,
+        primaryContactEmail: payload.primaryContactEmail,
+        invitationId: payload.invitationId,
+        createdAt: payload.createdAt,
+        expiresAt: payload.expiresAt,
+      };
+      setGeneratedDraft(nextDraft);
+      onGeneratedDraftChange?.(nextDraft);
+      setClientState((current) => ({
+        ...current,
+        bookingTotal: formatBookingTotal(payload.bookingTotalCents ?? initialBookingTotalCents),
+        bookingTotalDirty: false,
+        paymentPreference: null,
+        selectedAt: null,
+      }));
+      router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The payment-choice link could not be created.");
     } finally {
@@ -118,12 +172,20 @@ Cookie Paradise Travel Company`;
       {invoiceExists && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">The Square invoice has already been created, so the recorded payment preference can no longer be changed here.</p>}
       {paymentPreference && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
         <p className="flex items-center gap-2 font-bold"><CheckCircle2 className="h-4 w-4" /> {paymentPreference === "full" ? "Pay in full now" : "Deposit + monthly installments"}</p>
-        <p className="mt-1">Confirmed booking total: {formattedTotal}{selectedAt ? ` · selected ${new Date(selectedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}` : ""}</p>
+        <p className="mt-1">Confirmed booking total: {persistedTotal}{selectedAt ? ` · selected ${new Date(selectedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}` : ""}</p>
       </div>}
 
       {!invoiceExists && <label className="mt-4 block text-sm font-semibold text-[var(--ink)]">
         Confirmed total booking price
-        <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => setBookingTotal(event.target.value)} placeholder="Enter total including supplements" /></span>
+        <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => {
+          const nextValue = event.target.value;
+          setClientState((current) => ({
+            ...current,
+            bookingTotal: nextValue,
+            bookingTotalDirty: nextValue !== formatBookingTotal(initialBookingTotalCents),
+          }));
+        }} placeholder="Enter total including supplements" /></span>
+        {clientState.bookingTotalDirty && <span className="mt-1 block text-xs font-semibold text-amber-800">Unsaved total change. Creating or replacing the payment-choice link will save this amount.</span>}
       </label>}
 
       {!invoiceExists && !invitationUrl && <button disabled={!canCreate || creating} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={createInvitation}>
@@ -131,22 +193,22 @@ Cookie Paradise Travel Company`;
         {creating ? "Creating…" : paymentPreference ? "Create replacement payment-choice link" : "Create payment-choice link"}
       </button>}
 
-      {!invoiceExists && invitationUrl && <div className="mt-4 space-y-2">
-        <label className="block text-xs font-semibold text-[var(--ink)]">Copy this link now. Creating a replacement will revoke this one.
-          <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationUrl} />
-        </label>
-        <div className="flex flex-wrap gap-2">
-          <a className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-xs font-bold text-white" href={gmailHref} target="_blank" rel="noreferrer"><Mail className="h-3.5 w-3.5" /> Open Gmail draft</a>
+      {!invoiceExists && invitationUrl && <div className="mt-4">
+        <a className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white" href={gmailHref} target="_blank" rel="noreferrer"><Mail className="h-4 w-4" /> Open Gmail draft</a>
+        <p className="mt-2 text-xs text-[var(--muted-ink)]">Opening a draft does not mean the message was sent.</p>
+        <details className="mt-3 rounded-xl border border-[var(--line)] bg-white p-3">
+          <summary className="cursor-pointer text-xs font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">Copy or replace link</summary>
+          <label className="mt-3 block text-xs font-semibold text-[var(--ink)]">Secure link
+            <input readOnly className="mt-1 w-full rounded-lg border border-[var(--input)] bg-[var(--cream)] px-3 py-2 font-mono text-xs" value={invitationUrl} />
+          </label>
+          <div className="mt-3 flex flex-wrap gap-2">
           <button className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]" type="button" onClick={copyEmailDraft}>{emailDraftCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{emailDraftCopied ? "Email draft copied" : "Copy email draft"}</button>
           <button className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-3 py-2 text-xs font-bold text-white" type="button" onClick={copyInvitation}>{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? "Copied" : "Copy link"}</button>
           <button disabled={creating} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] disabled:opacity-50" type="button" onClick={createInvitation}>Replace link</button>
-        </div>
+          </div>
+        </details>
       </div>}
       {error && <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{error}</p>}
     </section>
   );
-}
-
-function isPaymentPreference(value: string | null): value is PaymentPreference {
-  return value === "payment_plan" || value === "full";
 }

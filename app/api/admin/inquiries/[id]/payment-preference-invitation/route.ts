@@ -85,11 +85,23 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     paymentPreference: null,
     paymentPreferenceSelectedAt: null,
   }).where(eq(bookingRequests.id, bookingRequestId));
-  await db.insert(paymentPreferenceInvitations).values({ bookingRequestId, tokenHash, createdBy: owner.email, expiresAt });
+  const createdAt = now.toISOString();
+  const [createdInvitation] = await db.insert(paymentPreferenceInvitations).values({
+    bookingRequestId,
+    tokenHash,
+    createdBy: owner.email,
+    expiresAt,
+    createdAt,
+  }).returning({ id: paymentPreferenceInvitations.id });
+  if (!createdInvitation) {
+    return Response.json({ error: "The payment-choice invitation could not be saved." }, { status: 500 });
+  }
 
   const invitationUrl = new URL(`/payment-preference/${encodeURIComponent(token)}`, request.url).toString();
   return Response.json({
     invitationUrl,
+    invitationId: createdInvitation.id,
+    createdAt,
     expiresAt,
     primaryContactName: inquiry.fullName,
     primaryContactEmail: inquiry.email,

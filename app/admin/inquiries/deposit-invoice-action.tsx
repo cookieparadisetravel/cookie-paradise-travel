@@ -1,11 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, ExternalLink, Loader2, LockKeyhole } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { AlertCircle, CheckCircle2, ExternalLink, Loader2, LockKeyhole } from "lucide-react";
 import {
   applyPaymentPreference,
   createPaymentPlan,
 } from "@/lib/payment-schedule";
+import type { SquareMode } from "./dashboard-types";
+import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
 
 type Props = {
   id: number;
@@ -20,9 +23,12 @@ type Props = {
   confirmedBookingTotalCents: number | null;
   initialPaymentPreference: string | null;
   paymentPreferenceSelectedAt: string | null;
+  creatingClaimIsStale: boolean;
+  squareMode: SquareMode;
 };
 
-export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate, email, initialStatus, initialUrl, agreementReady, agreementReadinessMessage, confirmedBookingTotalCents, initialPaymentPreference, paymentPreferenceSelectedAt }: Props) {
+export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate, email, initialStatus, initialUrl, agreementReady, agreementReadinessMessage, confirmedBookingTotalCents, initialPaymentPreference, paymentPreferenceSelectedAt, creatingClaimIsStale, squareMode }: Props) {
+  const router = useRouter();
   const [confirming, setConfirming] = useState(false);
   const [status, setStatus] = useState(initialStatus);
   const [invoiceUrl, setInvoiceUrl] = useState(initialUrl);
@@ -44,8 +50,19 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
   }
   const amount = (paymentPlan?.initialAmountCents ?? 0) / 100;
   const total = (paymentPlan ? bookingTotalCents : 0) / 100;
-  const alreadyCreated = ["unpaid", "paid", "scheduled", "partially_paid"].includes(status);
-  const retrying = status !== "not_created";
+  const statusPresentation = getSquareInvoiceStatusPresentation(status);
+  const recoverable = status === "error" || status === "draft" || (status === "creating" && creatingClaimIsStale);
+  const recoveryLabel = status === "draft"
+    ? "Resume draft invoice"
+    : status === "creating"
+      ? "Resume invoice creation"
+      : "Retry Square invoice";
+  const recoveryDescription = status === "draft"
+    ? "Square still reports a draft. The backend can safely reclaim this state and resume publishing while preserving duplicate-invoice protection."
+    : status === "creating"
+      ? "Invoice creation has remained in progress beyond the backend’s five-minute timeout. The backend can safely reclaim the stale attempt."
+      : "The application recorded an invoice error. Review the safeguards below before retrying.";
+  const recoveryIsError = status === "error";
 
   async function createInvoice() {
     setSending(true);
@@ -61,6 +78,7 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
       setStatus(payload.status || "published");
       setInvoiceUrl(payload.publicUrl || null);
       setConfirming(false);
+      router.refresh();
     } catch (cause) {
       setStatus("error");
       setError(cause instanceof Error ? cause.message : "Square could not create the invoice.");
@@ -69,20 +87,37 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
     }
   }
 
-  if (alreadyCreated) {
+  if (!recoverable && statusPresentation.invoiceExists) {
+    const cardClasses = statusPresentation.tone === "success"
+      ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+      : statusPresentation.tone === "pending"
+        ? "border-amber-200 bg-amber-50 text-amber-950"
+        : statusPresentation.tone === "danger"
+          ? "border-red-200 bg-red-50 text-red-900"
+          : "border-slate-200 bg-slate-50 text-slate-800";
     return (
-      <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-        <p className="flex items-center gap-2 text-sm font-bold text-emerald-900"><CheckCircle2 className="h-4 w-4" /> Payment invoice {status.replaceAll("_", " ")}</p>
-        <p className="mt-1 text-sm text-emerald-900/80">Payment invoice for {partySize} traveler{partySize === 1 ? "" : "s"}</p>
-        {invoiceUrl && <a className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-emerald-900 underline" href={invoiceUrl} target="_blank" rel="noreferrer">Open Square invoice <ExternalLink className="h-3.5 w-3.5" /></a>}
+      <div className={`rounded-2xl border p-4 ${cardClasses}`}>
+        <p className="flex items-center gap-2 text-sm font-bold">{statusPresentation.tone === "success" ? <CheckCircle2 className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />} {statusPresentation.label}</p>
+        <p className="mt-1 text-sm opacity-85">{statusPresentation.description} Invoice for {partySize} traveler{partySize === 1 ? "" : "s"}.</p>
+        {invoiceUrl && <a className="mt-3 inline-flex items-center gap-1 text-sm font-bold underline" href={invoiceUrl} target="_blank" rel="noreferrer">Open Square invoice <ExternalLink className="h-3.5 w-3.5" /></a>}
+      </div>
+    );
+  }
+
+  if (!recoverable) {
+    const inProgress = status === "creating";
+    return (
+      <div className={`rounded-2xl border p-4 ${inProgress ? "border-amber-200 bg-amber-50" : "border-[var(--line)] bg-[var(--cream)]"}`}>
+        <p className="text-sm font-bold text-[var(--ink)]">{statusPresentation.label}</p>
+        <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">{inProgress ? "Refresh to load the latest persisted Square status. Manual recovery appears only after a recorded error." : "The secure payment-choice flow creates the invoice automatically after the customer records a choice. Creating a link or opening a draft does not create a payment."}</p>
       </div>
     );
   }
 
   return (
-    <div className="rounded-2xl border border-[var(--line)] bg-[var(--cream)] p-4">
-      <p className="text-sm font-bold text-[var(--ink)]">Square payment invoice</p>
-      <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">The secure payment-choice link normally creates the Square invoice automatically and sends the customer directly to Square. Use the action below only to recover from a temporary Square error.</p>
+    <div className={`rounded-2xl border p-4 ${recoveryIsError ? "border-red-200 bg-red-50" : "border-amber-200 bg-amber-50"}`}>
+      <p className={`text-sm font-bold ${recoveryIsError ? "text-red-900" : "text-amber-950"}`}>{status === "draft" ? "Square invoice draft requires attention" : status === "creating" ? "Square invoice creation is stale" : "Square invoice error"}</p>
+      <p className={`mt-1 text-sm leading-6 ${recoveryIsError ? "text-red-900/80" : "text-amber-950/80"}`}>{recoveryDescription}</p>
       {!agreementReady && <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--gold)]/60 bg-[var(--gold)]/15 p-3 text-sm font-semibold leading-6 text-[var(--ink)]"><LockKeyhole className="mt-1 h-4 w-4 shrink-0" /> <span><strong>Invoice locked.</strong> {agreementReadinessMessage}</span></p>}
       {agreementReady && !paymentPreference && <p className="mt-3 flex items-start gap-2 rounded-xl border border-[var(--gold)]/60 bg-[var(--gold)]/15 p-3 text-sm font-semibold leading-6 text-[var(--ink)]"><LockKeyhole className="mt-1 h-4 w-4 shrink-0" /> <span><strong>Invoice locked.</strong> The primary contact has not submitted a payment preference.</span></p>}
       {paymentPreference && bookingTotalCents > 0 && <p className="mt-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-950"><strong>Customer selected:</strong> {paymentPreference === "full" ? "Pay in full now" : "Deposit + monthly installments"} · {(bookingTotalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })}{paymentPreferenceSelectedAt ? ` · ${new Date(paymentPreferenceSelectedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}` : ""}</p>}
@@ -96,11 +131,11 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
       {paymentPlanError && <p className="mt-2 text-sm font-semibold text-red-700">{paymentPlanError}</p>}
       {!confirming ? (
         <button disabled={!agreementReady || !paymentPreference || !paymentPlan || departure === "flexible"} className="mt-3 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50" onClick={() => setConfirming(true)}>
-          {retrying ? "Retry Square invoice" : "Create Square invoice manually"}
+          {recoveryLabel}
         </button>
       ) : (
         <div className="mt-3 rounded-xl border border-[var(--orange)]/30 bg-white p-4">
-          <p className="text-sm leading-6 text-[var(--ink)]">Square will create one <strong>${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> invoice and email it to <strong>{email}</strong>. {paymentPlan?.paymentType === "deposit" ? `The first $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is due now; the remaining payments follow the schedule below.` : "The full amount is due now."} Use this recovery action only when the customer’s secure link could not finish creating the Sandbox invoice.</p>
+          <p className="text-sm leading-6 text-[var(--ink)]">Square <strong>{squareMode === "sandbox" ? "Sandbox" : "Production"}</strong> will resume one <strong>${total.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</strong> invoice and email it to <strong>{email}</strong>. {paymentPlan?.paymentType === "deposit" ? `The first $${amount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} is due now; the remaining payments follow the schedule below.` : "The full amount is due now."} The server rechecks the invoice state and duplicate-invoice safeguards before continuing.</p>
           {paymentPlan && paymentPlan.installments.length > 0 && <div className="mt-3 rounded-lg bg-[var(--cream)] p-3 text-xs leading-5 text-[var(--ink)]">
             <p className="font-bold">Planned monthly balance payments</p>
             <ol className="mt-1 grid gap-x-4 sm:grid-cols-2">
@@ -109,7 +144,7 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
           </div>}
           <div className="mt-3 flex flex-wrap gap-2">
             <button disabled={sending} className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:opacity-50" onClick={createInvoice}>
-              {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Sending…</> : "Create and email invoice"}
+              {sending ? <><Loader2 className="h-4 w-4 animate-spin" /> Resuming…</> : recoveryLabel}
             </button>
             <button disabled={sending} className="rounded-full border border-[var(--line)] px-4 py-2 text-sm font-bold text-[var(--ink)]" onClick={() => setConfirming(false)}>Cancel</button>
           </div>
