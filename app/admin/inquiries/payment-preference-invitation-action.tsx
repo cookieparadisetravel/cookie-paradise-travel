@@ -177,7 +177,7 @@ Cookie Paradise Travel Company`;
 
       {!invoiceExists && <label className="mt-4 block text-sm font-semibold text-[var(--ink)]">
         Confirmed total booking price
-        <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => {
+        <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 [appearance:textfield] outline-none disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => {
           const nextValue = event.target.value;
           setClientState((current) => ({
             ...current,
