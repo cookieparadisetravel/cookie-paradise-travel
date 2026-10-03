@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowUpDown,
   CalendarDays,
   CheckCircle2,
@@ -17,14 +18,12 @@ import {
   Search,
   ShieldAlert,
   UserRoundSearch,
-  X,
 } from "lucide-react";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 import { PaymentPreferenceInvitationAction } from "./payment-preference-invitation-action";
 import { StatusSelect } from "./status-select";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
 import { TravelerListInvitationAction } from "./traveler-list-invitation-action";
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import type { DashboardInquiry, GeneratedInvitationDraft, PaymentPreferenceGeneratedDraft, SquareMode } from "./dashboard-types";
 import { isPaymentPreferenceDraftUsable } from "./payment-preference-state";
 import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
@@ -84,9 +83,15 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
   const [detailSection, setDetailSection] = useState<DetailSection>("overview");
   const [refreshing, setRefreshing] = useState(false);
   const [generatedLinks, setGeneratedLinks] = useState<GeneratedLinkCache>(readGeneratedLinkCache);
+  const listScrollPosition = useRef(0);
+  const restoreListScroll = useRef(false);
+  const detailBackButton = useRef<HTMLButtonElement>(null);
 
   const selectedInquiry = inquiries.find((inquiry) => inquiry.id === selectedInquiryId) ?? null;
-  const closeInquiry = useCallback(() => setSelectedInquiryId(null), []);
+  const closeInquiry = useCallback(() => {
+    restoreListScroll.current = true;
+    setSelectedInquiryId(null);
+  }, []);
   const validatedGeneratedLinks = useMemo<GeneratedLinkCache>(() => ({
     travelerLists: generatedLinks.travelerLists,
     paymentChoices: Object.fromEntries(Object.entries(generatedLinks.paymentChoices).filter(([rawInquiryId, draft]) => {
@@ -98,6 +103,20 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
   useEffect(() => {
     window.sessionStorage.setItem(generatedLinkCacheKey, JSON.stringify(validatedGeneratedLinks));
   }, [validatedGeneratedLinks]);
+
+  useEffect(() => {
+    if (selectedInquiryId !== null) {
+      window.scrollTo({ top: 0, behavior: "auto" });
+      detailBackButton.current?.focus();
+      return;
+    }
+    if (!restoreListScroll.current) return;
+    restoreListScroll.current = false;
+    const scrollPosition = listScrollPosition.current;
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => window.scrollTo({ top: scrollPosition, behavior: "auto" }));
+    });
+  }, [selectedInquiryId]);
   const activeInquiries = inquiries.filter((inquiry) => activeStatuses.has(inquiry.status));
   const attentionCounts = {
     new: activeInquiries.filter((inquiry) => inquiry.status === "new").length,
@@ -143,6 +162,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
   }
 
   function openInquiry(inquiry: DashboardInquiry, section?: DetailSection) {
+    listScrollPosition.current = window.scrollY;
     setSelectedInquiryId(inquiry.id);
     setDetailSection(section ?? workflowFor(inquiry).section);
   }
@@ -178,6 +198,21 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
         </div>
       </header>
 
+      {selectedInquiry ? (
+        <InquiryDetail
+          acceptanceDate={acceptanceDate}
+          backButtonRef={detailBackButton}
+          inquiry={selectedInquiry}
+          onClose={closeInquiry}
+          onSectionChange={setDetailSection}
+          paymentChoiceDraft={validatedGeneratedLinks.paymentChoices[selectedInquiry.id]}
+          onPaymentChoiceDraftChange={(draft) => setGeneratedLinks((current) => ({ ...current, paymentChoices: { ...current.paymentChoices, [selectedInquiry.id]: draft } }))}
+          section={detailSection}
+          squareMode={squareMode}
+          travelerListDraft={selectedInquiry.latestTravelerListCompletedAt ? undefined : generatedLinks.travelerLists[selectedInquiry.id]}
+          onTravelerListDraftChange={(draft) => setGeneratedLinks((current) => ({ ...current, travelerLists: { ...current.travelerLists, [selectedInquiry.id]: draft } }))}
+        />
+      ) : (
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7 sm:py-8">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div>
@@ -242,20 +277,6 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, ownerEmail, 
           <InquiryList inquiries={visibleInquiries} onOpen={openInquiry} squareMode={squareMode} />
         </section>
       </div>
-
-      {selectedInquiry && (
-        <InquiryDetail
-          acceptanceDate={acceptanceDate}
-          inquiry={selectedInquiry}
-          onClose={closeInquiry}
-          onSectionChange={setDetailSection}
-          paymentChoiceDraft={validatedGeneratedLinks.paymentChoices[selectedInquiry.id]}
-          onPaymentChoiceDraftChange={(draft) => setGeneratedLinks((current) => ({ ...current, paymentChoices: { ...current.paymentChoices, [selectedInquiry.id]: draft } }))}
-          section={detailSection}
-          squareMode={squareMode}
-          travelerListDraft={selectedInquiry.latestTravelerListCompletedAt ? undefined : generatedLinks.travelerLists[selectedInquiry.id]}
-          onTravelerListDraftChange={(draft) => setGeneratedLinks((current) => ({ ...current, travelerLists: { ...current.travelerLists, [selectedInquiry.id]: draft } }))}
-        />
       )}
     </main>
   );
@@ -325,38 +346,46 @@ function InquiryList({ inquiries, onOpen, squareMode }: { inquiries: DashboardIn
   );
 }
 
-function InquiryDetail({ acceptanceDate, inquiry, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; inquiry: DashboardInquiry; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
+function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; backButtonRef: React.RefObject<HTMLButtonElement | null>; inquiry: DashboardInquiry; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
   const workflow = workflowFor(inquiry);
   const acceptedCount = acceptedAgreementCount(inquiry);
 
   return (
-    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent showCloseButton={false} className="inset-0 left-0 top-0 flex h-[100dvh] w-full max-w-none translate-x-0 translate-y-0 flex-col gap-0 rounded-none border-0 bg-[var(--sand)] p-0 shadow-2xl md:left-auto md:right-0 md:w-[min(860px,92vw)]">
-        <header className="shrink-0 border-b border-[var(--line)] bg-white px-4 pb-0 pt-4 sm:px-6">
-          <div className="flex items-start justify-between gap-4">
+    <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-7 sm:py-7">
+      <button ref={backButtonRef} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 text-sm font-extrabold shadow-sm hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={onClose} type="button">
+        <ArrowLeft className="h-4 w-4" /> Back to inquiries
+      </button>
+
+      <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
+        <header className="px-4 pt-4 sm:px-6 sm:pt-5">
+          <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(300px,1.2fr)] lg:items-center">
             <div className="min-w-0">
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--orange)]">Inquiry #{inquiry.id}</p>
-              <DialogTitle className="mt-1 truncate font-serif text-3xl font-bold leading-tight">{inquiry.fullName}</DialogTitle>
-              <DialogDescription className="mt-1 text-sm text-[var(--muted-ink)]">Inquiry details for {inquiry.partySize} traveler{inquiry.partySize === 1 ? "" : "s"}, departing {departureLabel(inquiry.departure)}.</DialogDescription>
+              <h2 className="mt-1 truncate font-serif text-3xl font-bold leading-tight">{inquiry.fullName}</h2>
             </div>
-            <DialogClose asChild><button aria-label="Close inquiry details" className="grid h-11 w-11 shrink-0 place-items-center rounded-full border border-[var(--line)] hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" type="button"><X className="h-5 w-5" /></button></DialogClose>
+            <div className="flex flex-wrap items-center gap-2 text-sm">
+              <span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1.5 font-bold">{departureLabel(inquiry.departure)}</span>
+              <span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1.5 font-bold">{inquiry.partySize} traveler{inquiry.partySize === 1 ? "" : "s"}</span>
+              <StageBadge status={inquiry.status} />
+            </div>
+            <div className={`rounded-xl border px-4 py-3 ${workflow.blocked ? "border-amber-300 bg-amber-50" : "border-[var(--gold)] bg-[var(--gold)]/15"}`}>
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0"><p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Next action</p><p className="truncate text-sm font-bold">{workflow.label}</p></div>
+                <button className="shrink-0 rounded-full bg-[var(--gold)] px-3 py-2 text-xs font-extrabold text-[var(--ink)] hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={() => onSectionChange(workflow.section)} type="button">{workflow.actionLabel}</button>
+              </div>
+              {workflow.blocked && <p className="mt-1 text-xs font-semibold text-amber-900">Blocked: {workflow.detail}</p>}
+            </div>
           </div>
 
-          <div className={`mt-4 rounded-xl border p-4 ${workflow.blocked ? "border-amber-300 bg-amber-50" : "border-[var(--gold)] bg-[var(--gold)]/15"}`}>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Next step</p><p className="mt-0.5 font-bold">{workflow.label}</p><p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">{workflow.detail}</p></div>
-              <button className="shrink-0 rounded-full bg-[var(--gold)] px-4 py-2 text-sm font-extrabold text-[var(--ink)] hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={() => onSectionChange(workflow.section)} type="button">{workflow.actionLabel}</button>
-            </div>
-          </div>
-
-          <nav aria-label="Inquiry detail sections" className="mt-4 flex overflow-x-auto">
+          <nav aria-label="Inquiry detail sections" className="mt-4 flex overflow-x-auto border-t border-[var(--line)]">
             {(["overview", "travelers", "payments", "activity"] as const).map((value) => (
-              <button key={value} className={`min-h-12 whitespace-nowrap border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/30 sm:px-4 ${section === value ? "border-[var(--gold)] text-[var(--ink)]" : "border-transparent text-[var(--muted-ink)]"}`} onClick={() => onSectionChange(value)} type="button">{detailSectionLabel(value)}</button>
+              <button key={value} className={`min-h-12 whitespace-nowrap border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/30 sm:px-5 ${section === value ? "border-[var(--gold)] text-[var(--ink)]" : "border-transparent text-[var(--muted-ink)]"}`} onClick={() => onSectionChange(value)} type="button">{detailSectionLabel(value)}</button>
             ))}
           </nav>
         </header>
+      </section>
 
-        <div className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+        <div className="mt-5">
           {section === "overview" && <OverviewSection inquiry={inquiry} squareMode={squareMode} />}
           {section === "travelers" && (
             <div className="space-y-4">
@@ -374,8 +403,7 @@ function InquiryDetail({ acceptanceDate, inquiry, onClose, onPaymentChoiceDraftC
           )}
           {section === "activity" && <ActivitySection inquiry={inquiry} squareMode={squareMode} />}
         </div>
-      </DialogContent>
-    </Dialog>
+    </div>
   );
 }
 
