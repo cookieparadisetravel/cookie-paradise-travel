@@ -80,7 +80,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [departure, setDeparture] = useState("");
+  const [departure, setDeparture] = useState("2027-06-01");
   const [room, setRoom] = useState("shared");
   const [partySize, setPartySize] = useState("1");
   const [contactConsent, setContactConsent] = useState(false);
@@ -278,9 +278,6 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                   ><SelectValue placeholder="Choose a date" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="2027-06-01">June 1, 2027</SelectItem>
-                    <SelectItem value="2027-06-29">June 29, 2027</SelectItem>
-                    <SelectItem value="2027-07-27">July 27, 2027</SelectItem>
-                    <SelectItem value="flexible">I’m flexible</SelectItem>
                   </SelectContent>
                 </Select>
                 {fieldErrors.departure && <span id="departure-error" className="mt-1 text-xs font-semibold text-red-700">{fieldErrors.departure}</span>}

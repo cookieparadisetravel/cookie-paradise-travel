@@ -146,7 +146,7 @@ export default function Home() {
               <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[var(--gold)]" /> 8–15 travelers</span>
               <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[var(--gold)]" /> Saigon to Hội An</span>
               <span className="flex items-center gap-2 font-semibold text-white"><Tag className="h-4 w-4 text-[var(--gold)]" /> From $2,500–$2,875 per person</span>
-              <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-[var(--gold)]" /> Departs Jun 1, Jun 29 or Jul 27, 2027</span>
+              <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-[var(--gold)]" /> Departs June 1, 2027</span>
             </div>
           </div>
         </div>
