@@ -39,6 +39,7 @@ export async function sendOwnerInquiryNotification(input: InquiryNotification): 
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
+      signal: AbortSignal.timeout(5000),
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         event: "travel_inquiry.created",
@@ -61,6 +62,7 @@ export async function sendOwnerTravelerListNotification(input: TravelerListNotif
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
+      signal: AbortSignal.timeout(5000),
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         event: "traveler_list.submitted",
@@ -83,6 +85,7 @@ export async function sendOwnerPaymentPreferenceNotification(input: PaymentPrefe
   try {
     const response = await fetch(webhookUrl, {
       method: "POST",
+      signal: AbortSignal.timeout(5000),
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
         event: "payment_preference.submitted",

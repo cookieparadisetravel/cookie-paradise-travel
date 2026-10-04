@@ -126,6 +126,7 @@ async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResul
 
   const response = await fetch("https://api.mailersend.com/v1/email", {
     method: "POST",
+    signal: AbortSignal.timeout(10000),
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
