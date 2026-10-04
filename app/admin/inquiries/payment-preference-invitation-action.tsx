@@ -236,8 +236,9 @@ Cookie Paradise Travel Company`;
 
         <label className="mt-3 block text-sm font-semibold text-[var(--ink)]">
           Confirmed total booking price
-          <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 [appearance:textfield] outline-none disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => {
+          <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input autoComplete="off" disabled={!agreementReady || creating} inputMode="decimal" pattern="[0-9]*[.]?[0-9]{0,2}" className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="text" value={bookingTotal} onChange={(event) => {
             const nextValue = event.target.value;
+            if (!/^\d*(?:\.\d{0,2})?$/.test(nextValue)) return;
             setPriceMismatchConfirmed(false);
             setClientState((current) => ({
               ...current,

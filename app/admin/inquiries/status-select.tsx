@@ -41,7 +41,7 @@ export function StatusSelect({ compact = false, id, initialStatus }: { compact?:
         aria-describedby={compact ? `inquiry-status-note-${id}` : undefined}
         aria-label="Inquiry stage"
         className={compact
-          ? "h-8 w-auto max-w-[9.5rem] rounded-full border border-[#d99a3b] bg-[var(--gold)] px-3 py-0 text-sm font-extrabold leading-none text-[var(--ink)] shadow-sm hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/50"
+          ? "h-8 w-auto min-w-[13.5rem] max-w-full rounded-full border border-[#d99a3b] bg-[var(--gold)] px-3 py-0 text-sm font-extrabold leading-none text-[var(--ink)] shadow-sm hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/50"
           : "mt-1 w-full rounded-lg border border-[var(--input)] bg-white px-3 py-2 text-sm font-semibold text-[var(--ink)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40"}
         disabled={saving}
         id={`inquiry-status-${id}`}
