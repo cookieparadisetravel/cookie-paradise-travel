@@ -133,8 +133,12 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   try {
     pdfBytes = await generateAgreementPdf({ agreement: currentTravelerAgreement, snapshot });
   } catch (cause) {
+    console.error("Signed agreement PDF generation failed", {
+      invitationId: invitationResult.invitation.invitationId,
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
     return Response.json({
-      error: cause instanceof Error ? cause.message : "The signed agreement PDF could not be generated.",
+      error: "We couldn't prepare the signed agreement right now. Please try again in a few minutes.",
     }, { status: 503 });
   }
   const signedPdfBase64 = pdfBytesToBase64(pdfBytes);

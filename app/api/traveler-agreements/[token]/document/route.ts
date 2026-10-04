@@ -27,8 +27,12 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
       },
     });
   } catch (cause) {
+    console.error("Traveler agreement PDF generation failed", {
+      invitationId: result.invitation.invitationId,
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
     return Response.json({
-      error: cause instanceof Error ? cause.message : "The agreement PDF could not be generated.",
+      error: "We couldn't prepare the agreement document right now. Please try again in a few minutes.",
     }, { status: 503 });
   }
 }

@@ -70,6 +70,10 @@ export async function POST(_request: Request, context: { params: Promise<{ token
       })
       .where(eq(agreementInvitations.id, invitation.invitationId));
   } catch (cause) {
+    console.error("Agreement verification code email failed", {
+      invitationId: invitation.invitationId,
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
     await db.update(agreementInvitations)
       .set({
         verificationCodeSentAt: null,
@@ -79,7 +83,7 @@ export async function POST(_request: Request, context: { params: Promise<{ token
       })
       .where(eq(agreementInvitations.id, invitation.invitationId));
     return Response.json({
-      error: cause instanceof Error ? cause.message : "The verification code could not be sent.",
+      error: "We couldn't send the code right now. Please try again in a few minutes.",
     }, { status: 502 });
   }
 
