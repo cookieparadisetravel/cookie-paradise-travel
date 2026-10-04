@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, or } from "drizzle-orm";
 import { bookingRequests, paymentPreferenceInvitations } from "@/db/schema";
 import { getDb } from "@/db";
 import { createBookingInvoice } from "@/lib/booking-invoice";
@@ -60,7 +60,10 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     }).where(and(
       eq(bookingRequests.id, invitation.bookingRequestId),
       eq(bookingRequests.confirmedBookingTotalCents, invitation.bookingTotalCents),
-      isNull(bookingRequests.squareDepositInvoiceId),
+      or(
+        isNull(bookingRequests.squareDepositInvoiceId),
+        eq(bookingRequests.paymentPreference, paymentPreference),
+      ),
     )).returning({ id: bookingRequests.id });
     if (updated.length === 0) {
       await releaseClaim();
