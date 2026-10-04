@@ -41,6 +41,14 @@ type MainTab = "active" | "all" | "waitlist" | "closed";
 type AttentionFilter = "new" | "missing_travelers" | "agreements" | "invoice_issues" | null;
 type DetailSection = "overview" | "travelers" | "payments" | "activity";
 type SortOption = "attention" | "newest" | "oldest" | "departure" | "name";
+type ChecklistState = "complete" | "pending" | "error";
+
+type ChecklistItem = {
+  label: string;
+  detail: string;
+  state: ChecklistState;
+  section: DetailSection;
+};
 
 const activeStatuses = new Set(["new", "contacted", "qualified"]);
 const generatedLinkCacheKey = "cookie-paradise-admin-generated-links-v1";
@@ -436,6 +444,8 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
             </div>
           </div>
 
+          <InquiryProgressChecklist inquiry={inquiry} onSectionChange={onSectionChange} />
+
           <nav aria-label="Inquiry detail sections" className="mt-4 flex overflow-x-auto border-t border-[var(--line)]" role="tablist">
             {(["overview", "travelers", "payments", "activity"] as const).map((value) => (
               <button aria-controls={`inquiry-panel-${value}`} aria-selected={section === value} id={`inquiry-tab-${value}`} key={value} className={`min-h-12 whitespace-nowrap border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/30 sm:px-5 ${section === value ? "border-[var(--gold)] text-[var(--ink)]" : "border-transparent text-[var(--muted-ink)]"}`} onClick={() => onSectionChange(value)} role="tab" type="button">{detailSectionLabel(value)}</button>
@@ -463,6 +473,53 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
           {section === "activity" && <ActivitySection inquiry={inquiry} squareMode={squareMode} />}
         </div>
     </div>
+  );
+}
+
+function InquiryProgressChecklist({ inquiry, onSectionChange }: { inquiry: DashboardInquiry; onSectionChange: (section: DetailSection) => void }) {
+  const items = progressChecklistFor(inquiry);
+  const completeCount = items.filter((item) => item.state === "complete").length;
+
+  return (
+    <section aria-label="Inquiry progress checklist" className="mt-5 rounded-2xl border border-[var(--line)] bg-[var(--cream)]/55 p-3 sm:p-4">
+      <div className="flex flex-wrap items-end justify-between gap-2">
+        <div>
+          <h3 className="font-serif text-xl font-bold">Booking progress</h3>
+          <p className="mt-0.5 text-xs font-semibold text-[var(--muted-ink)]">Select an item to open the section where it is managed.</p>
+        </div>
+        <p className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-[var(--ink)] shadow-sm">{completeCount} of {items.length} complete</p>
+      </div>
+
+      <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4" role="list">
+        {items.map((item) => {
+          const stateLabel = item.state === "complete" ? "Complete" : item.state === "error" ? "Needs attention" : "Pending";
+          const classes = item.state === "complete"
+            ? "border-emerald-200 bg-emerald-50 text-emerald-950 hover:border-emerald-400"
+            : item.state === "error"
+              ? "border-red-300 bg-red-50 text-red-950 hover:border-red-500"
+              : "border-amber-200 bg-amber-50 text-amber-950 hover:border-amber-400";
+          const statusClasses = item.state === "complete" ? "text-emerald-800" : item.state === "error" ? "text-red-800" : "text-amber-900";
+
+          return (
+            <div key={item.label} role="listitem">
+              <button
+                aria-label={`${item.label}: ${stateLabel}. ${item.detail}`}
+                className={`min-h-24 w-full rounded-xl border p-3 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/45 ${classes}`}
+                onClick={() => onSectionChange(item.section)}
+                type="button"
+              >
+                <span className={`flex items-center gap-2 text-[0.68rem] font-extrabold uppercase tracking-[0.1em] ${statusClasses}`}>
+                  {item.state === "complete" ? <CheckCircle2 className="h-4 w-4" /> : item.state === "error" ? <AlertCircle className="h-4 w-4" /> : <span aria-hidden="true" className="h-4 w-4 rounded-full border-2 border-current" />}
+                  {stateLabel}
+                </span>
+                <span className="mt-1.5 block text-sm font-extrabold leading-5">{item.label}</span>
+                <span className="mt-1 block text-xs font-medium leading-5 opacity-80">{item.detail}</span>
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -564,6 +621,75 @@ function PaymentBadge({ inquiry, squareMode }: { inquiry: DashboardInquiry; squa
   return <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-extrabold ${classes}`}>{label}{squareMode === "sandbox" ? " · Test" : ""}</span>;
 }
 
+function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
+  const travelerCount = inquiry.travelers.length;
+  const acceptedCount = acceptedAgreementCount(inquiry);
+  const invoiceStatus = inquiry.squareDepositInvoiceStatus.trim().toLowerCase();
+  const invoicePresentation = getSquareInvoiceStatusPresentation(invoiceStatus);
+
+  const travelerItem: ChecklistItem = travelerCount === inquiry.partySize
+    ? { label: "Traveler details", detail: `${travelerCount}/${inquiry.partySize} traveler records received.`, state: "complete", section: "travelers" }
+    : travelerCount > inquiry.partySize
+      ? { label: "Traveler details", detail: `${travelerCount} records for a party of ${inquiry.partySize}. Resolve the mismatch.`, state: "error", section: "travelers" }
+      : { label: "Traveler details", detail: `${travelerCount}/${inquiry.partySize} traveler records received.`, state: "pending", section: "travelers" };
+
+  let agreementItem: ChecklistItem;
+  if (!inquiry.agreementActive) {
+    agreementItem = { label: "Traveler agreements", detail: "Agreement signing is not active yet.", state: "pending", section: "travelers" };
+  } else if (travelerCount > inquiry.partySize || acceptedCount > inquiry.partySize) {
+    agreementItem = { label: "Traveler agreements", detail: `${acceptedCount}/${inquiry.partySize} accepted; resolve the traveler mismatch first.`, state: "error", section: "travelers" };
+  } else if (travelerCount === inquiry.partySize && acceptedCount === inquiry.partySize) {
+    agreementItem = { label: "Traveler agreements", detail: `${acceptedCount}/${inquiry.partySize} current agreements accepted.`, state: "complete", section: "travelers" };
+  } else {
+    agreementItem = { label: "Traveler agreements", detail: `${acceptedCount}/${inquiry.partySize} current agreements accepted.`, state: "pending", section: "travelers" };
+  }
+
+  let invoiceItem: ChecklistItem;
+  if (invoiceStatus === "not_created") {
+    invoiceItem = { label: "Square invoice", detail: "No published invoice is recorded.", state: "pending", section: "payments" };
+  } else if (invoiceStatus === "creating") {
+    invoiceItem = inquiry.squareDepositClaimIsStale
+      ? { label: "Square invoice", detail: "Invoice creation is stuck and can be retried safely.", state: "error", section: "payments" }
+      : { label: "Square invoice", detail: "Invoice creation is in progress.", state: "pending", section: "payments" };
+  } else if (invoiceStatus === "draft") {
+    invoiceItem = { label: "Square invoice", detail: "A Square draft exists but is not published.", state: "pending", section: "payments" };
+  } else if (invoicePresentation.needsAttention) {
+    invoiceItem = { label: "Square invoice", detail: invoicePresentation.description, state: "error", section: "payments" };
+  } else if (invoicePresentation.invoiceExists) {
+    invoiceItem = { label: "Square invoice", detail: `Published · ${invoicePresentation.label}.`, state: "complete", section: "payments" };
+  } else {
+    invoiceItem = { label: "Square invoice", detail: invoicePresentation.description, state: "pending", section: "payments" };
+  }
+
+  let paymentItem: ChecklistItem;
+  if (invoiceStatus === "paid") {
+    paymentItem = { label: "Payment", detail: "Square reports the invoice paid in full.", state: "complete", section: "payments" };
+  } else if (["error", "failed", "canceled", "refunded", "partially_refunded"].includes(invoiceStatus) || (!invoicePresentation.invoiceExists && invoicePresentation.tone === "danger")) {
+    paymentItem = { label: "Payment", detail: invoicePresentation.description, state: "error", section: "payments" };
+  } else if (["partially_paid", "payment_pending"].includes(invoiceStatus)) {
+    paymentItem = { label: "Payment", detail: invoicePresentation.description, state: "pending", section: "payments" };
+  } else {
+    paymentItem = { label: "Payment", detail: invoicePresentation.invoiceExists ? `${invoicePresentation.label}; payment is not complete.` : "No verified payment is recorded.", state: "pending", section: "payments" };
+  }
+
+  return [
+    { label: "Inquiry received", detail: `Submitted ${formatTimestamp(inquiry.createdAt)}.`, state: "complete", section: "activity" },
+    inquiry.sellerOfTravelStateResident
+      ? { label: "Residency screening", detail: `Review ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the reported state"} requirements.`, state: "error", section: "overview" }
+      : { label: "Residency screening", detail: "No regulated-state flag was reported.", state: "complete", section: "overview" },
+    travelerItem,
+    agreementItem,
+    inquiry.confirmedBookingTotalCents && inquiry.confirmedBookingTotalCents > 0
+      ? { label: "Booking total", detail: `${formatCurrency(inquiry.confirmedBookingTotalCents)} confirmed.`, state: "complete", section: "payments" }
+      : { label: "Booking total", detail: "Confirmed total has not been entered.", state: "pending", section: "payments" },
+    inquiry.paymentPreference && inquiry.paymentPreferenceSelectedAt
+      ? { label: "Payment choice", detail: `${inquiry.paymentPreference === "full" ? "Full payment" : "Installment plan"} selected by customer.`, state: "complete", section: "payments" }
+      : { label: "Payment choice", detail: "No submitted customer choice is recorded.", state: "pending", section: "payments" },
+    invoiceItem,
+    paymentItem,
+  ];
+}
+
 function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string; actionLabel: string; section: DetailSection; blocked: boolean } {
   if (inquiry.travelers.length > inquiry.partySize) return { label: "Resolve traveler-count mismatch", detail: `${inquiry.travelers.length} traveler records exist for a party of ${inquiry.partySize}. Agreement and payment steps remain blocked until the extra record is resolved.`, actionLabel: "Review travelers", section: "travelers", blocked: true };
   if (inquiry.sellerOfTravelStateResident) return { label: "Review residency screening", detail: `Review seller-of-travel requirements for ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the customer's state"} before proceeding with a sale.`, actionLabel: "Review overview", section: "overview", blocked: true };
@@ -588,6 +714,7 @@ function hasInvoiceIssue(inquiry: DashboardInquiry) { return getSquareInvoiceSta
 function departureLabel(value: string) { return departureLabels[value] ?? value; }
 function departureSortValue(value: string) { if (value === "flexible") return Number.MAX_SAFE_INTEGER; const parsed = Date.parse(`${value}T00:00:00Z`); return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER - 1; }
 function readableValue(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+function formatCurrency(cents: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100); }
 function formatTimestamp(value: string | null) { if (!value) return "Not recorded"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Not recorded"; return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" }); }
 function detailSectionLabel(section: DetailSection) { return section[0].toUpperCase() + section.slice(1); }
 function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) { return filter === "new" ? "New inquiries" : filter === "missing_travelers" ? "Missing traveler details" : filter === "agreements" ? "Agreements incomplete" : "Invoice issues"; }
