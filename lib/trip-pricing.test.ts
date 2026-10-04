@@ -6,6 +6,7 @@ import {
   isPublishedPerTravelerPriceCents,
   privateRoomSupplementCents,
   publishedPerTravelerPricesCents,
+  publishedTravelerCountByPriceCents,
 } from "./trip-pricing.ts";
 
 test("recognizes only the published per-traveler prices", () => {
@@ -13,6 +14,7 @@ test("recognizes only the published per-traveler prices", () => {
     assert.equal(isPublishedPerTravelerPriceCents(price), true);
   }
   assert.equal(isPublishedPerTravelerPriceCents(300_000), false);
+  assert.deepEqual(publishedPerTravelerPricesCents.map((price) => publishedTravelerCountByPriceCents[price]), [8, 10, 12, 15]);
 });
 
 test("calculates the expected group total with private-room supplements", () => {

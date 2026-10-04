@@ -1,6 +1,13 @@
 export const publishedPerTravelerPricesCents = [287_500, 267_500, 260_500, 250_000] as const;
 export const privateRoomSupplementCents = 39_900;
 
+export const publishedTravelerCountByPriceCents: Record<typeof publishedPerTravelerPricesCents[number], number> = {
+  287_500: 8,
+  267_500: 10,
+  260_500: 12,
+  250_000: 15,
+};
+
 export function isPublishedPerTravelerPriceCents(value: number): value is typeof publishedPerTravelerPricesCents[number] {
   return publishedPerTravelerPricesCents.some((price) => price === value);
 }

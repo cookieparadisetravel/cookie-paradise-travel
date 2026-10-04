@@ -8,6 +8,7 @@ import {
   inferPriceCheckSelection,
   privateRoomSupplementCents,
   publishedPerTravelerPricesCents,
+  publishedTravelerCountByPriceCents,
 } from "@/lib/trip-pricing";
 import type { PaymentPreferenceGeneratedDraft } from "./dashboard-types";
 import {
@@ -218,7 +219,7 @@ Cookie Paradise Travel Company`;
               setPerTravelerPriceCents(Number(event.target.value));
               setPriceMismatchConfirmed(false);
             }}>
-              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler</option>)}
+              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler ({publishedTravelerCountByPriceCents[price]} travelers)</option>)}
             </select>
           </label>
           <label className="block text-xs font-bold text-[var(--ink)]">
