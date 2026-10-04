@@ -6,6 +6,7 @@ import { requireOwner } from "@/lib/owner-auth";
 import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
 import { hasValidOrigin } from "@/lib/same-origin";
 import { hashInvitationToken } from "@/lib/traveler-agreement";
+import { calculateExpectedBookingTotalCents, isPublishedPerTravelerPriceCents } from "@/lib/trip-pricing";
 
 const INVITATION_LIFETIME_DAYS = 7;
 
@@ -36,6 +37,16 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     return Response.json({ error: "Enter the confirmed total booking price before creating the secure link." }, { status: 400 });
   }
   const bookingTotalCents = Math.round(bookingTotalDollars * 100);
+  const perTravelerPriceCents = "perTravelerPriceCents" in body && typeof body.perTravelerPriceCents === "number"
+    ? body.perTravelerPriceCents
+    : NaN;
+  const privateRoomCount = "privateRoomCount" in body && typeof body.privateRoomCount === "number"
+    ? body.privateRoomCount
+    : NaN;
+  const priceMismatchConfirmed = "priceMismatchConfirmed" in body && body.priceMismatchConfirmed === true;
+  if (!Number.isInteger(perTravelerPriceCents) || !isPublishedPerTravelerPriceCents(perTravelerPriceCents)) {
+    return Response.json({ error: "Choose one of the published per-traveler prices for the accuracy check." }, { status: 400 });
+  }
 
   const db = getDb();
   const [inquiry] = await db.select().from(bookingRequests)
@@ -47,6 +58,24 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
   if (inquiry.departure === "flexible") {
     return Response.json({ error: "Assign a specific departure before requesting a payment preference." }, { status: 400 });
+  }
+
+  let expectedBookingTotalCents: number;
+  try {
+    expectedBookingTotalCents = calculateExpectedBookingTotalCents({
+      partySize: inquiry.partySize,
+      perTravelerPriceCents,
+      privateRoomCount,
+    });
+  } catch (error) {
+    return Response.json({
+      error: error instanceof Error ? error.message : "The price accuracy check could not be calculated.",
+    }, { status: 400 });
+  }
+  if (bookingTotalCents !== expectedBookingTotalCents && !priceMismatchConfirmed) {
+    return Response.json({
+      error: `The entered booking total (${formatMoney(bookingTotalCents)}) does not match the checked price (${formatMoney(expectedBookingTotalCents)}). Review the difference and confirm it before creating the secure link.`,
+    }, { status: 409 });
   }
 
   const agreementReadiness = await getAgreementReadiness(bookingRequestId, inquiry.partySize);
@@ -114,4 +143,8 @@ function createInvitationToken() {
   let binary = "";
   for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/u, "");
+}
+
+function formatMoney(cents: number) {
+  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 }

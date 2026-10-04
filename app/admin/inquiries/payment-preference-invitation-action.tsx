@@ -2,7 +2,13 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Check, CheckCircle2, Copy, Link2, Loader2, LockKeyhole, Mail, WalletCards } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Copy, Link2, Loader2, LockKeyhole, Mail, WalletCards } from "lucide-react";
+import {
+  calculateExpectedBookingTotalCents,
+  inferPriceCheckSelection,
+  privateRoomSupplementCents,
+  publishedPerTravelerPricesCents,
+} from "@/lib/trip-pricing";
 import type { PaymentPreferenceGeneratedDraft } from "./dashboard-types";
 import {
   createPaymentPreferenceClientState,
@@ -20,6 +26,8 @@ type Props = {
   initialPaymentPreference: string | null;
   initialSelectedAt: string | null;
   invoiceExists: boolean;
+  partySize: number;
+  roomPreference: string;
   initialGeneratedDraft?: PaymentPreferenceGeneratedDraft;
   onGeneratedDraftChange?: (draft: PaymentPreferenceGeneratedDraft) => void;
 };
@@ -32,10 +40,17 @@ export function PaymentPreferenceInvitationAction({
   initialPaymentPreference,
   initialSelectedAt,
   invoiceExists,
+  partySize,
+  roomPreference,
   initialGeneratedDraft,
   onGeneratedDraftChange,
 }: Props) {
   const router = useRouter();
+  const initialPriceCheck = inferPriceCheckSelection({
+    bookingTotalCents: initialBookingTotalCents,
+    partySize,
+    preferredPrivateRoomCount: roomPreference === "private" ? partySize : 0,
+  });
   const serverSnapshot: PaymentPreferenceServerSnapshot = {
     bookingTotalCents: initialBookingTotalCents,
     paymentPreference: initialPaymentPreference,
@@ -50,6 +65,9 @@ export function PaymentPreferenceInvitationAction({
   const [copied, setCopied] = useState(false);
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const [error, setError] = useState("");
+  const [perTravelerPriceCents, setPerTravelerPriceCents] = useState<number>(initialPriceCheck.perTravelerPriceCents);
+  const [privateRoomCount, setPrivateRoomCount] = useState(initialPriceCheck.privateRoomCount);
+  const [priceMismatchConfirmed, setPriceMismatchConfirmed] = useState(false);
   if (!samePaymentPreferenceServerSnapshot(previousServerSnapshot, serverSnapshot)) {
     setPreviousServerSnapshot(serverSnapshot);
     setClientState((current) => reconcilePaymentPreferenceClientState(current, serverSnapshot));
@@ -68,7 +86,15 @@ export function PaymentPreferenceInvitationAction({
     email: generatedDraft?.primaryContactEmail ?? "",
   };
   const bookingTotalNumber = Number(bookingTotal);
-  const canCreate = agreementReady && !invoiceExists && Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0;
+  const bookingTotalCents = Number.isFinite(bookingTotalNumber) ? Math.round(bookingTotalNumber * 100) : 0;
+  const expectedBookingTotalCents = calculateExpectedBookingTotalCents({ partySize, perTravelerPriceCents, privateRoomCount });
+  const priceDifferenceCents = bookingTotalCents - expectedBookingTotalCents;
+  const bookingTotalIsValid = Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0;
+  const priceMatches = bookingTotalIsValid && priceDifferenceCents === 0;
+  const canCreate = agreementReady
+    && !invoiceExists
+    && bookingTotalIsValid
+    && (priceMatches || priceMismatchConfirmed);
   const formattedTotal = Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0
     ? bookingTotalNumber.toLocaleString("en-US", { style: "currency", currency: "USD" })
     : "the confirmed booking total";
@@ -98,7 +124,12 @@ Cookie Paradise Travel Company`;
       const response = await fetch(`/api/admin/inquiries/${inquiryId}/payment-preference-invitation`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ bookingTotalDollars: bookingTotalNumber }),
+        body: JSON.stringify({
+          bookingTotalDollars: bookingTotalNumber,
+          perTravelerPriceCents,
+          privateRoomCount,
+          priceMismatchConfirmed,
+        }),
       });
       const payload = await response.json() as {
         error?: string;
@@ -130,6 +161,7 @@ Cookie Paradise Travel Company`;
         paymentPreference: null,
         selectedAt: null,
       }));
+      setPriceMismatchConfirmed(false);
       router.refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "The payment-choice link could not be created.");
@@ -175,18 +207,63 @@ Cookie Paradise Travel Company`;
         <p className="mt-1">Confirmed booking total: {persistedTotal}{selectedAt ? ` · selected ${new Date(selectedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}` : ""}</p>
       </div>}
 
-      {!invoiceExists && <label className="mt-4 block text-sm font-semibold text-[var(--ink)]">
-        Confirmed total booking price
-        <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 [appearance:textfield] outline-none disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => {
-          const nextValue = event.target.value;
-          setClientState((current) => ({
-            ...current,
-            bookingTotal: nextValue,
-            bookingTotalDirty: nextValue !== formatBookingTotal(initialBookingTotalCents),
-          }));
-        }} placeholder="Enter total including supplements" /></span>
-        {clientState.bookingTotalDirty && <span className="mt-1 block text-xs font-semibold text-amber-800">Unsaved total change. Creating or replacing the payment-choice link will save this amount.</span>}
-      </label>}
+      {!invoiceExists && <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--cream)]/50 p-4">
+        <p className="text-sm font-extrabold text-[var(--ink)]">Price accuracy check</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--muted-ink)]">Select the applicable published price and supplements. The check uses this customer’s party size of {partySize}; it does not choose the enrollment tier for you.</p>
+
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <label className="block text-xs font-bold text-[var(--ink)]">
+            Current price per traveler
+            <select disabled={!agreementReady || creating} className="mt-1 min-h-11 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50" value={perTravelerPriceCents} onChange={(event) => {
+              setPerTravelerPriceCents(Number(event.target.value));
+              setPriceMismatchConfirmed(false);
+            }}>
+              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler</option>)}
+            </select>
+          </label>
+          <label className="block text-xs font-bold text-[var(--ink)]">
+            Travelers with private-room supplement
+            <select disabled={!agreementReady || creating} className="mt-1 min-h-11 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50" value={privateRoomCount} onChange={(event) => {
+              setPrivateRoomCount(Number(event.target.value));
+              setPriceMismatchConfirmed(false);
+            }}>
+              {Array.from({ length: partySize + 1 }, (_, count) => <option key={count} value={count}>{count} {count === 1 ? "traveler" : "travelers"}</option>)}
+            </select>
+            <span className="mt-1 block font-medium text-[var(--muted-ink)]">{money(privateRoomSupplementCents)} each</span>
+          </label>
+        </div>
+
+        <label className="mt-3 block text-sm font-semibold text-[var(--ink)]">
+          Confirmed total booking price
+          <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input disabled={!agreementReady || creating} className="min-w-0 flex-1 bg-transparent px-2 py-2 [appearance:textfield] outline-none disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none" type="number" min="1" max="100000" step="0.01" value={bookingTotal} onChange={(event) => {
+            const nextValue = event.target.value;
+            setPriceMismatchConfirmed(false);
+            setClientState((current) => ({
+              ...current,
+              bookingTotal: nextValue,
+              bookingTotalDirty: nextValue !== formatBookingTotal(initialBookingTotalCents),
+            }));
+          }} placeholder="Enter total including supplements" /></span>
+          {clientState.bookingTotalDirty && <span className="mt-1 block text-xs font-semibold text-amber-800">Unsaved total change. Creating or replacing the payment-choice link will save this amount.</span>}
+        </label>
+
+        <div className={`mt-3 rounded-xl border p-3 text-sm ${priceMatches ? "border-emerald-200 bg-emerald-50 text-emerald-950" : bookingTotalIsValid ? "border-red-300 bg-red-50 text-red-950" : "border-amber-200 bg-amber-50 text-amber-950"}`}>
+          {priceMatches ? (
+            <p className="flex items-start gap-2 font-bold"><CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" /> Price check matches the expected total of {money(expectedBookingTotalCents)}.</p>
+          ) : bookingTotalIsValid ? (
+            <>
+              <p className="flex items-start gap-2 font-bold"><AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" /> Price mismatch: expected {money(expectedBookingTotalCents)}, but entered {money(bookingTotalCents)}.</p>
+              <p className="mt-1 text-xs font-semibold">The entered total is {money(Math.abs(priceDifferenceCents))} {priceDifferenceCents > 0 ? "higher" : "lower"} than the price check.</p>
+              <label className="mt-3 flex cursor-pointer items-start gap-2 rounded-lg bg-white/70 p-2 text-xs font-bold">
+                <input checked={priceMismatchConfirmed} className="mt-0.5 h-4 w-4 shrink-0 accent-[var(--orange)]" onChange={(event) => setPriceMismatchConfirmed(event.target.checked)} type="checkbox" />
+                <span>I reviewed this difference and confirm that {money(bookingTotalCents)} is the correct total to send to the customer.</span>
+              </label>
+            </>
+          ) : (
+            <p className="font-semibold">Enter the booking total to run the price check. Expected total: {money(expectedBookingTotalCents)}.</p>
+          )}
+        </div>
+      </div>}
 
       {!invoiceExists && !invitationUrl && <button disabled={!canCreate || creating} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={createInvitation}>
         {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
@@ -204,11 +281,15 @@ Cookie Paradise Travel Company`;
           <div className="mt-3 flex flex-wrap gap-2">
           <button className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)]" type="button" onClick={copyEmailDraft}>{emailDraftCopied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{emailDraftCopied ? "Email draft copied" : "Copy email draft"}</button>
           <button className="inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-3 py-2 text-xs font-bold text-white" type="button" onClick={copyInvitation}>{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}{copied ? "Copied" : "Copy link"}</button>
-          <button disabled={creating} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] disabled:opacity-50" type="button" onClick={createInvitation}>Replace link</button>
+          <button disabled={!canCreate || creating} className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] disabled:opacity-50" type="button" onClick={createInvitation}>Replace link</button>
           </div>
         </details>
       </div>}
       {error && <p role="alert" className="mt-3 text-sm font-semibold text-red-700">{error}</p>}
     </section>
   );
+}
+
+function money(cents: number) {
+  return (cents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" });
 }
