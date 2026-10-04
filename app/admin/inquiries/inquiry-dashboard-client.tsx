@@ -433,7 +433,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1.5 font-bold">{departureLabel(inquiry.departure)}</span>
               <span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1.5 font-bold">{inquiry.partySize} traveler{inquiry.partySize === 1 ? "" : "s"}</span>
-              <StageBadge status={inquiry.status} />
+              <StatusSelect compact key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} />
             </div>
             <div className={`rounded-xl border px-4 py-3 ${workflow.blocked ? "border-amber-300 bg-amber-50" : "border-[var(--gold)] bg-[var(--gold)]/15"}`}>
               <div className="flex items-center justify-between gap-3">
@@ -526,10 +526,6 @@ function InquiryProgressChecklist({ inquiry, onSectionChange }: { inquiry: Dashb
 function OverviewSection({ inquiry, squareMode }: { inquiry: DashboardInquiry; squareMode: SquareMode }) {
   return (
     <div className="space-y-5">
-      <div className="flex flex-col gap-3 rounded-2xl border border-[var(--line)] bg-white p-4 sm:flex-row sm:items-start sm:justify-between">
-        <div><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Manual sales stage</p><p className="mt-1 text-sm text-[var(--muted-ink)]">Stage does not prove agreement or payment completion.</p></div>
-        <StatusSelect key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} />
-      </div>
       {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
       <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
         <SectionHeading description="Information submitted with the inquiry." title="Overview" />

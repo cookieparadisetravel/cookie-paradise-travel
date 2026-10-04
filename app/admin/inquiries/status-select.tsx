@@ -11,7 +11,7 @@ const options = [
   ["closed", "Closed"],
 ] as const;
 
-export function StatusSelect({ id, initialStatus }: { id: number; initialStatus: string }) {
+export function StatusSelect({ compact = false, id, initialStatus }: { compact?: boolean; id: number; initialStatus: string }) {
   const router = useRouter();
   const [status, setStatus] = useState(initialStatus);
   const [saving, setSaving] = useState(false);
@@ -42,11 +42,13 @@ export function StatusSelect({ id, initialStatus }: { id: number; initialStatus:
   }
 
   return (
-    <div className="min-w-40">
-      <label className="block text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-ink)]" htmlFor={`inquiry-status-${id}`}>Stage</label>
+    <div className={compact ? "min-w-36" : "min-w-40"}>
+      <label className={compact ? "sr-only" : "block text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-ink)]"} htmlFor={`inquiry-status-${id}`}>Stage</label>
       <select
-        aria-label="Inquiry status"
-        className="mt-1 w-full rounded-lg border border-[var(--input)] bg-white px-3 py-2 text-sm font-semibold text-[var(--ink)]"
+        aria-label="Inquiry stage"
+        className={compact
+          ? "min-h-9 w-full rounded-full border border-[var(--line)] bg-[var(--cream)] px-3 text-sm font-extrabold text-[var(--ink)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40"
+          : "mt-1 w-full rounded-lg border border-[var(--input)] bg-white px-3 py-2 text-sm font-semibold text-[var(--ink)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40"}
         disabled={saving}
         id={`inquiry-status-${id}`}
         value={status}
@@ -54,8 +56,8 @@ export function StatusSelect({ id, initialStatus }: { id: number; initialStatus:
       >
         {options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select>
-      <p aria-live="polite" className={`mt-1 text-xs font-semibold ${error ? "text-red-700" : "text-[var(--muted-ink)]"}`}>
-        {saving ? "Saving…" : error ? "Could not save." : saved ? "Saved" : "Update after each follow-up."}
+      <p aria-live="polite" className={`${compact ? "mt-0.5 text-center text-[0.64rem]" : "mt-1 text-xs"} font-semibold ${error ? "text-red-700" : "text-[var(--muted-ink)]"}`}>
+        {saving ? "Saving…" : error ? "Could not save." : saved ? "Saved" : compact ? "Manual stage only" : "Update after each follow-up."}
       </p>
     </div>
   );
