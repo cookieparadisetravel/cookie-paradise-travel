@@ -428,17 +428,19 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
           <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(300px,1.2fr)] lg:items-center">
             <div className="min-w-0">
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--orange)]">Inquiry #{inquiry.id}</p>
-              <h2 className="mt-1 truncate font-serif text-3xl font-bold leading-tight">{inquiry.fullName}</h2>
+              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+                <h2 className="min-w-0 truncate font-serif text-3xl font-bold leading-tight">{inquiry.fullName}</h2>
+                <StatusSelect compact key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} />
+              </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm">
               <span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1.5 font-bold">{departureLabel(inquiry.departure)}</span>
               <span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1.5 font-bold">{inquiry.partySize} traveler{inquiry.partySize === 1 ? "" : "s"}</span>
-              <StatusSelect compact key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} />
             </div>
             <div className={`rounded-xl border px-4 py-3 ${workflow.blocked ? "border-amber-300 bg-amber-50" : "border-[var(--gold)] bg-[var(--gold)]/15"}`}>
               <div className="flex items-center justify-between gap-3">
                 <div className="min-w-0"><p className="text-[0.68rem] font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Next action</p><p className="truncate text-sm font-bold">{workflow.label}</p></div>
-                <button className="shrink-0 rounded-full bg-[var(--gold)] px-3 py-2 text-xs font-extrabold text-[var(--ink)] hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={() => onSectionChange(workflow.section)} type="button">{workflow.actionLabel}</button>
+                <button className="min-h-10 shrink-0 rounded-full border border-[#d99a3b] bg-[var(--gold)] px-3 py-2 text-xs font-extrabold text-[var(--ink)] shadow-sm hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/50" onClick={() => onSectionChange(workflow.section)} type="button">{workflow.actionLabel}</button>
               </div>
               {workflow.blocked && <p className="mt-1 text-xs font-semibold text-amber-900">Blocked: {workflow.detail}</p>}
             </div>
