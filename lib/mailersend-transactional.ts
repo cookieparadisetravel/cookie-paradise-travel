@@ -115,6 +115,41 @@ export async function sendSignedAgreementEmail(input: {
   });
 }
 
+export async function sendTravelInsuranceReferralEmail(input: {
+  toEmail: string;
+  toName: string;
+}) {
+  const affiliateUrl = "https://purchase.sevencorners.com/product/u/0/ecf1f871-6681-4c8c-b6fc-2017e2ffa317";
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: "Consider travel insurance for your Vietnam trip",
+    text: [
+      `Hello ${input.toName},`,
+      "",
+      "Thank you for making your first payment toward your Cookie Paradise Travel Company trip.",
+      "",
+      "Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you. You may review available Seven Corners options using our referral link:",
+      affiliateUrl,
+      "",
+      "Affiliate disclosure: Cookie Paradise Travel Company may receive marketing referral compensation if you purchase through this link. You are not required to purchase from Seven Corners, and you may choose any insurance provider.",
+      "",
+      "For questions about Seven Corners coverage, benefits, exclusions, or purchasing, contact Lakita Brewington at 317-455-3634 or Lakita.Brewington@sevencorners.com.",
+      "",
+      "Cookie Paradise Travel Company does not determine eligibility for coverage or provide advice about which policy is right for you.",
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>Thank you for making your first payment toward your Cookie Paradise Travel Company trip.</p>
+      <p>Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you.</p>
+      <p><a href="${affiliateUrl}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review Seven Corners options</a></p>
+      <p style="font-size:13px;line-height:1.6;color:#5f5145"><strong>Affiliate disclosure:</strong> Cookie Paradise Travel Company may receive marketing referral compensation if you purchase through this link. You are not required to purchase from Seven Corners, and you may choose any insurance provider.</p>
+      <p>For questions about Seven Corners coverage, benefits, exclusions, or purchasing, contact Lakita Brewington at <a href="tel:+13174553634">317-455-3634</a> or <a href="mailto:Lakita.Brewington@sevencorners.com">Lakita.Brewington@sevencorners.com</a>.</p>
+      <p>Cookie Paradise Travel Company does not determine eligibility for coverage or provide advice about which policy is right for you.</p>
+    `,
+  });
+}
+
 async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResult> {
   const runtime = env as unknown as Record<string, string | undefined>;
   const token = runtime.MAILERSEND_API_TOKEN?.trim();

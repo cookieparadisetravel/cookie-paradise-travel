@@ -78,6 +78,13 @@
       "when": 1791043462446,
       "tag": "0010_smart_stature",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1791141288598,
+      "tag": "0011_redundant_bastion",
+      "breakpoints": true
     }
   ]
 }

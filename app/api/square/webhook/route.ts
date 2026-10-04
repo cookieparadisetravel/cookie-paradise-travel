@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { bookingRequests } from "@/db/schema";
+import { sendTravelInsuranceReferralEmail } from "@/lib/mailersend-transactional";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -139,5 +140,62 @@ export async function POST(request: Request) {
     ))
     .returning({ id: bookingRequests.id });
 
-  return Response.json({ ok: true, updated: Boolean(updated) });
+  let insuranceReferralSent = false;
+  if (payload.type === "invoice.payment_made") {
+    const claimTimestamp = new Date().toISOString();
+    const staleClaimCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const [claimed] = await getDb()
+      .update(bookingRequests)
+      .set({ travelInsuranceReferralClaimedAt: claimTimestamp })
+      .where(and(
+        eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+        isNull(bookingRequests.travelInsuranceReferralSentAt),
+        or(
+          isNull(bookingRequests.travelInsuranceReferralClaimedAt),
+          lt(bookingRequests.travelInsuranceReferralClaimedAt, staleClaimCutoff),
+        ),
+      ))
+      .returning({
+        id: bookingRequests.id,
+        email: bookingRequests.email,
+        fullName: bookingRequests.fullName,
+      });
+
+    if (claimed) {
+      try {
+        const result = await sendTravelInsuranceReferralEmail({
+          toEmail: claimed.email,
+          toName: claimed.fullName,
+        });
+        await getDb()
+          .update(bookingRequests)
+          .set({
+            travelInsuranceReferralSentAt: result.sentAt,
+            travelInsuranceReferralMessageId: result.messageId,
+          })
+          .where(and(
+            eq(bookingRequests.id, claimed.id),
+            eq(bookingRequests.travelInsuranceReferralClaimedAt, claimTimestamp),
+            isNull(bookingRequests.travelInsuranceReferralSentAt),
+          ));
+        insuranceReferralSent = true;
+      } catch (error) {
+        console.error("Travel insurance referral email failed", error);
+        await getDb()
+          .update(bookingRequests)
+          .set({ travelInsuranceReferralClaimedAt: null })
+          .where(and(
+            eq(bookingRequests.id, claimed.id),
+            eq(bookingRequests.travelInsuranceReferralClaimedAt, claimTimestamp),
+            isNull(bookingRequests.travelInsuranceReferralSentAt),
+          ));
+        return Response.json(
+          { error: "The payment was recorded, but the follow-up email could not be sent." },
+          { status: 500 },
+        );
+      }
+    }
+  }
+
+  return Response.json({ ok: true, updated: Boolean(updated), insuranceReferralSent });
 }
