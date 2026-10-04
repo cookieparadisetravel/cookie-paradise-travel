@@ -2,18 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-
-const options = [
-  ["new", "New"],
-  ["contacted", "Follow-up sent"],
-  ["qualified", "Ready to book"],
-  ["waitlist", "Waitlist"],
-  ["closed", "Closed"],
-] as const;
+import { inquiryStageOptions, normalizeInquiryStage } from "@/lib/inquiry-stage";
 
 export function StatusSelect({ compact = false, id, initialStatus }: { compact?: boolean; id: number; initialStatus: string }) {
   const router = useRouter();
-  const [status, setStatus] = useState(initialStatus);
+  const [status, setStatus] = useState(() => normalizeInquiryStage(initialStatus));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -56,7 +49,7 @@ export function StatusSelect({ compact = false, id, initialStatus }: { compact?:
         value={status}
         onChange={(event) => update(event.target.value)}
       >
-        {options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+        {inquiryStageOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select>
       <p aria-live="polite" className={`${compact ? "sr-only" : "mt-1 text-xs"} font-semibold ${error ? "text-red-700" : "text-[var(--muted-ink)]"}`} id={compact ? `inquiry-status-note-${id}` : undefined}>
         {saving ? "Saving…" : error ? "Could not save." : saved ? "Saved" : compact ? "Manual stage only" : "Update after each follow-up."}

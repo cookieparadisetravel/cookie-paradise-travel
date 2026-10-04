@@ -27,6 +27,13 @@ import { TravelerListInvitationAction } from "./traveler-list-invitation-action"
 import type { DashboardInquiry, GeneratedInvitationDraft, PaymentPreferenceGeneratedDraft, SquareMode } from "./dashboard-types";
 import { isPaymentPreferenceDraftUsable } from "./payment-preference-state";
 import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
+import {
+  inquiryStageLabel,
+  inquiryStageMatchesFilter,
+  inquiryStageOptions,
+  isActiveInquiryStage,
+  normalizeInquiryStage,
+} from "@/lib/inquiry-stage";
 
 type Props = {
   inquiries: DashboardInquiry[];
@@ -50,7 +57,6 @@ type ChecklistItem = {
   section: DetailSection;
 };
 
-const activeStatuses = new Set(["new", "contacted", "qualified"]);
 const generatedLinkCacheKey = "cookie-paradise-admin-generated-links-v1";
 const dashboardListStateKey = "cookie-paradise-admin-inquiry-list-state-v1";
 
@@ -83,14 +89,6 @@ const stateLabels: Record<string, string> = {
   HI: "Hawaii",
   MD: "Maryland",
   WA: "Washington",
-};
-
-const stageLabels: Record<string, string> = {
-  new: "New",
-  contacted: "Follow-up",
-  qualified: "Ready to book",
-  waitlist: "Waitlist",
-  closed: "Closed",
 };
 
 export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetailSection, initialInquiryId, ownerEmail, squareMode }: Props) {
@@ -158,7 +156,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
       });
     });
   }, [listStateToRestore, selectedInquiryId]);
-  const activeInquiries = inquiries.filter((inquiry) => activeStatuses.has(inquiry.status));
+  const activeInquiries = inquiries.filter((inquiry) => isActiveInquiryStage(inquiry.status));
   const attentionCounts = {
     new: activeInquiries.filter((inquiry) => inquiry.status === "new").length,
     missing_travelers: activeInquiries.filter(hasMissingTravelerDetails).length,
@@ -179,10 +177,10 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
   const visibleInquiries = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
     const filtered = inquiries.filter((inquiry) => {
-      if (mainTab === "active" && !activeStatuses.has(inquiry.status)) return false;
+      if (mainTab === "active" && !isActiveInquiryStage(inquiry.status)) return false;
       if (mainTab === "waitlist" && inquiry.status !== "waitlist") return false;
       if (mainTab === "closed" && inquiry.status !== "closed") return false;
-      if (stage !== "all" && inquiry.status !== stage) return false;
+      if (stage !== "all" && !inquiryStageMatchesFilter(inquiry.status, stage)) return false;
       if (departure !== "all" && inquiry.departure !== departure) return false;
       if (attentionFilter === "new" && inquiry.status !== "new") return false;
       if (attentionFilter === "missing_travelers" && !hasMissingTravelerDetails(inquiry)) return false;
@@ -306,11 +304,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
               </label>
               <FilterSelect icon={ListFilter} label="Stage" onChange={setStage} value={stage}>
                 <option value="all">All sales stages</option>
-                <option value="new">New</option>
-                <option value="contacted">Follow-up</option>
-                <option value="qualified">Ready to book</option>
-                <option value="waitlist">Waitlist</option>
-                <option value="closed">Closed</option>
+                {inquiryStageOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
               </FilterSelect>
               <FilterSelect icon={CalendarDays} label="Departure" onChange={setDeparture} value={departure}>
                 <option value="all">All departures</option>
@@ -428,7 +422,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
           <div className="grid gap-4 lg:grid-cols-[minmax(220px,1fr)_auto_minmax(300px,1.2fr)] lg:items-center">
             <div className="min-w-0">
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--orange)]">Inquiry #{inquiry.id}</p>
-              <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+              <div className="mt-1 flex flex-wrap items-center gap-x-6 gap-y-3 sm:gap-x-8">
                 <h2 className="min-w-0 truncate font-serif text-3xl font-bold leading-tight">{inquiry.fullName}</h2>
                 <StatusSelect compact key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} />
               </div>
@@ -594,8 +588,9 @@ function MobileLabel({ children }: { children: React.ReactNode }) {
 }
 
 function StageBadge({ status }: { status: string }) {
-  const classes = status === "closed" ? "bg-slate-100 text-slate-700" : status === "waitlist" ? "bg-amber-100 text-amber-900" : status === "qualified" ? "bg-blue-100 text-blue-900" : status === "new" ? "bg-[var(--gold)]/25 text-[var(--ink)]" : "bg-[var(--cream)] text-[var(--ink)]";
-  return <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-extrabold ${classes}`}>{stageLabels[status] ?? readableValue(status)}</span>;
+  const normalized = normalizeInquiryStage(status);
+  const classes = normalized === "closed" ? "bg-slate-100 text-slate-700" : normalized === "waitlist" ? "bg-amber-100 text-amber-900" : normalized === "reserved" ? "bg-emerald-100 text-emerald-900" : normalized === "booking_in_progress" ? "bg-blue-100 text-blue-900" : normalized === "new" ? "bg-[var(--gold)]/25 text-[var(--ink)]" : "bg-[var(--cream)] text-[var(--ink)]";
+  return <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-extrabold ${classes}`}>{inquiryStageLabel(status) ?? readableValue(status)}</span>;
 }
 
 function ProgressLine({ label, state }: { label: string; state: "complete" | "pending" | "error" }) {

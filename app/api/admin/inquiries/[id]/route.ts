@@ -3,8 +3,7 @@ import { getDb } from "@/db";
 import { eq } from "drizzle-orm";
 import { isOwnerRequest } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
-
-const validStatuses = new Set(["new", "contacted", "qualified", "waitlist", "closed"]);
+import { isAllowedInquiryStage } from "@/lib/inquiry-stage";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!hasValidOrigin(request)) return Response.json({ error: "Invalid request origin" }, { status: 403 });
@@ -23,7 +22,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   }
   const payload = parsedPayload as Record<string, unknown>;
   const status = String(payload.status ?? "");
-  if (!Number.isInteger(id) || id < 1 || !validStatuses.has(status)) {
+  if (!Number.isInteger(id) || id < 1 || !isAllowedInquiryStage(status)) {
     return Response.json({ error: "Invalid inquiry or status" }, { status: 400 });
   }
 
