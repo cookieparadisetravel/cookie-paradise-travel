@@ -1,4 +1,4 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, isNull, lt, sql } from "drizzle-orm";
 import { z } from "zod";
 import { agreementInvitations } from "@/db/schema";
 import { getDb } from "@/db";
@@ -47,19 +47,23 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   }
 
   const db = getDb();
-  const [stored] = await db.select({ hash: agreementInvitations.verificationCodeHash })
-    .from(agreementInvitations)
-    .where(eq(agreementInvitations.id, invitation.invitationId))
-    .limit(1);
-  if (!stored?.hash) {
+  const [claimedAttempt] = await db.update(agreementInvitations)
+    .set({ verificationAttempts: sql`${agreementInvitations.verificationAttempts} + 1` })
+    .where(and(
+      eq(agreementInvitations.id, invitation.invitationId),
+      lt(agreementInvitations.verificationAttempts, VERIFICATION_CODE_MAX_ATTEMPTS),
+      isNull(agreementInvitations.emailVerifiedAt),
+    ))
+    .returning({ hash: agreementInvitations.verificationCodeHash });
+  if (!claimedAttempt) {
+    return Response.json({ error: "Too many incorrect attempts. Request a new code." }, { status: 429 });
+  }
+  if (!claimedAttempt.hash) {
     return Response.json({ error: "The verification code is not ready. Request another code." }, { status: 409 });
   }
 
   const submittedHash = await hashVerificationCode(invitation.invitationId, parsed.data.code);
-  if (!constantTimeEqual(stored.hash, submittedHash)) {
-    await db.update(agreementInvitations)
-      .set({ verificationAttempts: sql`${agreementInvitations.verificationAttempts} + 1` })
-      .where(eq(agreementInvitations.id, invitation.invitationId));
+  if (!constantTimeEqual(claimedAttempt.hash, submittedHash)) {
     return Response.json({ error: "That verification code is incorrect." }, { status: 400 });
   }
 
