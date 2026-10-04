@@ -100,10 +100,10 @@ export async function createSquareDepositOrder(input: {
       customer_id: input.customerId,
       reference_id: `booking-inquiry-${input.inquiryId}`,
       line_items: [{
-        name: "Vietnam 2027 trip booking",
+        name: "Discover Southern Vietnam booking",
         quantity: "1",
         base_price_money: { amount: input.bookingTotalCents, currency: "USD" },
-        note: "Payment for the Vietnam 2027 trip booking. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement.",
+        note: "Payment for the Discover Southern Vietnam booking. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement.",
       }],
     },
   } });
@@ -154,7 +154,7 @@ export async function createSquareDepositInvoice(input: {
         buy_now_pay_later: false,
         cash_app_pay: false,
       },
-      title: input.paymentType === "deposit" ? "Vietnam 2027 — payment plan" : "Vietnam 2027 — full payment",
+      title: input.paymentType === "deposit" ? "Discover Southern Vietnam — payment plan" : "Discover Southern Vietnam — full payment",
       description: input.paymentType === "deposit"
         ? depositInvoiceDescription(input.partySize, initialAmount, bookingTotal, input.installments, input.finalPaymentDeadline)
         : `Full payment selected for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`,

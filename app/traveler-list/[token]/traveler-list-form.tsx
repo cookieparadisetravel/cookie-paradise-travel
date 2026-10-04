@@ -74,7 +74,7 @@ export function TravelerListForm({ token, primaryContactName, departure, remaini
   return (
     <>
       <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-9">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--orange)]">Vietnam traveler list</p>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--orange)]">Discover Southern Vietnam traveler list</p>
         <h1 className="mt-2 font-serif text-3xl sm:text-4xl">Hello, {primaryContactName}</h1>
         <p className="mt-4 leading-7 text-[var(--muted-ink)]">Please provide the information below for {remainingTravelerCount} traveler{remainingTravelerCount === 1 ? "" : "s"} on the {departure} departure. Use each traveler’s legal name as it appears on their identification.</p>
         <div className="mt-5 flex gap-3 rounded-2xl border border-[var(--gold)]/50 bg-[var(--gold)]/15 p-4 text-sm leading-6">

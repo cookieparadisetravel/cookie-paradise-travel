@@ -75,7 +75,7 @@ export function PaymentPreferenceInvitationAction({
   const persistedTotal = initialBookingTotalCents && initialBookingTotalCents > 0
     ? (initialBookingTotalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
     : "Not recorded";
-  const emailSubject = "Choose your payment option for your Vietnam trip";
+  const emailSubject = "Choose your payment option for Discover Southern Vietnam";
   const emailBody = `Hi ${primaryContact.name},
 
 Your confirmed group booking total is ${formattedTotal}. Please use the secure link below to choose either pay in full or the $500-per-traveler deposit with monthly installments:

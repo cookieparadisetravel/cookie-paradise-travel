@@ -73,7 +73,7 @@ export function PaymentPreferenceForm({
   return (
     <form onSubmit={submit}>
       <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-9">
-        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--orange)]">Vietnam booking payment</p>
+        <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--orange)]">Discover Southern Vietnam payment</p>
         <h1 className="mt-2 font-serif text-3xl sm:text-4xl">Hello, {primaryContactName}</h1>
         <p className="mt-4 leading-7 text-[var(--muted-ink)]">Please choose how your group would like to pay for the {departure} departure.</p>
 

@@ -130,7 +130,7 @@ export default function Home() {
               <span className="h-px w-10 bg-[var(--gold)]" /> Small-group Vietnam • 2027
             </p>
             <h1 className="max-w-3xl font-serif text-5xl leading-[0.96] tracking-[-0.045em] sm:text-7xl lg:text-[5.8rem]">
-              Southern Charms &amp; Central Heritage
+              Discover Southern Vietnam
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
               Eight thoughtfully paced days from Saigon and the Mekong to imperial Huế and lantern-lit Hội An, personally hosted by Trung Le.

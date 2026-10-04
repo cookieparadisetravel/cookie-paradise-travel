@@ -25,7 +25,7 @@ export function TravelerListInvitationAction({ inquiryId, expectedPartySize, cur
   const [emailDraftCopied, setEmailDraftCopied] = useState(false);
   const [error, setError] = useState("");
   const remaining = Math.max(0, expectedPartySize - currentTravelerCount);
-  const emailSubject = "Secure traveler-list link for your Vietnam trip";
+  const emailSubject = "Secure traveler-list link for Discover Southern Vietnam";
   const emailBody = `Hi ${primaryContact.name},
 
 To continue your group's reservation, please use the secure link below to provide the legal names and email addresses of the other travelers in your party:

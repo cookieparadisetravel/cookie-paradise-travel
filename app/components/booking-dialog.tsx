@@ -253,7 +253,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               <DialogClose className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70" aria-label="Close request form">
                 <X className="h-5 w-5" />
               </DialogClose>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Vietnam 2027</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Discover Southern Vietnam • 2027</p>
               <DialogTitle className="font-serif text-3xl">Request a place</DialogTitle>
               <DialogDescription className="text-sm leading-6 text-white/70">
                 Tell us which departure works for you. No payment is collected and this form does not confirm a reservation.
