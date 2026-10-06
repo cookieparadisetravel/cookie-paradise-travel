@@ -106,10 +106,25 @@ export async function POST(request: Request, context: { params: Promise<{ token:
       bookingRequestId,
       ...traveler,
     })));
-  } catch {
+  } catch (cause) {
+    console.error("Traveler-list database save failed", {
+      bookingRequestId,
+      invitationId,
+      submittedTravelerCount: normalizedTravelers.length,
+      error: cause instanceof Error
+        ? { name: cause.name, message: cause.message, stack: cause.stack }
+        : String(cause),
+    });
     try {
       await releaseClaim();
-    } catch {
+    } catch (releaseCause) {
+      console.error("Traveler-list claim could not be released after a failed save", {
+        bookingRequestId,
+        invitationId,
+        error: releaseCause instanceof Error
+          ? { name: releaseCause.name, message: releaseCause.message, stack: releaseCause.stack }
+          : String(releaseCause),
+      });
       return Response.json({ error: "Traveler information could not be saved, and the secure link could not be restored. Please contact Cookie Paradise Travel Company for a new link." }, { status: 500 });
     }
     return Response.json({ error: "Traveler information could not be saved. Please try again." }, { status: 500 });
