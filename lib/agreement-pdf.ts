@@ -86,7 +86,6 @@ function renderAgreementHtml(agreement: AgreementDocument, snapshot?: AgreementA
         <li>Entire Traveler Agreement: accepted</li>
         <li>$500 per traveler nonrefundable reservation deposit: acknowledged</li>
         <li>Cancellation terms: acknowledged</li>
-        <li>Completed Schedule 1: acknowledged</li>
         <li>Health and ability to participate: acknowledged</li>
         <li>Travel-insurance decision: ${escapeHtml(snapshot.insuranceSelection.replaceAll("_", " "))}</li>
         <li>Section 20A ordinary-negligence release: acknowledged</li>

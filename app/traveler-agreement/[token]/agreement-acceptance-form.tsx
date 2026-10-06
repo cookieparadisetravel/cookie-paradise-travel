@@ -30,7 +30,6 @@ type FormState = {
   agreementConsent: boolean;
   depositAcknowledged: boolean;
   cancellationAcknowledged: boolean;
-  paymentScheduleAcknowledged: boolean;
   healthFitnessAcknowledged: boolean;
   insuranceSelection: string;
   insuranceAcknowledged: boolean;
@@ -50,7 +49,6 @@ const initialForm: FormState = {
   agreementConsent: false,
   depositAcknowledged: false,
   cancellationAcknowledged: false,
-  paymentScheduleAcknowledged: false,
   healthFitnessAcknowledged: false,
   insuranceSelection: "",
   insuranceAcknowledged: false,
@@ -267,7 +265,6 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
           <RequiredCheckbox checked={form.agreementConsent} onChange={(value) => setForm({ ...form, agreementConsent: value })}>I have read, understand and agree to the Traveler Agreement and Booking Terms shown above.</RequiredCheckbox>
           <RequiredCheckbox checked={form.depositAcknowledged} onChange={(value) => setForm({ ...form, depositAcknowledged: value })}>I understand that the $500 per traveler reservation deposit is nonrefundable, subject to Sections 4, 12 and 14 of the agreement.</RequiredCheckbox>
           <RequiredCheckbox checked={form.cancellationAcknowledged} onChange={(value) => setForm({ ...form, cancellationAcknowledged: value })}>I have reviewed and acknowledge the cancellation terms in the agreement.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.paymentScheduleAcknowledged} onChange={(value) => setForm({ ...form, paymentScheduleAcknowledged: value })}>I reviewed my completed Schedule 1, including my Trip Price, payment choice, amounts and due dates.</RequiredCheckbox>
           <RequiredCheckbox checked={form.healthFitnessAcknowledged} onChange={(value) => setForm({ ...form, healthFitnessAcknowledged: value })}>I reviewed the itinerary and its physical demands and acknowledge the health and ability-to-participate statement in Section 17.</RequiredCheckbox>
           <RequiredCheckbox checked={form.insuranceAcknowledged} onChange={(value) => setForm({ ...form, insuranceAcknowledged: value })}>I separately confirm the travel-insurance decision selected above.</RequiredCheckbox>
           <RequiredCheckbox checked={form.releaseAcknowledged} onChange={(value) => setForm({ ...form, releaseAcknowledged: value })}>I have read and understand the release of claims for the Company’s own ordinary negligence in Section 20A.</RequiredCheckbox>

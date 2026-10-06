@@ -36,7 +36,7 @@ export default async function PaymentPreferencePage({ params }: { params: Promis
         {result.status === "expired" && <StatusCard icon="alert" title="This payment-choice link has expired">Please contact Cookie Paradise Travel Company to request a new secure link.</StatusCard>}
         {result.status === "completed" && <StatusCard icon="check" title="Payment preference received">
           <span>This secure link has already been used{result.completedAt ? ` on ${new Date(result.completedAt).toLocaleDateString("en-US", { dateStyle: "long" })}` : ""}. Your selection was {result.paymentPreference === "full" ? "pay in full" : result.paymentPreference === "payment_plan" ? "deposit and monthly installments" : "recorded"}.</span>
-          {result.invoiceUrl ? <a className="mx-auto mt-6 inline-flex rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white" href={result.invoiceUrl}>Open Square invoice</a> : <span className="mt-3 block">Personalized traveler agreements are the next step. Square will email the invoice after all required agreements are signed and the owner issues it.</span>}
+          {result.invoiceUrl ? <a className="mx-auto mt-6 inline-flex rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white" href={result.invoiceUrl}>Open Square invoice</a> : <span className="mt-3 block">The payment choice is recorded, but the Square invoice link is not available. Please contact Cookie Paradise Travel Company.</span>}
         </StatusCard>}
         {result.status === "ready" && <PaymentPreferenceForm
           token={token}

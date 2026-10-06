@@ -22,7 +22,6 @@ export type AgreementAcceptanceSnapshot = {
   agreementConsent: true;
   depositAcknowledged: true;
   cancellationAcknowledged: true;
-  paymentScheduleAcknowledged: true;
   healthFitnessAcknowledged: true;
   insuranceSelection: "will_purchase" | "declined";
   insuranceAcknowledged: true;

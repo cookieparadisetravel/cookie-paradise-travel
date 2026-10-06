@@ -11,8 +11,6 @@ import {
   hashAgreementDocument,
   hashInvitationToken,
 } from "@/lib/traveler-agreement";
-import { isPaymentPreference } from "@/lib/payment-preference-invitation";
-import { todayInIndiana } from "@/lib/payment-schedule";
 
 const INVITATION_LIFETIME_DAYS = 14;
 
@@ -62,17 +60,6 @@ export async function POST(
     .where(eq(bookingRequests.id, inquiryId))
     .limit(1);
   if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
-  if (!inquiry.confirmedBookingTotalCents || !isPaymentPreference(inquiry.paymentPreference) || !inquiry.companyAcceptedAt || !inquiry.companyAcceptedBy) {
-    return Response.json({
-      error: "Record the confirmed traveler prices and have the primary contact choose a payment option before sending agreement links.",
-    }, { status: 409 });
-  }
-  if (inquiry.squareDepositInvoiceStatus !== "draft" || !inquiry.squareDepositInvoiceId) {
-    return Response.json({
-      error: "The matching Square draft invoice must be prepared before agreement links are sent.",
-    }, { status: 409 });
-  }
-
   const bookingTravelers = await db.select({
     id: travelers.id,
     confirmedTripPriceCents: travelers.confirmedTripPriceCents,
@@ -84,10 +71,6 @@ export async function POST(
   if (bookingTravelers.some((record) => !record.confirmedTripPriceCents || record.confirmedTripPriceCents < 1 || (record.confirmedOccupancy !== "shared" && record.confirmedOccupancy !== "private"))) {
     return Response.json({ error: "Save a confirmed Trip Price and occupancy for every traveler before sending agreement links." }, { status: 409 });
   }
-  const allocatedTotal = bookingTravelers.reduce((sum, record) => sum + (record.confirmedTripPriceCents ?? 0), 0);
-  if (allocatedTotal !== inquiry.confirmedBookingTotalCents) {
-    return Response.json({ error: "The individual traveler prices must add up exactly to the confirmed booking total." }, { status: 409 });
-  }
   if (!traveler.confirmedTripPriceCents || (traveler.confirmedOccupancy !== "shared" && traveler.confirmedOccupancy !== "private")) {
     return Response.json({ error: "Save this traveler’s confirmed Trip Price and occupancy before sending the agreement." }, { status: 409 });
   }
@@ -97,8 +80,6 @@ export async function POST(
     departure: inquiry.departure,
     occupancy: traveler.confirmedOccupancy === "private" ? "Private room supplement" : "Shared double/twin room",
     tripPriceCents: traveler.confirmedTripPriceCents,
-    paymentPreference: inquiry.paymentPreference,
-    acceptanceDate: todayInIndiana(new Date(inquiry.companyAcceptedAt)),
   });
 
   const agreementHash = await hashAgreementDocument(personalizedAgreement);

@@ -20,7 +20,7 @@
           "type": "paragraph",
           "segments": [
             {
-              "text": "2. Trip documents. This Agreement includes the signed booking confirmation, individualized Payment Schedule (Schedule 1), invoice, Appendix A itinerary, Appendix B Responsibility and Disclaimer Provisions, Appendix C Vietnam Traveler Safety Briefing, included and excluded services, trip-specific notices, privacy notice, and any written amendment signed by both the Company and the affected traveler. If documents conflict, a later trip-specific written amendment signed by both parties controls, followed by the booking confirmation, this Agreement (including its appendices and Schedule 1), and the descriptive itinerary. Appendix B supplements this Agreement; Sections 1–33 control over conflicting Appendix B language.",
+              "text": "2. Trip documents. This Agreement includes the signed booking confirmation, Square invoice and hosted payment schedule when issued, Appendix A itinerary, Appendix B Responsibility and Disclaimer Provisions, Appendix C Vietnam Traveler Safety Briefing, included and excluded services, trip-specific notices, privacy notice, and any written amendment signed by both the Company and the affected traveler. If documents conflict, a later trip-specific written amendment signed by both parties controls, followed by the booking confirmation, this Agreement and its appendices, the Square invoice and hosted payment schedule, and the descriptive itinerary. Appendix B supplements this Agreement; Sections 1–33 control over conflicting Appendix B language.",
               "strong": false
             }
           ]
@@ -141,7 +141,7 @@
           "type": "paragraph",
           "segments": [
             {
-              "text": "(a) Individual payment schedule. For a booking accepted more than 90 days before departure, the balance of the confirmed Trip Price remaining after the deposit is payable in equal monthly installments, not to exceed twelve (12), with any rounding difference applied to the final installment. The final installment is due no later than 90 days before departure. If fewer than two monthly due dates fall between acceptance and that deadline, the entire balance is due in one payment no later than 90 days before departure. The exact number, amounts, and due dates appear in the traveler’s individualized Payment Schedule, identified as Schedule 1. Schedule 1 forms part of this Agreement and must be completed before the traveler signs this Agreement on paper or electronically or authorizes automatic payments. Blank or estimated entries do not authorize a charge.",
+              "text": "(a) Individual payment schedule. For a booking accepted more than 90 days before departure, the balance of the confirmed Trip Price remaining after the deposit is payable in equal monthly installments, not to exceed twelve (12), with any rounding difference applied to the final installment. The final installment is due no later than 90 days before departure. If fewer than two monthly due dates fall between acceptance and that deadline, the entire balance is due in one payment no later than 90 days before departure. The exact number, amounts, and due dates are presented through Square’s hosted invoice and payment process before payment. The Square invoice and hosted payment schedule become part of the traveler’s booking documents when issued.",
               "strong": false
             }
           ]
@@ -159,7 +159,7 @@
           "type": "paragraph",
           "segments": [
             {
-              "text": "(c) Optional automatic payments. Automatic payments are optional and are not required to book. A traveler who does not select automatic payments may make each required payment through the payment methods shown on the Square invoice. If automatic payments are offered and selected, the cardholder must complete a separate authorization after receiving the completed Schedule 1. That authorization will identify the exact amounts, due dates, total authorized amount, and payment method maintained securely by Square. The Company will not collect or store a full card number or security code. Square will securely collect and maintain the payment method; the Company may retain Square’s payment-method identifier and limited details such as the card brand and last four digits. The Company will not increase an installment, add a charge, or move a payment to an earlier date without the cardholder’s new written authorization. Stopping automatic payments does not cancel the booking or change a payment deadline. If the cardholder is not the traveler, the cardholder authorizes only the stated payments and does not accept the traveler’s other contractual terms.",
+              "text": "(c) Optional automatic payments. Automatic payments are optional and are not required to book. A traveler who does not select automatic payments may make each required payment through the payment methods shown on the Square invoice. If automatic payments are offered and selected, the cardholder must complete a separate authorization through Square after reviewing the exact amounts, due dates, and total authorized amount. The Company will not collect or store a full card number or security code. Square will securely collect and maintain the payment method; the Company may retain Square’s payment-method identifier and limited details such as the card brand and last four digits. The Company will not increase an installment, add a charge, or move a payment to an earlier date without the cardholder’s new written authorization. Stopping automatic payments does not cancel the booking or change a payment deadline. If the cardholder is not the traveler, the cardholder authorizes only the stated payments and does not accept the traveler’s other contractual terms.",
               "strong": false
             }
           ]
@@ -792,7 +792,7 @@
           "type": "paragraph",
           "segments": [
             {
-              "text": "For paper signing, the Company will provide the complete Agreement, all appendices, and the traveler’s completed Schedule 1. The traveler must personally initial all required provisions and sign the acceptance block by hand. Each adult traveler must sign separately, and a parent or legal guardian must sign the minor-traveler block for each minor. The Company will provide the traveler a complete copy after all required signatures are completed. A handwritten signature and a valid electronic signature have the same contractual effect to the extent permitted by law.",
+              "text": "For paper signing, the Company will provide the complete Agreement and all appendices. The traveler must personally initial all required provisions and sign the acceptance block by hand. Each adult traveler must sign separately, and a parent or legal guardian must sign the minor-traveler block for each minor. The Company will provide the traveler a complete copy after all required signatures are completed. Exact installment amounts and due dates, when applicable, are provided separately through Square’s hosted invoice and payment process. A handwritten signature and a valid electronic signature have the same contractual effect to the extent permitted by law.",
               "strong": false
             }
           ]
@@ -1150,7 +1150,7 @@
           "type": "paragraph",
           "segments": [
             {
-              "text": "By signing or electronically accepting the traveler agreement, the traveler confirms that the traveler has reviewed these provisions, Appendix C, and the completed Schedule 1; had an opportunity to ask questions; and agrees to be bound by them.",
+              "text": "By signing or electronically accepting the traveler agreement, the traveler confirms that the traveler has reviewed these provisions and Appendix C, had an opportunity to ask questions, and agrees to be bound by them. Exact installment amounts and due dates, when applicable, are presented separately through Square’s hosted invoice and payment process.",
               "strong": false
             }
           ]

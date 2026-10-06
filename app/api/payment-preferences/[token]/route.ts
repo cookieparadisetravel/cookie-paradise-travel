@@ -2,6 +2,7 @@ import { and, eq, isNull, or, sql } from "drizzle-orm";
 import { bookingRequests, paymentPreferenceInvitations } from "@/db/schema";
 import { getDb } from "@/db";
 import { createBookingInvoice } from "@/lib/booking-invoice";
+import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { sendOwnerPaymentPreferenceNotification } from "@/lib/owner-notification";
 import { getPaymentPreferenceInvitation, isPaymentPreference } from "@/lib/payment-preference-invitation";
 
@@ -35,6 +36,10 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   }
 
   const db = getDb();
+  const agreementReadiness = await getAgreementReadiness(invitation.bookingRequestId, invitation.partySize);
+  if (!agreementReadiness.readyForInvoice) {
+    return Response.json({ error: `Payment setup is locked. ${agreementReadiness.message}` }, { status: 409 });
+  }
   const completedAt = new Date().toISOString();
   const claimedInvitations = await db.update(paymentPreferenceInvitations).set({ completedAt }).where(and(
     eq(paymentPreferenceInvitations.id, invitationId),
@@ -83,7 +88,6 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   const invoiceResult = await createBookingInvoice({
     inquiryId: invitation.bookingRequestId,
     acceptedBy: invitation.createdBy ?? "Secure payment-choice link",
-    publish: false,
   });
   if (!invoiceResult.ok) {
     try {
@@ -110,5 +114,10 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     });
   }
 
-  return Response.json({ completedAt, paymentPreference }, { status: 201 });
+  return Response.json({
+    completedAt,
+    paymentPreference,
+    invoiceUrl: invoiceResult.publicUrl,
+    invoiceStatus: invoiceResult.status,
+  }, { status: 201 });
 }

@@ -1,8 +1,9 @@
-import { and, eq } from "drizzle-orm";
-import { bookingRequests, travelers } from "@/db/schema";
+import { and, eq, isNotNull } from "drizzle-orm";
+import { agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
+import { isPublishedPerTravelerPriceCents, privateRoomSupplementCents } from "@/lib/trip-pricing";
 
 type PriceInput = { travelerId: number; tripPriceCents: number; occupancy: "shared" | "private" };
 
@@ -24,6 +25,11 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
   }
   if (!body || typeof body !== "object" || Array.isArray(body) || !("prices" in body) || !Array.isArray(body.prices)) {
     return Response.json({ error: "Provide one confirmed Trip Price for every traveler." }, { status: 400 });
+  }
+  const publishedBasePriceCents = "publishedBasePriceCents" in body ? body.publishedBasePriceCents : null;
+  const priceMismatchConfirmed = "priceMismatchConfirmed" in body && body.priceMismatchConfirmed === true;
+  if (!Number.isSafeInteger(publishedBasePriceCents) || !isPublishedPerTravelerPriceCents(Number(publishedBasePriceCents))) {
+    return Response.json({ error: "Choose one of the published package prices before saving traveler prices." }, { status: 400 });
   }
 
   const prices: PriceInput[] = [];
@@ -57,12 +63,27 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     id: travelers.id,
     confirmedTripPriceCents: travelers.confirmedTripPriceCents,
   }).from(travelers).where(eq(travelers.bookingRequestId, inquiryId));
+  const [sentAgreement] = await db.select({ id: agreementInvitations.id })
+    .from(agreementInvitations)
+    .innerJoin(travelers, eq(agreementInvitations.travelerId, travelers.id))
+    .where(and(
+      eq(travelers.bookingRequestId, inquiryId),
+      isNotNull(agreementInvitations.invitationEmailSentAt),
+    ))
+    .limit(1);
+  if (sentAgreement) {
+    return Response.json({ error: "Traveler prices are locked because a personalized agreement has already been emailed." }, { status: 409 });
+  }
   const recordIds = new Set(records.map((traveler) => traveler.id));
   const submittedIds = new Set(prices.map((price) => price.travelerId));
   if (records.length !== inquiry.partySize || prices.length !== records.length || submittedIds.size !== records.length || prices.some((price) => !recordIds.has(price.travelerId))) {
     return Response.json({ error: "The submitted prices must match every traveler on this inquiry exactly once." }, { status: 409 });
   }
   const submittedTotal = prices.reduce((sum, price) => sum + price.tripPriceCents, 0);
+  const hasPriceMismatch = prices.some((price) => price.tripPriceCents !== Number(publishedBasePriceCents) + (price.occupancy === "private" ? privateRoomSupplementCents : 0));
+  if (hasPriceMismatch && !priceMismatchConfirmed) {
+    return Response.json({ error: "One or more traveler prices do not match the selected published package price and occupancy. Review and confirm the differences before saving." }, { status: 409 });
+  }
   if (inquiry.invoiceId) {
     const legacyDraftCanBeInitialized = inquiry.invoiceStatus === "draft"
       && records.every((traveler) => traveler.confirmedTripPriceCents === null)

@@ -3,6 +3,7 @@ import { bookingRequests, paymentPreferenceInvitations, travelers } from "@/db/s
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
+import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { hasValidOrigin } from "@/lib/same-origin";
 import { hashInvitationToken } from "@/lib/traveler-agreement";
 import { calculateExpectedBookingTotalCents, isPublishedPerTravelerPriceCents } from "@/lib/trip-pricing";
@@ -57,6 +58,12 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
   if (inquiry.departure === "flexible") {
     return Response.json({ error: "Assign a specific departure before requesting a payment preference." }, { status: 400 });
+  }
+  const agreementReadiness = await getAgreementReadiness(bookingRequestId, inquiry.partySize);
+  if (!agreementReadiness.readyForInvoice) {
+    return Response.json({
+      error: `The payment-choice link is locked. ${agreementReadiness.message}`,
+    }, { status: 409 });
   }
 
   let expectedBookingTotalCents: number;
