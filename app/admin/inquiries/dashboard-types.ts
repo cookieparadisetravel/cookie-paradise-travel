@@ -7,6 +7,8 @@ export type DashboardTraveler = {
   dateOfBirth: string | null;
   guardianLegalName: string | null;
   guardianRelationship: string | null;
+  confirmedTripPriceCents: number | null;
+  confirmedOccupancy: string | null;
 };
 
 export type AgreementInvitationDelivery = {
@@ -67,6 +69,7 @@ export type DashboardInquiry = {
   squareDepositClaimIsStale: boolean;
   companyAcceptedAt: string | null;
   companyAcceptedBy: string | null;
+  companyAcceptanceDate: string;
   travelers: DashboardTraveler[];
   agreementActive: boolean;
   agreementReady: boolean;

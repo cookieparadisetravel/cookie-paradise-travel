@@ -48,10 +48,9 @@ export function PaymentPreferenceForm({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ paymentPreference }),
       });
-      const payload = await response.json() as { error?: string; completedAt?: string; publicUrl?: string };
-      if (!response.ok || !payload.completedAt || !payload.publicUrl) throw new Error(payload.error || "Your payment preference could not be submitted.");
+      const payload = await response.json() as { error?: string; completedAt?: string };
+      if (!response.ok || !payload.completedAt) throw new Error(payload.error || "Your payment preference could not be submitted.");
       setCompletedAt(payload.completedAt);
-      window.location.assign(payload.publicUrl);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Your payment preference could not be submitted.");
     } finally {
@@ -65,7 +64,7 @@ export function PaymentPreferenceForm({
         <CheckCircle2 className="h-11 w-11 text-emerald-700" />
         <h1 className="mt-5 font-serif text-3xl sm:text-4xl">Payment preference received</h1>
         <p className="mt-4 leading-7">You selected <strong>{paymentPreference === "full" ? "pay in full" : "deposit and monthly installments"}</strong>.</p>
-        <p className="mt-2 text-sm leading-6">Your Square invoice is ready. You are being redirected to Square’s secure payment page.</p>
+        <p className="mt-2 text-sm leading-6">Cookie Paradise Travel Company will now send each traveler a personalized Agreement 1.0. After all travelers sign, the owner will review and issue the Square invoice.</p>
       </section>
     );
   }
@@ -110,12 +109,12 @@ export function PaymentPreferenceForm({
 
         <div className="mt-6 flex gap-3 rounded-2xl border border-[var(--gold)]/50 bg-[var(--gold)]/10 p-4 text-sm leading-6">
           <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--orange)]" />
-          <p>Do not enter card or bank information on this page. After you confirm your preference, you will continue directly to Square’s secure payment page. Square will also email the invoice to the primary contact.</p>
+          <p>Do not enter card or bank information on this page. Your choice will be used to prepare each traveler’s payment schedule. Square will email the invoice to the primary contact only after every required traveler agreement is signed and the owner approves it.</p>
         </div>
 
         {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">{error}</p>}
         <button disabled={submitting || !paymentPreference} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" type="submit">
-          {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Preparing Square payment…</> : "Continue to Square payment"}
+          {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving payment choice…</> : "Confirm payment choice"}
         </button>
       </section>
     </form>

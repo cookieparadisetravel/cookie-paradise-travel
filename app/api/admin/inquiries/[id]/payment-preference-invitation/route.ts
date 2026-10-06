@@ -1,7 +1,6 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { bookingRequests, paymentPreferenceInvitations } from "@/db/schema";
+import { bookingRequests, paymentPreferenceInvitations, travelers } from "@/db/schema";
 import { getDb } from "@/db";
-import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { requireOwner } from "@/lib/owner-auth";
 import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
 import { hasValidOrigin } from "@/lib/same-origin";
@@ -78,12 +77,19 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     }, { status: 409 });
   }
 
-  const agreementReadiness = await getAgreementReadiness(bookingRequestId, inquiry.partySize);
-  if (!agreementReadiness.readyForInvoice) {
-    return Response.json({
-      error: `Payment-preference link is locked. ${agreementReadiness.message}`,
-      agreementReadiness,
-    }, { status: 409 });
+  const bookingTravelers = await db.select({
+    confirmedTripPriceCents: travelers.confirmedTripPriceCents,
+    confirmedOccupancy: travelers.confirmedOccupancy,
+  }).from(travelers).where(eq(travelers.bookingRequestId, bookingRequestId));
+  if (bookingTravelers.length !== inquiry.partySize) {
+    return Response.json({ error: "Enter exactly one traveler record for each person before creating the payment-choice link." }, { status: 409 });
+  }
+  if (bookingTravelers.some((traveler) => !traveler.confirmedTripPriceCents || traveler.confirmedTripPriceCents < 1 || (traveler.confirmedOccupancy !== "shared" && traveler.confirmedOccupancy !== "private"))) {
+    return Response.json({ error: "Save a confirmed Trip Price and occupancy for every traveler before creating the payment-choice link." }, { status: 409 });
+  }
+  const allocatedTotal = bookingTravelers.reduce((sum, traveler) => sum + (traveler.confirmedTripPriceCents ?? 0), 0);
+  if (allocatedTotal !== bookingTotalCents) {
+    return Response.json({ error: `The individual traveler prices total ${formatMoney(allocatedTotal)}, but the confirmed booking total is ${formatMoney(bookingTotalCents)}.` }, { status: 409 });
   }
 
   try {

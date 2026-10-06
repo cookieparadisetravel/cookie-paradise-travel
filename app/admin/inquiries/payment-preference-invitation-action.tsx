@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { AlertTriangle, Check, CheckCircle2, Copy, Link2, Loader2, LockKeyhole, Mail, WalletCards } from "lucide-react";
+import { AlertTriangle, Check, CheckCircle2, Copy, Link2, Loader2, Mail, WalletCards } from "lucide-react";
 import {
   calculateExpectedBookingTotalCents,
   inferPriceCheckSelection,
@@ -21,8 +21,6 @@ import {
 
 type Props = {
   inquiryId: number;
-  agreementReady: boolean;
-  agreementReadinessMessage: string;
   initialBookingTotalCents: number | null;
   initialPaymentPreference: string | null;
   initialSelectedAt: string | null;
@@ -35,8 +33,6 @@ type Props = {
 
 export function PaymentPreferenceInvitationAction({
   inquiryId,
-  agreementReady,
-  agreementReadinessMessage,
   initialBookingTotalCents,
   initialPaymentPreference,
   initialSelectedAt,
@@ -92,8 +88,7 @@ export function PaymentPreferenceInvitationAction({
   const priceDifferenceCents = bookingTotalCents - expectedBookingTotalCents;
   const bookingTotalIsValid = Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0;
   const priceMatches = bookingTotalIsValid && priceDifferenceCents === 0;
-  const canCreate = agreementReady
-    && !invoiceExists
+  const canCreate = !invoiceExists
     && bookingTotalIsValid
     && (priceMatches || priceMismatchConfirmed);
   const formattedTotal = Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0
@@ -109,7 +104,7 @@ Your confirmed group booking total is ${formattedTotal}. Please use the secure l
 
 ${invitationUrl}
 
-The link expires in seven days and can be submitted once. No payment information is entered on the Cookie Paradise Travel Company page. After you confirm your choice, you will continue directly to Square's secure payment page.
+The link expires in seven days and can be submitted once. No payment information is entered on the Cookie Paradise Travel Company page. After you confirm your choice, Cookie Paradise Travel Company will send each traveler a personalized agreement. Square will email the invoice only after every required agreement is signed and the owner approves it.
 
 Thank you,
 Trung
@@ -196,13 +191,12 @@ Cookie Paradise Travel Company`;
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]"><WalletCards className="h-4 w-4 text-[var(--orange)]" /> Customer payment preference</p>
-          <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">Set the confirmed booking total, then send the primary contact a secure, one-time link to choose a payment option and continue directly to Square.</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">First save each traveler’s confirmed Trip Price in Travelers. Then send the primary contact a secure, one-time link to choose a payment option. This prepares a Square draft but does not issue it.</p>
         </div>
         {paymentPreference && <span className="w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-900">Choice received</span>}
       </div>
 
-      {!agreementReady && !invoiceExists && <p className="mt-4 flex items-start gap-2 rounded-xl border border-[var(--gold)]/60 bg-[var(--gold)]/15 p-3 text-sm font-semibold leading-6 text-[var(--ink)]"><LockKeyhole className="mt-1 h-4 w-4 shrink-0" /> <span><strong>Payment choice locked.</strong> {agreementReadinessMessage}</span></p>}
-      {invoiceExists && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">The Square invoice has already been created, so the recorded payment preference can no longer be changed here.</p>}
+      {invoiceExists && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">The Square draft has been prepared from the recorded payment choice. The preference and confirmed traveler prices are now locked so every personalized agreement matches the invoice schedule.</p>}
       {paymentPreference && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
         <p className="flex items-center gap-2 font-bold"><CheckCircle2 className="h-4 w-4" /> {paymentPreference === "full" ? "Pay in full now" : "Deposit + monthly installments"}</p>
         <p className="mt-1">Confirmed booking total: {persistedTotal}{selectedAt ? ` · selected ${new Date(selectedAt).toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" })}` : ""}</p>
@@ -215,7 +209,7 @@ Cookie Paradise Travel Company`;
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-xs font-bold text-[var(--ink)]">
             Current price per traveler
-            <select disabled={!agreementReady || creating} className="mt-1 min-h-11 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50" value={perTravelerPriceCents} onChange={(event) => {
+            <select disabled={creating} className="mt-1 min-h-11 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50" value={perTravelerPriceCents} onChange={(event) => {
               setPerTravelerPriceCents(Number(event.target.value));
               setPriceMismatchConfirmed(false);
             }}>
@@ -224,7 +218,7 @@ Cookie Paradise Travel Company`;
           </label>
           <label className="block text-xs font-bold text-[var(--ink)]">
             Travelers with private-room supplement
-            <select disabled={!agreementReady || creating} className="mt-1 min-h-11 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50" value={privateRoomCount} onChange={(event) => {
+            <select disabled={creating} className="mt-1 min-h-11 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50" value={privateRoomCount} onChange={(event) => {
               setPrivateRoomCount(Number(event.target.value));
               setPriceMismatchConfirmed(false);
             }}>
@@ -236,7 +230,7 @@ Cookie Paradise Travel Company`;
 
         <label className="mt-3 block text-sm font-semibold text-[var(--ink)]">
           Confirmed total booking price
-          <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input autoComplete="off" disabled={!agreementReady || creating} inputMode="decimal" pattern="[0-9]*[.]?[0-9]{0,2}" className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="text" value={bookingTotal} onChange={(event) => {
+          <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input autoComplete="off" disabled={creating} inputMode="decimal" pattern="[0-9]*[.]?[0-9]{0,2}" className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="text" value={bookingTotal} onChange={(event) => {
             const nextValue = event.target.value;
             if (!/^\d*(?:\.\d{0,2})?$/.test(nextValue)) return;
             setPriceMismatchConfirmed(false);

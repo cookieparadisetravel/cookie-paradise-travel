@@ -1,14 +1,18 @@
 import { and, eq, isNull } from "drizzle-orm";
-import { agreementAcceptances, agreementInvitations, travelers } from "@/db/schema";
+import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
 import { sendAgreementInvitationEmail } from "@/lib/mailersend-transactional";
 import {
+  buildPersonalizedTravelerAgreement,
+  canonicalizeAgreement,
   currentTravelerAgreement,
   hashAgreementDocument,
   hashInvitationToken,
 } from "@/lib/traveler-agreement";
+import { isPaymentPreference } from "@/lib/payment-preference-invitation";
+import { todayInIndiana } from "@/lib/payment-schedule";
 
 const INVITATION_LIFETIME_DAYS = 14;
 
@@ -43,6 +47,8 @@ export async function POST(
     email: travelers.email,
     travelerType: travelers.travelerType,
     guardianLegalName: travelers.guardianLegalName,
+    confirmedTripPriceCents: travelers.confirmedTripPriceCents,
+    confirmedOccupancy: travelers.confirmedOccupancy,
   })
     .from(travelers)
     .where(and(
@@ -52,7 +58,50 @@ export async function POST(
     .limit(1);
   if (!traveler) return Response.json({ error: "Traveler not found" }, { status: 404 });
 
-  const agreementHash = await hashAgreementDocument(currentTravelerAgreement);
+  const [inquiry] = await db.select().from(bookingRequests)
+    .where(eq(bookingRequests.id, inquiryId))
+    .limit(1);
+  if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+  if (!inquiry.confirmedBookingTotalCents || !isPaymentPreference(inquiry.paymentPreference) || !inquiry.companyAcceptedAt || !inquiry.companyAcceptedBy) {
+    return Response.json({
+      error: "Record the confirmed traveler prices and have the primary contact choose a payment option before sending agreement links.",
+    }, { status: 409 });
+  }
+  if (inquiry.squareDepositInvoiceStatus !== "draft" || !inquiry.squareDepositInvoiceId) {
+    return Response.json({
+      error: "The matching Square draft invoice must be prepared before agreement links are sent.",
+    }, { status: 409 });
+  }
+
+  const bookingTravelers = await db.select({
+    id: travelers.id,
+    confirmedTripPriceCents: travelers.confirmedTripPriceCents,
+    confirmedOccupancy: travelers.confirmedOccupancy,
+  }).from(travelers).where(eq(travelers.bookingRequestId, inquiryId));
+  if (bookingTravelers.length !== inquiry.partySize) {
+    return Response.json({ error: "The traveler count must exactly match the inquiry party size before agreements are sent." }, { status: 409 });
+  }
+  if (bookingTravelers.some((record) => !record.confirmedTripPriceCents || record.confirmedTripPriceCents < 1 || (record.confirmedOccupancy !== "shared" && record.confirmedOccupancy !== "private"))) {
+    return Response.json({ error: "Save a confirmed Trip Price and occupancy for every traveler before sending agreement links." }, { status: 409 });
+  }
+  const allocatedTotal = bookingTravelers.reduce((sum, record) => sum + (record.confirmedTripPriceCents ?? 0), 0);
+  if (allocatedTotal !== inquiry.confirmedBookingTotalCents) {
+    return Response.json({ error: "The individual traveler prices must add up exactly to the confirmed booking total." }, { status: 409 });
+  }
+  if (!traveler.confirmedTripPriceCents || (traveler.confirmedOccupancy !== "shared" && traveler.confirmedOccupancy !== "private")) {
+    return Response.json({ error: "Save this traveler’s confirmed Trip Price and occupancy before sending the agreement." }, { status: 409 });
+  }
+
+  const personalizedAgreement = buildPersonalizedTravelerAgreement({
+    travelerName: `${traveler.firstName} ${traveler.lastName}`,
+    departure: inquiry.departure,
+    occupancy: traveler.confirmedOccupancy === "private" ? "Private room supplement" : "Shared double/twin room",
+    tripPriceCents: traveler.confirmedTripPriceCents,
+    paymentPreference: inquiry.paymentPreference,
+    acceptanceDate: todayInIndiana(new Date(inquiry.companyAcceptedAt)),
+  });
+
+  const agreementHash = await hashAgreementDocument(personalizedAgreement);
   const [existingAcceptance] = await db.select({ id: agreementAcceptances.id })
     .from(agreementAcceptances)
     .where(and(
@@ -83,6 +132,7 @@ export async function POST(
     tokenHash,
     agreementVersion: currentTravelerAgreement.version,
     agreementDocumentHash: agreementHash,
+    agreementDocumentJson: canonicalizeAgreement(personalizedAgreement),
     recipientEmail: traveler.email.trim().toLowerCase(),
     expiresAt,
   }).returning({ id: agreementInvitations.id });

@@ -14,6 +14,8 @@ type Traveler = {
   dateOfBirth: string | null;
   guardianLegalName: string | null;
   guardianRelationship: string | null;
+  confirmedTripPriceCents: number | null;
+  confirmedOccupancy: string | null;
 };
 
 type Props = {
@@ -23,6 +25,8 @@ type Props = {
   agreementActive: boolean;
   acceptedTravelerIds: number[];
   initialInvitationDeliveries: Record<number, AgreementInvitationDelivery>;
+  paymentPreference: string | null;
+  invoiceExists: boolean;
 };
 
 const emptyForm = {
@@ -35,7 +39,7 @@ const emptyForm = {
   guardianRelationship: "",
 };
 
-export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries }: Props) {
+export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries, paymentPreference, invoiceExists }: Props) {
   const router = useRouter();
   const [travelerList, setTravelerList] = useState(initialTravelers);
   const [form, setForm] = useState(emptyForm);
@@ -45,10 +49,52 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
   const [invitationDeliveries, setInvitationDeliveries] = useState<Record<number, AgreementInvitationDelivery>>(initialInvitationDeliveries);
   const [invitationErrors, setInvitationErrors] = useState<Record<number, string>>({});
   const [creatingInvitationFor, setCreatingInvitationFor] = useState<number | null>(null);
+  const [savingPrices, setSavingPrices] = useState(false);
+  const [priceValues, setPriceValues] = useState<Record<number, string>>(() => Object.fromEntries(
+    initialTravelers.map((traveler) => [traveler.id, traveler.confirmedTripPriceCents ? (traveler.confirmedTripPriceCents / 100).toFixed(2) : ""]),
+  ));
+  const [occupancyValues, setOccupancyValues] = useState<Record<number, string>>(() => Object.fromEntries(
+    initialTravelers.map((traveler) => [traveler.id, traveler.confirmedOccupancy ?? ""]),
+  ));
   const complete = travelerList.length === expectedPartySize;
   const travelerCountMismatch = travelerList.length > expectedPartySize;
   const acceptedIds = new Set(acceptedTravelerIds);
   const acceptedCount = travelerList.filter((traveler) => acceptedIds.has(traveler.id)).length;
+  const pricingLocked = invoiceExists && travelerList.some((traveler) => traveler.confirmedTripPriceCents !== null);
+  const pricingComplete = complete && travelerList.every((traveler) => {
+    const value = Number(priceValues[traveler.id]);
+    return Number.isFinite(value) && value >= 500 && ["shared", "private"].includes(occupancyValues[traveler.id] ?? "");
+  });
+
+  async function saveTravelerPrices() {
+    setSavingPrices(true);
+    setError("");
+    try {
+      const prices = travelerList.map((traveler) => ({
+        travelerId: traveler.id,
+        tripPriceCents: Math.round(Number(priceValues[traveler.id]) * 100),
+        occupancy: occupancyValues[traveler.id],
+      }));
+      const response = await fetch(`/api/admin/inquiries/${inquiryId}/traveler-prices`, {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ prices }),
+      });
+      const payload = await response.json() as { error?: string; prices?: Array<{ travelerId: number; tripPriceCents: number; occupancy: string }> };
+      if (!response.ok || !payload.prices) throw new Error(payload.error || "The traveler prices could not be saved.");
+      const saved = new Map(payload.prices.map((price) => [price.travelerId, price.tripPriceCents]));
+      setTravelerList((current) => current.map((traveler) => ({
+        ...traveler,
+        confirmedTripPriceCents: saved.get(traveler.id) ?? traveler.confirmedTripPriceCents,
+        confirmedOccupancy: payload.prices?.find((price) => price.travelerId === traveler.id)?.occupancy ?? traveler.confirmedOccupancy,
+      })));
+      router.refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "The traveler prices could not be saved.");
+    } finally {
+      setSavingPrices(false);
+    }
+  }
 
   async function addTraveler(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,12 +181,25 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                   )}
                 </div>
               </div>
+              <label className="mt-3 block text-xs font-bold text-[var(--ink)]">Confirmed Trip Price
+                <span className="mt-1 flex items-center rounded-xl border border-[var(--input)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input aria-label={`Confirmed Trip Price for ${traveler.firstName} ${traveler.lastName}`} disabled={pricingLocked || acceptedIds.has(traveler.id)} inputMode="decimal" pattern="[0-9]*[.]?[0-9]{0,2}" className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-60" value={priceValues[traveler.id] ?? ""} onChange={(event) => {
+                  if (!/^\d*(?:\.\d{0,2})?$/.test(event.target.value)) return;
+                  setPriceValues((current) => ({ ...current, [traveler.id]: event.target.value }));
+                }} /></span>
+              </label>
+              <label className="mt-3 block text-xs font-bold text-[var(--ink)]">Confirmed occupancy
+                <select disabled={pricingLocked || acceptedIds.has(traveler.id)} className="mt-1 min-h-10 w-full rounded-xl border border-[var(--input)] bg-white px-3 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60" value={occupancyValues[traveler.id] ?? ""} onChange={(event) => setOccupancyValues((current) => ({ ...current, [traveler.id]: event.target.value }))}>
+                  <option value="">Choose occupancy</option>
+                  <option value="shared">Shared double/twin room</option>
+                  <option value="private">Private room supplement</option>
+                </select>
+              </label>
               <p className={`mt-3 flex items-center gap-2 text-xs font-semibold ${acceptedIds.has(traveler.id) ? "text-emerald-800" : "text-[var(--muted-ink)]"}`}><CheckCircle2 className="h-3.5 w-3.5" /> {acceptedIds.has(traveler.id) ? "Current agreement accepted" : agreementActive ? "Agreement acceptance pending" : "Agreement invitation not yet enabled"}</p>
               {!acceptedIds.has(traveler.id) && (
                 <div className="mt-3">
                   {!invitationDeliveries[traveler.id] ? (
                     <button
-                      disabled={!agreementActive || creatingInvitationFor === traveler.id}
+                      disabled={!agreementActive || !paymentPreference || !pricingComplete || creatingInvitationFor === traveler.id}
                       className="inline-flex items-center gap-2 rounded-full border border-[var(--line)] px-3 py-2 text-xs font-bold text-[var(--ink)] disabled:cursor-not-allowed disabled:opacity-45"
                       type="button"
                       onClick={() => createInvitation(traveler.id)}
@@ -153,7 +212,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                       <p className="flex items-start gap-2"><MailCheck className="mt-0.5 h-4 w-4 shrink-0" /> <span>Agreement email recorded as sent to {invitationDeliveries[traveler.id].email} on {formatTimestamp(invitationDeliveries[traveler.id].sentAt)}.</span></p>
                       <details className="mt-2 text-[var(--ink)]">
                         <summary className="cursor-pointer font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">More options</summary>
-                        <button disabled={!agreementActive || creatingInvitationFor === traveler.id} className="mt-2 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-bold disabled:opacity-45" type="button" onClick={() => createInvitation(traveler.id)}>{creatingInvitationFor === traveler.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />} Send replacement email</button>
+                        <button disabled={!agreementActive || !paymentPreference || !pricingComplete || creatingInvitationFor === traveler.id} className="mt-2 inline-flex items-center gap-2 rounded-full border border-[var(--line)] bg-white px-3 py-2 text-xs font-bold disabled:opacity-45" type="button" onClick={() => createInvitation(traveler.id)}>{creatingInvitationFor === traveler.id ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Link2 className="h-3.5 w-3.5" />} Send replacement email</button>
                       </details>
                     </div>
                   )}
@@ -162,6 +221,14 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
               )}
             </div>
           ))}
+        </div>
+      )}
+
+      {complete && !travelerCountMismatch && !pricingLocked && (
+        <div className="mt-4 rounded-xl border border-[var(--line)] bg-white p-4">
+          <p className="text-sm font-bold text-[var(--ink)]">Individual agreement prices</p>
+          <p className="mt-1 text-xs leading-5 text-[var(--muted-ink)]">Enter each traveler’s complete Trip Price, including any private-room supplement. These amounts must add up to the group total used for the payment-choice link.</p>
+          <button disabled={!pricingComplete || savingPrices} className="mt-3 inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={saveTravelerPrices}>{savingPrices ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />} {savingPrices ? "Saving…" : "Save traveler prices"}</button>
         </div>
       )}
 
@@ -192,7 +259,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
         </form>
       )}
 
-      {complete && <p className="mt-4 rounded-xl border border-[var(--gold)]/50 bg-[var(--gold)]/15 p-3 text-sm font-semibold text-[var(--ink)]">{agreementActive ? `${acceptedCount} of ${expectedPartySize} traveler agreements accepted.` : "All traveler records are ready. Secure agreement links will be enabled only after the final agreement receives legal approval."}</p>}
+      {complete && <p className="mt-4 rounded-xl border border-[var(--gold)]/50 bg-[var(--gold)]/15 p-3 text-sm font-semibold text-[var(--ink)]">{agreementActive ? paymentPreference ? `${acceptedCount} of ${expectedPartySize} traveler agreements accepted.` : "Save traveler prices, then collect the primary contact’s payment choice before sending agreement links." : "All traveler records are ready. Secure agreement links are not active."}</p>}
     </section>
   );
 }

@@ -1,0 +1,1 @@
+ALTER TABLE `travelers` ADD `confirmed_occupancy` text;

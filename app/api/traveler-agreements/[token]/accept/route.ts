@@ -31,11 +31,14 @@ const acceptanceSchema = z.object({
   agreementConsent: z.literal(true, { errorMap: () => ({ message: "Agreement acceptance is required." }) }),
   depositAcknowledged: z.literal(true, { errorMap: () => ({ message: "Deposit acknowledgement is required." }) }),
   cancellationAcknowledged: z.literal(true, { errorMap: () => ({ message: "Cancellation acknowledgement is required." }) }),
-  insuranceSelection: z.enum(["purchased", "will_purchase", "declined"], { errorMap: () => ({ message: "Choose a travel-insurance decision." }) }),
+  paymentScheduleAcknowledged: z.literal(true, { errorMap: () => ({ message: "Payment-schedule acknowledgement is required." }) }),
+  healthFitnessAcknowledged: z.literal(true, { errorMap: () => ({ message: "Health and participation acknowledgement is required." }) }),
+  insuranceSelection: z.enum(["will_purchase", "declined"], { errorMap: () => ({ message: "Choose a travel-insurance decision." }) }),
   insuranceAcknowledged: z.literal(true, { errorMap: () => ({ message: "Travel-insurance acknowledgement is required." }) }),
   releaseAcknowledged: z.literal(true, { errorMap: () => ({ message: "Responsibility and release acknowledgement is required." }) }),
+  liabilityLimitAcknowledged: z.literal(true, { errorMap: () => ({ message: "Liability-limit acknowledgement is required." }) }),
+  safetyBriefingAcknowledged: z.literal(true, { errorMap: () => ({ message: "Safety-briefing acknowledgement is required." }) }),
   agreementViewedToEnd: z.literal(true, { errorMap: () => ({ message: "Review the complete agreement before signing." }) }),
-  insuranceProvider: z.string().trim().max(120).optional().default(""),
   photoMediaOptIn: z.boolean().optional().default(false),
 });
 
@@ -96,9 +99,9 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   const signerType = isMinor ? "guardian" : "traveler";
   const signerEmail = invitationResult.invitation.recipientEmail;
   const snapshot: AgreementAcceptanceSnapshot = {
-    agreementVersion: currentTravelerAgreement.version,
+    agreementVersion: invitationResult.agreement.version,
     agreementDocumentHash: invitationResult.agreementHash,
-    agreementCanonicalJson: canonicalizeAgreement(currentTravelerAgreement),
+    agreementCanonicalJson: canonicalizeAgreement(invitationResult.agreement),
     invitationId: invitationResult.invitation.invitationId,
     travelerId: invitationResult.invitation.travelerId,
     bookingRequestId: invitationResult.invitation.bookingRequestId,
@@ -107,6 +110,8 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     signerType,
     signerLegalName: data.signerLegalName,
     signerEmail,
+    companyAcceptedAt: invitationResult.invitation.companyAcceptedAt,
+    companyAcceptedBy: invitationResult.invitation.companyAcceptedBy,
     travelerInitials: data.travelerInitials.toUpperCase(),
     guardianRelationship: isMinor ? data.guardianRelationship : null,
     minorDateOfBirth: isMinor ? data.minorDateOfBirth : null,
@@ -115,10 +120,13 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     agreementConsent: true,
     depositAcknowledged: true,
     cancellationAcknowledged: true,
+    paymentScheduleAcknowledged: true,
+    healthFitnessAcknowledged: true,
     insuranceSelection: data.insuranceSelection,
-    insuranceProvider: data.insuranceProvider || null,
     insuranceAcknowledged: true,
     releaseAcknowledged: true,
+    liabilityLimitAcknowledged: true,
+    safetyBriefingAcknowledged: true,
     agreementViewedToEnd: true,
     photoMediaOptIn: data.photoMediaOptIn,
     emailVerifiedAt: invitationResult.invitation.emailVerifiedAt,
@@ -131,7 +139,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   const retentionUntil = retentionUntilForDeparture(invitationResult.invitation.departure);
   let pdfBytes: Uint8Array;
   try {
-    pdfBytes = await generateAgreementPdf({ agreement: currentTravelerAgreement, snapshot });
+    pdfBytes = await generateAgreementPdf({ agreement: invitationResult.agreement, snapshot });
   } catch (cause) {
     console.error("Signed agreement PDF generation failed", {
       invitationId: invitationResult.invitation.invitationId,
@@ -151,7 +159,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     const [createdAcceptance] = await db.insert(agreementAcceptances).values({
       invitationId: invitationResult.invitation.invitationId,
       travelerId: invitationResult.invitation.travelerId,
-      agreementVersion: currentTravelerAgreement.version,
+      agreementVersion: invitationResult.agreement.version,
       agreementDocumentHash: invitationResult.agreementHash,
       signerType,
       signerLegalName: data.signerLegalName,
@@ -163,11 +171,15 @@ export async function POST(request: Request, context: { params: Promise<{ token:
       agreementConsent: data.agreementConsent,
       depositAcknowledged: data.depositAcknowledged,
       cancellationAcknowledged: data.cancellationAcknowledged,
+      paymentScheduleAcknowledged: data.paymentScheduleAcknowledged,
+      healthFitnessAcknowledged: data.healthFitnessAcknowledged,
       insuranceSelection: data.insuranceSelection,
       insuranceAcknowledged: data.insuranceAcknowledged,
       releaseAcknowledged: data.releaseAcknowledged,
+      liabilityLimitAcknowledged: data.liabilityLimitAcknowledged,
+      safetyBriefingAcknowledged: data.safetyBriefingAcknowledged,
       agreementViewedToEnd: data.agreementViewedToEnd,
-      insuranceProvider: data.insuranceProvider || null,
+      insuranceProvider: null,
       photoMediaOptIn: data.photoMediaOptIn,
       ipHash,
       userAgent,

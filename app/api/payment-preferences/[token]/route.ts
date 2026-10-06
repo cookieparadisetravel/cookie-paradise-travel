@@ -1,4 +1,4 @@
-import { and, eq, isNull, or } from "drizzle-orm";
+import { and, eq, isNull, or, sql } from "drizzle-orm";
 import { bookingRequests, paymentPreferenceInvitations } from "@/db/schema";
 import { getDb } from "@/db";
 import { createBookingInvoice } from "@/lib/booking-invoice";
@@ -57,6 +57,8 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     const updated = await db.update(bookingRequests).set({
       paymentPreference,
       paymentPreferenceSelectedAt: completedAt,
+      companyAcceptedAt: sql`coalesce(${bookingRequests.companyAcceptedAt}, ${completedAt})`,
+      companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${invitation.createdBy ?? "Secure payment-choice link"})`,
     }).where(and(
       eq(bookingRequests.id, invitation.bookingRequestId),
       eq(bookingRequests.confirmedBookingTotalCents, invitation.bookingTotalCents),
@@ -81,18 +83,17 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   const invoiceResult = await createBookingInvoice({
     inquiryId: invitation.bookingRequestId,
     acceptedBy: invitation.createdBy ?? "Secure payment-choice link",
+    publish: false,
   });
-  if (!invoiceResult.ok || !invoiceResult.publicUrl) {
+  if (!invoiceResult.ok) {
     try {
       await releaseClaim();
     } catch {
-      return Response.json({ error: "Your preference was saved, but the Square payment page could not be opened and the secure link could not be restored. Please contact Cookie Paradise Travel Company." }, { status: 500 });
+      return Response.json({ error: "Your preference was saved, but the Square draft could not be prepared and the secure link could not be restored. Please contact Cookie Paradise Travel Company." }, { status: 500 });
     }
     return Response.json({
-      error: invoiceResult.ok
-        ? "Square created the invoice but did not return its payment link. Please try again or contact Cookie Paradise Travel Company."
-        : invoiceResult.error,
-    }, { status: invoiceResult.ok ? 502 : invoiceResult.status });
+      error: invoiceResult.error,
+    }, { status: invoiceResult.status });
   }
 
   const ownerNotificationStatus = await sendOwnerPaymentPreferenceNotification({
@@ -109,5 +110,5 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     });
   }
 
-  return Response.json({ completedAt, paymentPreference, publicUrl: invoiceResult.publicUrl }, { status: 201 });
+  return Response.json({ completedAt, paymentPreference }, { status: 201 });
 }

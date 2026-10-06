@@ -1,0 +1,1293 @@
+{
+  "version": "1.0",
+  "effectiveDate": "October 6, 2026",
+  "title": "Traveler Agreement and Booking Terms",
+  "sections": [
+    {
+      "heading": "Agreement",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "1. Parties and contact. This Agreement is between Cookie Paradise Travel Company LLC, an Indiana limited liability company, 3346 Cox Ln., Columbus, IN 47203, +1 (812) 508-9675, trung@cookieparadise.co (the “Company”), and each traveler identified in the booking. A booking is not confirmed until the Company accepts it in writing, receives the required reservation deposit (or full payment, when Section 5(b) applies), and the traveler signs or electronically accepts this Agreement. An inquiry or request for a spot is not a purchase or confirmed reservation. Notices, including cancellations, must be emailed to trung@cookieparadise.co and are effective when received.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "2. Trip documents. This Agreement includes the signed booking confirmation, individualized Payment Schedule (Schedule 1), invoice, Appendix A itinerary, Appendix B Responsibility and Disclaimer Provisions, Appendix C Vietnam Traveler Safety Briefing, included and excluded services, trip-specific notices, privacy notice, and any written amendment signed by both the Company and the affected traveler. If documents conflict, a later trip-specific written amendment signed by both parties controls, followed by the booking confirmation, this Agreement (including its appendices and Schedule 1), and the descriptive itinerary. Appendix B supplements this Agreement; Sections 1–33 control over conflicting Appendix B language.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "3. Individual traveler acceptance and payment responsibility. Each adult traveler must personally sign or electronically accept this Agreement before the Company issues any invoice for that traveler. Each adult traveler is individually responsible for compliance and payment obligations applicable to that traveler. A person who pays for another traveler is responsible for the payment but does not accept risk terms on that traveler’s behalf, except that a parent or guardian signing for a minor under Section 28 does so. A parent or guardian must complete the separate minor signature block in the single acceptance section before the Company issues an invoice for a minor.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "3A. Trip price and enrollment tiers",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Fully paid travelers 80 days before departure",
+            "Package price per traveler"
+          ],
+          "rows": [
+            [
+              "8",
+              "$2,875"
+            ],
+            [
+              "10",
+              "$2,675"
+            ],
+            [
+              "12",
+              "$2,605"
+            ],
+            [
+              "15",
+              "$2,500"
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The booking begins at the eight-traveler price. The tier is set by the number of fully paid travelers 80 days before departure, including any payment cured under Section 6. Groups between tiers pay the price of the highest tier reached (for example, 9 travelers pay the 8-traveler price). Any resulting credit or refund is issued within 30 days of that date and will not be reversed if someone later cancels. Prices are per person, based on a shared double/twin room. Taxes and service charges: included. A booking accepted after the tier-setting date uses the tier already set for that departure. If fewer than eight travelers are fully paid on that date, the eight-traveler price remains pending the operating decision under Section 12.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Private-room supplement: $399 per traveler, subject to availability.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• All prices are in U.S. dollars and are the same for every payment method. The Company does not add a surcharge or convenience fee to any payment, including deposits, installments and automatic card payments.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• International airfare is not included. The included domestic flight is subject to airline schedule and fare changes before ticketing.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Booking and payment terms",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "4. Reservation deposit. A $500 reservation deposit per traveler is due when the Company accepts the booking and is applied toward that traveler’s Trip Price (defined before Section 9); it is not an additional charge. The booking is not confirmed until the Company receives cleared funds for the deposit (or, for a booking accepted 90 days or fewer before departure, the full Trip Price under Section 5(b)) and the traveler signs or electronically accepts this Agreement. The deposit is nonrefundable, except that if the Company cancels the departure for insufficient enrollment or cancels the affected traveler’s booking for a reason other than a force majeure event under Section 14 or the traveler’s breach, the Company will refund the deposit in full within 30 days. This exception does not apply when the Company cancels the affected traveler’s booking for the traveler’s breach, including non-payment under Section 6. If the Company cancels because of a force majeure event under Section 14, refunds, including the deposit, are governed by Section 14. If the traveler cancels, the deposit and all other cleared payments count toward the Section 9 cancellation charge. The deposit is included in that charge and is not added on top of it. If payments received are less than the cancellation charge, the Company may invoice the unpaid difference. If payments received exceed the cancellation charge, the Company will refund the excess within 30 days, subject to Sections 12 and 14.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "THE $500 PER TRAVELER RESERVATION DEPOSIT IS NONREFUNDABLE, SUBJECT TO SECTIONS 4, 12 AND 14. Traveler (or parent/guardian) initials: __________",
+              "strong": true
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "5. Installment payments and final payment.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "(a) Individual payment schedule. For a booking accepted more than 90 days before departure, the balance of the confirmed Trip Price remaining after the deposit is payable in equal monthly installments, not to exceed twelve (12), with any rounding difference applied to the final installment. The final installment is due no later than 90 days before departure. If fewer than two monthly due dates fall between acceptance and that deadline, the entire balance is due in one payment no later than 90 days before departure. The exact number, amounts, and due dates appear in the traveler’s individualized Payment Schedule, identified as Schedule 1. Schedule 1 forms part of this Agreement and must be completed before the traveler signs this Agreement on paper or electronically or authorizes automatic payments. Blank or estimated entries do not authorize a charge.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "(b) Bookings within 90 days. A booking accepted 90 days or fewer before departure requires payment of the full Trip Price upon acceptance.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "(c) Optional automatic payments. Automatic payments are optional and are not required to book. A traveler who does not select automatic payments may make each required payment through the payment methods shown on the Square invoice. If automatic payments are offered and selected, the cardholder must complete a separate authorization after receiving the completed Schedule 1. That authorization will identify the exact amounts, due dates, total authorized amount, and payment method maintained securely by Square. The Company will not collect or store a full card number or security code. Square will securely collect and maintain the payment method; the Company may retain Square’s payment-method identifier and limited details such as the card brand and last four digits. The Company will not increase an installment, add a charge, or move a payment to an earlier date without the cardholder’s new written authorization. Stopping automatic payments does not cancel the booking or change a payment deadline. If the cardholder is not the traveler, the cardholder authorizes only the stated payments and does not accept the traveler’s other contractual terms.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "(d) Prepayment. The traveler may prepay all or any part of the remaining balance at any time without penalty. Prepayments are applied to remaining installments in order of due date.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "(e) A payment is on time if it is received by its due date, or, for an automatic card charge, if the charge is approved on its due date.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "6. Missed and failed payments. If a required payment, including an authorized automatic installment, is declined, fails, or is not received by its due date, the Company will notify the traveler in writing. If the traveler does not pay the amount due by another accepted method, or provide a valid replacement payment method when applicable, within 7 days after that notice, the Company may cancel the booking by written notice. The cancellation charge is the one in Section 9’s schedule for the date of that notice. All cleared payments are credited against that charge. The Company may invoice any unpaid difference, and any amount paid above the charge will be refunded within 30 days. Automatic charges stop on that notice. Each later installment remains due on its scheduled date unless the booking is cancelled.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "7. Price changes before confirmation. Airfare, taxes, supplier prices, and availability may change before services are confirmed. The Company will not charge a material increase without notifying the traveler. If a material increase is proposed before confirmation, the traveler may decline and receive a refund of amounts not already knowingly authorized as nonrefundable.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "8. Chargebacks and returned payments. The traveler must contact the Company promptly to address a billing concern. A returned payment or improper chargeback does not eliminate the underlying obligation. The Company may recover lawful processor, bank, collection, or administrative costs actually incurred, subject to applicable law.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Traveler cancellation and refunds",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Cancellation must be emailed to trung@cookieparadise.co and is effective when received. “Trip Price” means the confirmed price for that traveler, including any booked supplements and optional services. The schedule below applies separately to each traveler. Cancellation schedule acknowledgment — Traveler (or parent/guardian) initials: __________",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Written cancellation received before departure",
+            "Cancellation charge per traveler"
+          ],
+          "rows": [
+            [
+              "91 or more days",
+              "$500 (the nonrefundable reservation deposit)"
+            ],
+            [
+              "90 to 61 days",
+              "$500"
+            ],
+            [
+              "60 to 31 days",
+              "The greater of $500 or 50% of that traveler’s Trip Price"
+            ],
+            [
+              "30 to 16 days",
+              "The greater of $500 or 75% of that traveler’s Trip Price"
+            ],
+            [
+              "15 days or fewer, or no-show",
+              "100% of that traveler’s Trip Price"
+            ]
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "9. Cancellation charges and refunds. The charges in the schedule are a reasonable estimate of the Company’s losses, which are difficult to calculate in advance, and are the traveler’s only cancellation charge. The $500 reservation deposit is included in, and is not added to, the applicable cancellation charge. All cleared payments already received for the traveler will be credited against that charge. If payments received are less than the cancellation charge, the Company may invoice the traveler for the unpaid difference. If payments received exceed the cancellation charge, the Company will refund the excess within 30 days after receiving the cancellation notice, subject to Sections 12 and 14. This rule applies even if the traveler has missed one or more scheduled installments. The cancellation charge is fixed and is not reduced by a supplier refund or cost the Company avoids, except as required by Sections 12 and 14. Automatic charges stop when the booking is cancelled.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "10. Unused services. No refund is due for a traveler’s late arrival, missed activity, voluntary nonparticipation, early departure, removal for conduct, or failure to meet passport, visa, health, or entry requirements. The Company will request available supplier refunds or credits when reasonable but cannot guarantee recovery.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "11. Name changes and transfers. A booking may not be transferred without written approval. Name changes are subject to supplier and airline rules, availability, deadlines, and all resulting costs. A substitute traveler must independently accept this Agreement and satisfy all requirements.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Company cancellation, minimum enrollment and changes",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "12. Minimum enrollment and Company cancellation. The trip requires at least eight fully paid travelers. The Company will confirm in writing, no later than 75 days before departure, whether the departure will operate. If the Company cancels for insufficient enrollment (fewer than 8 fully paid travelers), or for any reason other than a force majeure event or the traveler’s breach, it refunds 100% of the traveler’s payments within 30 days after cancellation. Force majeure cancellations are governed by Section 14. The Company is not responsible for independently purchased international airfare or other arrangements; travelers should use refundable arrangements or suitable insurance.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "13. Itinerary and supplier changes. Hotels, flight times, routing, vehicles, guides, meals, and activities may change for availability, safety, weather, transportation, government action, public-health conditions, or supplier requirements. The Company may use reasonably comparable arrangements when practical. Material changes will be communicated promptly, and any refund or credit will depend on the circumstances, this Agreement, and amounts recoverable from suppliers.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "14. Force majeure. For unusual and unforeseeable events beyond reasonable control—including severe weather, natural disaster, epidemic, war, terrorism, civil unrest, government action, border closure, labor disruption, carrier cancellation, or infrastructure failure—the Company may alter, postpone, or cancel affected services. For a force majeure cancellation, the traveler may choose either a full credit toward a future departure or a refund of all payments except amounts paid to suppliers that cannot be recovered, as shown by supplier documentation. The Company will provide the supporting supplier documentation with the refund calculation and written instructions for making the election. The Company will use reasonable efforts to protect travelers, communicate changes, and obtain available supplier refunds or credits. Any additional supplier recovery will be credited or refunded to the traveler.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Included and excluded services",
+      "level": 1,
+      "blocks": []
+    },
+    {
+      "heading": "Included",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Seven nights’ hotel accommodation in shared double/twin rooms with daily breakfast at the named or comparable hotels.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Private air-conditioned ground transportation and scheduled Vietnam airport transfers described in the itinerary.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Economy domestic flight from Ho Chi Minh City to Huế, subject to schedule change.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• English-speaking local guides, admissions, boats, meals and activities expressly listed in Appendix A.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Good Morning Saigon, Mekong Delta excursion, Perfume River sunset cruise, Huế royal dinner, lantern workshop, basket boat and Hội An culinary challenge.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Refillable water bottle and access to purified drinking water during scheduled touring where provided.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Not included",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• International flights to and from Vietnam; passport, visa and entry costs.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Travel insurance, medical care, evacuation or repatriation costs.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Meals, beverages, transfers, activities, early check-in, late checkout and services not expressly listed as included.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Personal expenses, laundry, communications, shopping and gratuities.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Optional 60-minute Almanity massage.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Airport fast-track or meet-and-assist service and any late-arrival transfer fee disclosed before confirmation.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Traveler responsibilities",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "15. Documents and entry. The traveler must provide accurate legal names and obtain a passport valid for the period required by destination and carrier rules, all visas, permits, vaccinations and entry or exit documents. The traveler must verify current requirements for the traveler’s citizenship and circumstances. U.S. citizens currently need a passport valid at least six months from date of arrival in Vietnam and a Vietnam visa or e-visa obtained before travel. Check travel.state.gov before booking. ",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "16. International airfare and flight information. The traveler is responsible for arranging international flights and allowing adequate connection time. The traveler must provide complete arrival and departure flight details to the Company no later than 30 days before departure and must promptly report any later change. The traveler bears costs caused by independently arranged flight delays, missed connections, schedule changes, or arrival outside included transfer windows, except to the extent caused by the Company.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "17. Health, accessibility, allergies, and ability to participate. The traveler is responsible for evaluating whether the itinerary and its activities are suitable for the traveler’s health, mobility, abilities, and individual circumstances. The Company does not make medical diagnoses or determine a traveler’s fitness to participate. The traveler must promptly disclose mobility, accessibility, dietary, allergy, or other needs relevant to safe participation. The Company will make reasonable efforts to coordinate accepted requests but cannot guarantee an allergen-free environment or accessibility equivalent to that available in the United States. When the Company has a reasonable safety concern relating to a traveler’s participation, it may require appropriate physician or activity-specific clearance, subject to applicable law. I have reviewed the itinerary and its physical demands. Based on my own assessment and, when appropriate, advice from my healthcare provider, I believe I can safely participate, with or without the accommodations I have disclosed or requested. Traveler (or parent/guardian) initials: __________",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "18. Conduct. Travelers must comply with applicable laws and regulations in every destination visited, including applicable Vietnamese national and local laws. Travelers must also comply with safety briefings, meeting times, and reasonable safety and operational directions from the Company, trip host, local guides, transportation providers, accommodations, activity operators, and other suppliers. The Company may remove a traveler whose conduct creates a material safety risk, seriously disrupts the group, involves harassment or threats, violates applicable law, or repeatedly disregards reasonable instructions. When practicable, the Company will give the traveler a warning and an opportunity to correct the conduct before removal. The traveler remains responsible for resulting arrangements and costs, subject to applicable law. Travelers who drink alcohol must meet local age requirements, drink responsibly, and avoid impairment that creates a safety risk or disrupts the group.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "18A. Travel insurance",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Comprehensive travel insurance is strongly recommended and should be considered promptly after the deposit is paid. Travelers should evaluate coverage for trip cancellation and interruption, travel delay, baggage, emergency medical care, evacuation and repatriation, supplier default where available, and preexisting-condition requirements. The traveler is responsible for understanding exclusions, deadlines, and claim procedures. Insurance is not included unless the booking confirmation expressly says otherwise.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Traveler selection: ☐ I will purchase travel insurance.   ☐ I understand that travel insurance is strongly recommended, but I decline it at this time.\n",
+              "strong": false
+            },
+            {
+              "text": "If I decline travel insurance, I understand that I remain responsible for applicable cancellation charges and for medical, evacuation, repatriation, delay, baggage, and other uninsured expenses. The traveler does not need to identify an insurer or policy when signing this Agreement. The Company may request policy and emergency-assistance information later for predeparture administration.\n",
+              "strong": true
+            },
+            {
+              "text": "Traveler (or parent/guardian) initials: __________",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Independent suppliers, risk and responsibility",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "19. Independent suppliers. Destination management companies, airlines, hotels, transportation companies, guides, restaurants, activity operators and other providers are independent suppliers. They are not employees of the Company and control their personnel, equipment, premises, schedules and procedures. The Company remains responsible for its own obligations and for liability that cannot lawfully be excluded. The Company will use commercially reasonable care in planning and administering the trip, communicating material information known to it, and selecting and coordinating with destination suppliers.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "20. Ordinary travel risks. To the extent permitted by law, the traveler accepts the ordinary and reasonably foreseeable risks of international travel and the itinerary, including transportation disruption or accident, unfamiliar roads and vehicles, boats, bicycles, open Jeeps, uneven surfaces, weather, food-related illness, infectious disease, crime, crowds, limited medical resources, and differences in local law and safety practices.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "20A. Assumption of risk and release for ordinary negligence",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "International travel and the activities described in the itinerary involve inherent and reasonably foreseeable risks. These include transportation accidents or disruption, unfamiliar roads and vehicles, boats, bicycles, open vehicles, uneven surfaces, slips and falls, weather, heat, food-related illness, infectious disease, crime, crowds, limited medical resources, and differences in local laws and safety practices. The traveler knowingly and voluntarily accepts the inherent and ordinary risks of participating in the trip.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "TO THE FULLEST EXTENT PERMITTED BY LAW, THE TRAVELER RELEASES COOKIE PARADISE TRAVEL COMPANY LLC AND ITS MEMBERS, MANAGERS, EMPLOYEES, AGENTS, AND TRIP HOSTS FROM CLAIMS FOR INJURY, DEATH, PROPERTY DAMAGE, OR OTHER LOSS CAUSED BY THE ORDINARY NEGLIGENCE OF THOSE RELEASED PARTIES IN PLANNING, ADMINISTERING, OR HOSTING THE TRIP.",
+              "strong": true
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "This release does not apply to gross negligence, reckless or intentional misconduct, fraud, an express refund obligation under this Agreement, or any liability or remedy that cannot lawfully be released. It does not release an independent supplier from liability for that supplier’s own conduct.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "I HAVE READ AND UNDERSTAND THIS RELEASE OF CLAIMS FOR THE COMPANY’S OWN ORDINARY NEGLIGENCE. Traveler (or parent/guardian) initials: __________",
+              "strong": true
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "20B. Limitation of liability",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "To the fullest extent permitted by law, the Company’s total liability for direct economic loss arising from a breach of this Agreement or the Company’s ordinary negligence will not exceed the total amount that the affected traveler paid directly to the Company for the affected booking. This limitation does not apply to bodily injury or death; gross negligence, reckless or intentional misconduct, or fraud; an express refund obligation under this Agreement; or any liability or remedy that cannot lawfully be limited. To the fullest extent permitted by law, the Company is not liable for indirect, incidental, special, exemplary, or consequential damages that were not reasonably foreseeable when this Agreement was made. Traveler (or parent/guardian) initials: __________",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "21. Separate waivers. A supplier may require a lawful activity waiver. Refusal to sign may result in exclusion from that activity without refund when the waiver was disclosed or is a supplier condition. No waiver eliminates rights that cannot lawfully be waived.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Claims, privacy and legal terms",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "22. Problems during travel and claim notice. The traveler should promptly report a safety issue, injury, service failure, or material complaint to the trip host, local supplier, or Company so corrective action can be attempted. The traveler must email written notice of a claim to trung@cookieparadise.co within 30 days after the trip ends. The notice should identify the traveler, trip, relevant date, facts, requested resolution, and available supporting records. This notice requirement does not waive a right that cannot be lawfully waived.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "23. Privacy. The Company may collect and share information reasonably needed to administer the booking, protect travelers, satisfy legal requirements, and deliver services. Sensitive data should be provided only through an approved secure method. Marketing consent is separate and is not required to book.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "24. Governing law, forum, and advance notice. Except where controlling law requires otherwise, this Agreement is governed by Indiana law, without regard to conflict-of-law rules. Any dispute arising from this Agreement will be brought in the state courts serving Bartholomew County, Indiana. Before filing a claim, a party must email written notice of the claim to the other party. Notice to the Company must be sent to trung@cookieparadise.co. The parties will have an opportunity to discuss a possible resolution after notice is received. This section does not waive a right or forum that applicable law makes nonwaivable.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "25. Severability and nonwaivable rights. If a provision is unenforceable, it will be limited or severed to the minimum extent necessary, and the remainder will continue. Nothing excludes liability for gross negligence, reckless or intentional misconduct, fraud, or any duty or remedy that cannot lawfully be excluded.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "26. Entire agreement and amendments. The trip documents described in Section 2 constitute the entire agreement concerning the booking. An amendment is effective only if it is in writing and signed by both the Company and the affected traveler. A waiver by the Company must be in writing. Failure to enforce a provision on one occasion is not a continuing waiver.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "27. State seller-of-travel compliance",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The traveler must accurately identify the traveler’s state of residence. The Company does not accept a booking or payment from a resident of California, Florida, Hawaii, Maryland, or Washington unless the Company has first confirmed that it has satisfied, is exempt from, or is otherwise permitted to proceed under that state’s applicable seller-of-travel requirements. The Company may pause or decline a booking while it determines whether registration, disclosure, bonding, trust-account, or other compliance requirements apply.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "28. Minimum age and minor travelers",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "There is no minimum traveler age. A traveler under 18 must be booked by a parent or legal guardian, who signs this Agreement on the minor’s behalf and in the parent’s or guardian’s own name using the minor signature block below. The parent or guardian is responsible for all payments for the minor, including the $500 reservation deposit, and agrees to the terms of this Agreement for the minor, including Sections 17, 18, 20A, 20B, and 29. A minor must travel with a parent, legal guardian, or an adult whom the parent or guardian names in writing and the Company approves. That adult is responsible for the minor’s supervision during the trip, and the parent or guardian is responsible for any required travel permissions.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "29. Emergency medical treatment",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "If I cannot give consent in an emergency, I authorize the Company and trip host to seek emergency medical treatment and transportation for me. Qualified medical providers determine the treatment. I am responsible for medical and evacuation costs, subject to available insurance and applicable law. This authorization does not waive claims against the Company or a provider. A parent or guardian’s authorization for a minor is recorded below.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "30. Optional photo and media permission",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Photo and media permission is optional and is not a condition of booking. Only if I check the opt-in box below, I permit the Company to use photographs or recordings of me taken during the trip on its website, social media, and promotional materials without compensation. Leaving the box unchecked means I do not grant permission. I may withdraw permission for future uses by emailing the Company, but withdrawal does not require the Company to recall or remove materials already published or distributed. A parent or guardian must separately opt in for a minor.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "31. Assignment",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The traveler may not assign this Agreement or rights under it without the Company’s written consent. Approved booking transfers remain subject to Section 11.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "32. Survival",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Sections 6, 8–12, and 14 survive to the extent necessary to resolve outstanding payments, cancellation charges, credits, and refunds. Sections 19–26, including Sections 20A and 20B, Sections 30–33, and the corresponding Appendix B provisions survive to the extent necessary to resolve claims, enforce lawful obligations, administer privacy responsibilities, maintain signature records, or carry out an authorized media permission. No provision survives or applies beyond the extent permitted by applicable law.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "33. Electronic and paper records and signatures",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "A traveler may sign this Agreement electronically or request a paper copy at no charge. For electronic signing, the traveler consents to electronic records, checkboxes, initials, typed signatures, and electronic delivery. The traveler must receive or be able to download a complete copy of the signed Agreement.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "For paper signing, the Company will provide the complete Agreement, all appendices, and the traveler’s completed Schedule 1. The traveler must personally initial all required provisions and sign the acceptance block by hand. Each adult traveler must sign separately, and a parent or legal guardian must sign the minor-traveler block for each minor. The Company will provide the traveler a complete copy after all required signatures are completed. A handwritten signature and a valid electronic signature have the same contractual effect to the extent permitted by law.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "If a cardholder is different from the traveler, that cardholder must separately sign or electronically accept the applicable payment authorization. The Company will retain the signing record for seven years after the trip ends, or longer when reasonably necessary for a pending claim or legal obligation.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Appendix A — Planned itinerary",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Times are local and approximate. Final schedules, flight numbers, hotels and activities may change under Sections 13 and 14.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "table",
+          "headers": [
+            "Day",
+            "Plan",
+            "Scheduled highlights"
+          ],
+          "rows": [
+            [
+              "1",
+              "Arrive in Ho Chi Minh City",
+              "Private airport transfer; hotel check-in from 2:00 PM; remainder at leisure. Meals: none."
+            ],
+            [
+              "2",
+              "The many sides of Saigon",
+              "Good Morning Saigon; central-city heritage; Saigon After Dark by vintage Jeep. Meals: breakfast, dinner."
+            ],
+            [
+              "3",
+              "Mekong Delta life",
+              "Floating community, fish farm, sampan, village paths, family workshops and home-hosted lunch. Meals: breakfast, lunch."
+            ],
+            [
+              "4",
+              "Fly to Huế",
+              "Domestic economy flight; Imperial Citadel, Kiến Trung Palace, Thiên Mụ Pagoda and Perfume River sunset cruise. Meals: breakfast, lunch."
+            ],
+            [
+              "5",
+              "Gardens, tombs and royal dinner",
+              "Thả Om Garden House; Tự Đức and Khải Định tombs; royal dinner with traditional music. Meals: breakfast, lunch, dinner."
+            ],
+            [
+              "6",
+              "Huế to Hội An",
+              "Hải Vân Pass, lantern workshop, Hội An old town, basket boat; Optional 60-minute Almanity massage during Hội An stay. Meals: breakfast, lunch."
+            ],
+            [
+              "7",
+              "Hội An culinary challenge",
+              "Herb-farm activities, hands-on cooking, free afternoon and farewell dinner with one house wine. Meals: breakfast, lunch, dinner."
+            ],
+            [
+              "8",
+              "Depart Hội An",
+              "Breakfast, hotel checkout and private transfer to Đà Nẵng International Airport. Meals: breakfast."
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Appendix B Responsibility and Disclaimer Provisions",
+      "level": 1,
+      "blocks": []
+    },
+    {
+      "heading": "Agreement and scope",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "These Responsibility and Disclaimer Provisions form part of the agreement between Cookie Paradise Travel Company LLC, referred to as the Company, and each traveler named in the booking. They apply to the itinerary, accommodations, transportation, activities, meals, guides, and other travel services identified in the traveler’s booking materials. These provisions are incorporated into this Agreement and accepted through its single signature section.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The traveler acknowledges that international travel involves changing conditions and risks that cannot be eliminated. The Company will use commercially reasonable care in planning and administering the trip, communicating material information known to it, and selecting and coordinating with destination suppliers.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Independent travel suppliers",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Hotels, airlines, destination management companies, transportation companies, guides, restaurants, activity operators, and other service providers are independent suppliers. They are not employees of the Company and ordinarily control their own personnel, equipment, premises, schedules, and operating procedures.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The Company does not own or operate aircraft, motor coaches, automobiles, trains, vessels, hotels, restaurants, or activity facilities used on the trip unless the booking materials expressly state otherwise. The Company remains responsible for its own obligations and for liability that applicable law does not permit it to disclaim.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Itinerary changes and supplier performance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Published itineraries describe the services reasonably expected at the time of publication. The Company or a supplier may make reasonable changes when necessary for safety, weather, transportation disruption, government action, public health conditions, supplier unavailability, local events, or circumstances beyond reasonable control. A comparable substitute may be used when reasonably available.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The Company does not guarantee uninterrupted or error-free performance by independent suppliers. The Company will use reasonable efforts to assist travelers and pursue appropriate supplier remedies when a material contracted service is not provided. Any refund, credit, or substitute service will be determined under the traveler agreement, governing law, and supplier terms only to the extent consistent with this Agreement; Sections 9, 12 and 14 control cancellation charges, credits, and refunds.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Traveler responsibilities",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Provide accurate legal names, contact information, travel details, and other information reasonably required for the booking.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Obtain and carry valid passports, visas, permits, vaccinations, and entry or exit documentation required for the traveler’s circumstances.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Review the itinerary, physical demands, destination conditions, inclusions, exclusions, and meeting instructions before travel.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Promptly disclose accommodation, mobility, dietary, allergy, or other needs that may affect safe participation, while understanding that not every request can be guaranteed.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Follow applicable laws, official instructions, safety briefings, meeting times, and reasonable directions from the trip host, local guides, and suppliers.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Remain responsible for personal property, discretionary purchases, conduct, and services not expressly included in the package.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Health accessibility and fitness to travel",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Travelers are responsible for determining, in consultation with qualified professionals when appropriate, whether the trip is suitable for their health, mobility, and individual circumstances. The Company does not provide medical advice. Travelers should bring necessary medications and supplies and should not rely on the availability of particular medical services or products at the destination.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "The Company will consider reasonable accommodation requests communicated in advance and will coordinate with suppliers where practicable. Because many services are provided abroad by independent suppliers, the Company cannot guarantee that facilities, vehicles, or activities will meet standards applicable in the United States or satisfy every requested accommodation.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Travel insurance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Travel insurance is strongly recommended. Unless expressly included in writing, the Trip Price does not include trip cancellation, interruption, delay, baggage, medical, evacuation, or repatriation insurance. Travelers are responsible for reviewing coverage terms, exclusions, preexisting-condition provisions, and claim procedures. The traveler’s decision to purchase or decline coverage will be documented when required by the Company’s procedures.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Assumption of ordinary travel risks",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "To the extent permitted by law, the traveler accepts the ordinary and reasonably foreseeable risks of international travel and participation in the selected itinerary. These may include transportation delays or accidents, unfamiliar roads and vehicles, illness, food-related illness, weather, natural events, uneven surfaces, crowds, crime, civil disturbance, infectious disease, limited medical resources, and differences in local laws and safety practices.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Separate activity waivers or acknowledgments may be required for activities presenting distinct risks. Refusal to sign a required supplier waiver may result in exclusion from that activity without a refund when the supplier makes the waiver a condition of participation.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Traveler conduct and removal",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "A traveler may be removed from an activity or trip when the traveler’s conduct creates a material safety risk, seriously disrupts the group, violates law, involves harassment or threats, or repeatedly disregards reasonable instructions. When practicable, the Company will provide a warning and an opportunity to correct the conduct. The traveler remains responsible for additional arrangements and costs resulting from removal, subject to applicable law and the circumstances of the event.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Events beyond reasonable control",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "For events beyond reasonable control, Section 14 governs changes, cancellations, credits and refunds. The Company will use reasonable efforts to protect travelers, communicate changes, and obtain available supplier refunds or credits, but cannot guarantee recovery of amounts retained by suppliers. This provision does not limit the Company’s obligations under Sections 12, 14 or 25.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Claims and incident notice",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "A traveler should promptly report a safety concern, injury, service failure, or material complaint to the trip host, local supplier, or Company so corrective action can be attempted. After the trip, written notice should include the traveler’s name, trip, date, facts, requested resolution, and available supporting documents. The traveler must email written notice of any claim within 30 days after the trip ends under Section 22. This notice requirement does not waive a right that cannot be lawfully waived.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Limitations required by law",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "No provision is intended to exclude or limit liability for the Company’s gross negligence, reckless or intentional misconduct, fraud, or any responsibility that cannot be excluded under applicable law. If part of these provisions is unenforceable, the remaining provisions will continue to the extent permitted by law. Supplier limitations, tariffs, and international conventions may independently apply to transportation and other services.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Governing documents and acceptance",
+      "level": 2,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "These provisions should be read with the documents listed in Section 2. Sections 1–33 of this Agreement and later amendments signed by both the Company and the affected traveler control any conflict, as provided in Section 2.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "By signing or electronically accepting the traveler agreement, the traveler confirms that the traveler has reviewed these provisions, Appendix C, and the completed Schedule 1; had an opportunity to ask questions; and agrees to be bound by them.",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "heading": "Appendix C — Vietnam Traveler Safety Briefing",
+      "level": 1,
+      "blocks": [
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "This briefing supplements instructions provided by the Company, trip host, local guides, transportation providers, accommodations, and activity suppliers. Conditions and legal requirements may change, and travelers must follow current official instructions.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "1. Local laws, illegal drugs, and medication. Travelers must comply with all applicable Vietnamese national and local laws. Vietnam strictly prohibits the unlawful possession, use, purchase, sale, import, or transportation of controlled drugs and imposes severe criminal penalties for drug offenses.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Examples include cannabis or marijuana in any form—including flower, edibles, gummies, oils, tinctures, concentrates, and THC vape cartridges—as well as heroin, cocaine, methamphetamine, amphetamine, MDMA or ecstasy, ketamine, fentanyl, opium, and any other prohibited narcotic or psychotropic substance.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• A substance’s legality in a U.S. state does not make it legal in Vietnam. A U.S. medical-marijuana card or prescription does not authorize a traveler to bring marijuana or THC products into Vietnam. Travelers must not bring cannabis, THC, CBD, hemp-derived intoxicating products, or recreational drug paraphernalia on the trip.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Never accept, carry, store, or transport a package, medication, vape, food product, or other item for another person unless you know exactly what it contains.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "• Some lawful U.S. prescription medicines—including certain medicines used to treat ADHD, pain, anxiety, or sleep conditions—may be controlled or prohibited in Vietnam. Before departure, travelers must confirm that each medication is permitted, carry it in its original labeled container, bring a copy of the prescription, and obtain any required authorization. Travelers should contact the Vietnamese embassy or consulate when uncertain.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "2. Alcohol. Vietnamese law prohibits people under 18 from drinking alcohol or beer. Travelers who may lawfully drink must do so responsibly. Never drive or operate a motorbike, bicycle, boat, or other equipment while impaired.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "3. Road safety. Traffic patterns and driving practices may differ substantially from those in the United States. Use designated transportation, wear available seat belts and helmets, and follow guides’ instructions when crossing streets or entering vehicles.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "4. Group movements. Arrive at meeting points on time. Tell the trip host before separating from the group and provide a way to contact you.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "5. Food, water, and health. Follow guide recommendations concerning drinking water and food. Carry necessary medication in original or properly labeled packaging and stay adequately hydrated.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "6. Personal security. Protect passports, phones, money, and valuables. Remain alert in crowded locations and promptly report a lost passport, theft, threat, or suspicious activity.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "7. Activities and weather. Follow all safety instructions for boats, bicycles, open vehicles, workshops, cooking activities, and excursions. Tell the host or guide if conditions exceed your abilities or if you become ill or injured.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "8. Emergency assistance. In an emergency, contact the trip host or local guide immediately and follow the directions of local emergency personnel. The Company may adjust or stop an activity when reasonably necessary for safety.",
+              "strong": false
+            }
+          ]
+        },
+        {
+          "type": "paragraph",
+          "segments": [
+            {
+              "text": "Traveler acknowledgment: I have reviewed this safety briefing and agree to follow applicable laws and reasonable safety instructions. Traveler (or parent/guardian) initials: __________",
+              "strong": false
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

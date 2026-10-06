@@ -12,6 +12,8 @@ export type AgreementAcceptanceSnapshot = {
   signerType: "traveler" | "guardian";
   signerLegalName: string;
   signerEmail: string;
+  companyAcceptedAt: string;
+  companyAcceptedBy: string;
   travelerInitials: string;
   guardianRelationship: string | null;
   minorDateOfBirth: string | null;
@@ -20,10 +22,13 @@ export type AgreementAcceptanceSnapshot = {
   agreementConsent: true;
   depositAcknowledged: true;
   cancellationAcknowledged: true;
-  insuranceSelection: "purchased" | "will_purchase" | "declined";
-  insuranceProvider: string | null;
+  paymentScheduleAcknowledged: true;
+  healthFitnessAcknowledged: true;
+  insuranceSelection: "will_purchase" | "declined";
   insuranceAcknowledged: true;
   releaseAcknowledged: true;
+  liabilityLimitAcknowledged: true;
+  safetyBriefingAcknowledged: true;
   agreementViewedToEnd: true;
   photoMediaOptIn: boolean;
   emailVerifiedAt: string;

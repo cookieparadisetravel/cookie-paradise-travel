@@ -109,7 +109,7 @@ export function DepositInvoiceAction({ id, partySize, departure, acceptanceDate,
     return (
       <div className={`rounded-2xl border p-4 ${inProgress ? "border-amber-200 bg-amber-50" : "border-[var(--line)] bg-[var(--cream)]"}`}>
         <p className="text-sm font-bold text-[var(--ink)]">{statusPresentation.label}</p>
-        <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">{inProgress ? "Refresh to load the latest persisted Square status. Manual recovery appears only after a recorded error." : "The secure payment-choice flow creates the invoice automatically after the customer records a choice. Creating a link or opening a draft does not create a payment."}</p>
+        <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">{inProgress ? "Refresh to load the latest persisted Square status. Manual recovery appears only after a recorded error." : "The secure payment-choice flow prepares an unpublished Square draft after the customer records a choice. The draft is issued only after every required Agreement 1.0 acceptance is complete and you approve it."}</p>
       </div>
     );
   }

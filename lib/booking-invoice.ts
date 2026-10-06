@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
-import { bookingRequests } from "@/db/schema";
+import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { isPaymentPreference } from "@/lib/payment-preference-invitation";
@@ -32,14 +32,17 @@ type InvoiceCreationFailure = {
 
 export type BookingInvoiceResult = InvoiceCreationSuccess | InvoiceCreationFailure;
 
-export async function createBookingInvoice(input: { inquiryId: number; acceptedBy: string }): Promise<BookingInvoiceResult> {
+export async function createBookingInvoice(input: { inquiryId: number; acceptedBy: string; publish?: boolean }): Promise<BookingInvoiceResult> {
   const db = getDb();
+  const shouldPublish = input.publish !== false;
   const [inquiry] = await db.select().from(bookingRequests).where(eq(bookingRequests.id, input.inquiryId)).limit(1);
   if (!inquiry) return failure(404, "Inquiry not found");
 
-  const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize);
-  if (!agreementReadiness.readyForInvoice) {
-    return failure(409, `Payment invoice is locked. ${agreementReadiness.message}`);
+  if (shouldPublish) {
+    const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize);
+    if (!agreementReadiness.readyForInvoice) {
+      return failure(409, `Payment invoice is locked. ${agreementReadiness.message}`);
+    }
   }
   if (!inquiry.confirmedBookingTotalCents || inquiry.confirmedBookingTotalCents < 1) {
     return failure(409, "Create the secure payment-choice link with the confirmed booking total before invoicing.");
@@ -53,16 +56,46 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
 
   const paymentPreference = inquiry.paymentPreference;
   const bookingTotalCents = inquiry.confirmedBookingTotalCents;
-  const acceptanceDate = todayInIndiana();
+  const acceptanceDate = inquiry.companyAcceptedAt
+    ? todayInIndiana(new Date(inquiry.companyAcceptedAt))
+    : todayInIndiana();
   let paymentPlan;
   try {
-    const standardPaymentPlan = createPaymentPlan({
-      bookingTotalCents,
-      partySize: inquiry.partySize,
-      departure: inquiry.departure,
-      acceptanceDate,
+    const travelerPrices = await db.select({
+      tripPriceCents: travelers.confirmedTripPriceCents,
+    }).from(travelers).where(eq(travelers.bookingRequestId, input.inquiryId));
+    if (
+      travelerPrices.length !== inquiry.partySize
+      || travelerPrices.some((traveler) => !traveler.tripPriceCents || traveler.tripPriceCents < 1)
+    ) {
+      return failure(409, "Every traveler must have a confirmed Trip Price before the Square draft is prepared.");
+    }
+    const allocatedTotal = travelerPrices.reduce((sum, traveler) => sum + (traveler.tripPriceCents ?? 0), 0);
+    if (allocatedTotal !== bookingTotalCents) {
+      return failure(409, "The individual traveler prices do not equal the confirmed booking total.");
+    }
+    const individualPlans = travelerPrices.map((traveler) => {
+      const tripPriceCents = traveler.tripPriceCents!;
+      const standard = createPaymentPlan({
+        bookingTotalCents: tripPriceCents,
+        partySize: 1,
+        departure: inquiry.departure,
+        acceptanceDate,
+      });
+      return applyPaymentPreference(standard, tripPriceCents, paymentPreference);
     });
-    paymentPlan = applyPaymentPreference(standardPaymentPlan, bookingTotalCents, paymentPreference);
+    const firstPlan = individualPlans[0];
+    paymentPlan = {
+      paymentType: firstPlan.paymentType,
+      initialAmountCents: individualPlans.reduce((sum, plan) => sum + plan.initialAmountCents, 0),
+      depositAmountCents: individualPlans.reduce((sum, plan) => sum + plan.depositAmountCents, 0),
+      remainingBalanceCents: individualPlans.reduce((sum, plan) => sum + plan.remainingBalanceCents, 0),
+      finalPaymentDeadline: firstPlan.finalPaymentDeadline,
+      installments: firstPlan.installments.map((installment, index) => ({
+        dueDate: installment.dueDate,
+        amountCents: individualPlans.reduce((sum, plan) => sum + (plan.installments[index]?.amountCents ?? 0), 0),
+      })),
+    };
   } catch (error) {
     return failure(400, error instanceof Error ? error.message : "The payment schedule could not be calculated.");
   }
@@ -176,10 +209,14 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
       }
       invoiceVersion = existingInvoice.version;
       published = existingInvoice.status === "draft"
-        ? await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion })
+        ? shouldPublish
+          ? await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion })
+          : { status: "draft", publicUrl: existingInvoice.publicUrl, version: existingInvoice.version }
         : { status: existingInvoice.status, publicUrl: existingInvoice.publicUrl, version: existingInvoice.version };
     } else {
-      published = await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion });
+      published = shouldPublish
+        ? await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion })
+        : { status: "draft", publicUrl: null, version: invoiceVersion };
     }
 
     const companyAcceptedAt = inquiry.companyAcceptedAt ?? new Date().toISOString();
@@ -188,7 +225,7 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
       squareDepositInvoiceVersion: published.version,
       squareDepositAmountCents: squareOrderAmountCents,
       squareDepositInvoiceUrl: published.publicUrl,
-      squareDepositCreatedAt: new Date().toISOString(),
+      squareDepositCreatedAt: shouldPublish ? new Date().toISOString() : inquiry.squareDepositCreatedAt,
       squareDepositClaimedAt: null,
       companyAcceptedAt,
       companyAcceptedBy: inquiry.companyAcceptedBy ?? input.acceptedBy,

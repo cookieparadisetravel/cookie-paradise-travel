@@ -10,7 +10,7 @@ import {
 import { getDb } from "@/db";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { todayInIndiana } from "@/lib/payment-schedule";
-import { currentTravelerAgreement, hashAgreementDocument } from "@/lib/traveler-agreement";
+import { currentTravelerAgreement } from "@/lib/traveler-agreement";
 import type {
   AgreementInvitationDelivery,
   DashboardInquiry,
@@ -35,14 +35,10 @@ export async function loadInquiryDashboardData() {
     travelersByInquiry.set(traveler.bookingRequestId, existing);
   }
 
-  const currentAgreementHash = currentTravelerAgreement
-    ? await hashAgreementDocument(currentTravelerAgreement)
-    : null;
   const latestAgreementInvitationByTraveler = new Map<number, AgreementInvitationDelivery>();
   for (const invitation of agreementInvitationRows) {
     if (latestAgreementInvitationByTraveler.has(invitation.travelerId)) continue;
-    if (!currentTravelerAgreement || !currentAgreementHash) continue;
-    if (invitation.agreementVersion !== currentTravelerAgreement.version || invitation.agreementDocumentHash !== currentAgreementHash) continue;
+    if (invitation.agreementVersion !== currentTravelerAgreement.version || !invitation.agreementDocumentJson) continue;
     if (!invitation.invitationEmailSentAt || !invitation.recipientEmail) continue;
     latestAgreementInvitationByTraveler.set(invitation.travelerId, {
       email: invitation.recipientEmail,
@@ -91,6 +87,9 @@ export async function loadInquiryDashboardData() {
 
     return {
       ...inquiry,
+      companyAcceptanceDate: inquiry.companyAcceptedAt
+        ? todayInIndiana(new Date(inquiry.companyAcceptedAt))
+        : todayInIndiana(),
       travelers: inquiryTravelers,
       agreementActive: agreementReadiness.agreementActive,
       agreementReady: agreementReadiness.readyForInvoice,

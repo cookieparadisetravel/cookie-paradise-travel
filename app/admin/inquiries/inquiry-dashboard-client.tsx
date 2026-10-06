@@ -456,14 +456,14 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
             <div className="space-y-4">
               <SectionHeading description={`${inquiry.travelers.length} of ${inquiry.partySize} traveler records · ${acceptedCount} current agreements accepted`} title="Travelers & agreements" />
               <TravelerListInvitationAction inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} currentTravelerCount={inquiry.travelers.length} initialGeneratedDraft={travelerListDraft} onGeneratedDraftChange={onTravelerListDraftChange} />
-              <TravelerAgreementManager key={`agreements-${inquiry.id}-${inquiry.travelers.length}-${inquiry.acceptedTravelerIds.join("-")}-${Object.values(inquiry.agreementInvitationDeliveries).map((delivery) => delivery.sentAt).join("-")}`} inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} initialTravelers={inquiry.travelers} agreementActive={inquiry.agreementActive} acceptedTravelerIds={inquiry.acceptedTravelerIds} initialInvitationDeliveries={inquiry.agreementInvitationDeliveries} />
+              <TravelerAgreementManager key={`agreements-${inquiry.id}-${inquiry.travelers.length}-${inquiry.acceptedTravelerIds.join("-")}-${Object.values(inquiry.agreementInvitationDeliveries).map((delivery) => delivery.sentAt).join("-")}`} inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} initialTravelers={inquiry.travelers} agreementActive={inquiry.agreementActive} acceptedTravelerIds={inquiry.acceptedTravelerIds} initialInvitationDeliveries={inquiry.agreementInvitationDeliveries} paymentPreference={inquiry.paymentPreference} invoiceExists={Boolean(inquiry.squareDepositInvoiceId)} />
             </div>
           )}
           {section === "payments" && (
             <div className="space-y-4">
               <SectionHeading description={`Square ${squareMode === "sandbox" ? "Sandbox testing" : "production"}. A saved preference is not a payment.`} title="Payments" />
-              <PaymentPreferenceInvitationAction inquiryId={inquiry.id} agreementReady={inquiry.agreementReady} agreementReadinessMessage={inquiry.agreementReadinessMessage} initialBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} initialSelectedAt={inquiry.paymentPreferenceSelectedAt} invoiceExists={Boolean(inquiry.squareDepositInvoiceId)} partySize={inquiry.partySize} roomPreference={inquiry.roomPreference} initialGeneratedDraft={paymentChoiceDraft} onGeneratedDraftChange={onPaymentChoiceDraftChange} />
-              <DepositInvoiceAction key={`invoice-${inquiry.id}-${inquiry.squareDepositInvoiceStatus}-${inquiry.squareDepositInvoiceUrl ?? "none"}`} id={inquiry.id} partySize={inquiry.partySize} departure={inquiry.departure} acceptanceDate={acceptanceDate} email={inquiry.email} initialStatus={inquiry.squareDepositInvoiceStatus} initialUrl={inquiry.squareDepositInvoiceUrl} agreementReady={inquiry.agreementReady} agreementReadinessMessage={inquiry.agreementReadinessMessage} confirmedBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} paymentPreferenceSelectedAt={inquiry.paymentPreferenceSelectedAt} creatingClaimIsStale={inquiry.squareDepositClaimIsStale} squareMode={squareMode} />
+              <PaymentPreferenceInvitationAction inquiryId={inquiry.id} initialBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} initialSelectedAt={inquiry.paymentPreferenceSelectedAt} invoiceExists={Boolean(inquiry.squareDepositInvoiceId)} partySize={inquiry.partySize} roomPreference={inquiry.roomPreference} initialGeneratedDraft={paymentChoiceDraft} onGeneratedDraftChange={onPaymentChoiceDraftChange} />
+              <DepositInvoiceAction key={`invoice-${inquiry.id}-${inquiry.squareDepositInvoiceStatus}-${inquiry.squareDepositInvoiceUrl ?? "none"}`} id={inquiry.id} partySize={inquiry.partySize} departure={inquiry.departure} acceptanceDate={inquiry.companyAcceptanceDate || acceptanceDate} email={inquiry.email} initialStatus={inquiry.squareDepositInvoiceStatus} initialUrl={inquiry.squareDepositInvoiceUrl} agreementReady={inquiry.agreementReady} agreementReadinessMessage={inquiry.agreementReadinessMessage} confirmedBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} paymentPreferenceSelectedAt={inquiry.paymentPreferenceSelectedAt} creatingClaimIsStale={inquiry.squareDepositClaimIsStale} squareMode={squareMode} />
             </div>
           )}
           {section === "activity" && <ActivitySection inquiry={inquiry} squareMode={squareMode} />}
@@ -671,13 +671,13 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
       ? { label: "Residency screening", detail: `Review ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the reported state"} requirements.`, state: "error", section: "overview" }
       : { label: "Residency screening", detail: "No regulated-state flag was reported.", state: "complete", section: "overview" },
     travelerItem,
-    agreementItem,
     inquiry.confirmedBookingTotalCents && inquiry.confirmedBookingTotalCents > 0
       ? { label: "Booking total", detail: `${formatCurrency(inquiry.confirmedBookingTotalCents)} confirmed.`, state: "complete", section: "payments" }
       : { label: "Booking total", detail: "Confirmed total has not been entered.", state: "pending", section: "payments" },
     inquiry.paymentPreference && inquiry.paymentPreferenceSelectedAt
       ? { label: "Payment choice", detail: `${inquiry.paymentPreference === "full" ? "Full payment" : "Installment plan"} selected by customer.`, state: "complete", section: "payments" }
       : { label: "Payment choice", detail: "No submitted customer choice is recorded.", state: "pending", section: "payments" },
+    agreementItem,
     invoiceItem,
     paymentItem,
   ];
@@ -689,18 +689,20 @@ function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string
   if (hasMissingTravelerDetails(inquiry)) return { label: "Collect traveler details", detail: `${inquiry.partySize - inquiry.travelers.length} traveler record${inquiry.partySize - inquiry.travelers.length === 1 ? " is" : "s are"} still needed. Create or replace the secure traveler-list link in the traveler section.`, actionLabel: "Open travelers", section: "travelers", blocked: false };
   if (inquiry.departure === "flexible") return { label: "Confirm departure", detail: "A specific departure must be confirmed before agreement acceptance and payment scheduling can proceed.", actionLabel: "Review overview", section: "overview", blocked: true };
   if (!inquiry.agreementActive) return { label: "Await agreement activation", detail: "Traveler agreement invitations remain disabled until the legally approved agreement is activated.", actionLabel: "Review travelers", section: "travelers", blocked: true };
-  if (hasIncompleteAgreements(inquiry)) return { label: "Review agreements", detail: `${inquiry.partySize - acceptedAgreementCount(inquiry)} current agreement${inquiry.partySize - acceptedAgreementCount(inquiry) === 1 ? " is" : "s are"} still awaiting acceptance. Persisted email timestamps appear beside travelers when available.`, actionLabel: "Open agreements", section: "travelers", blocked: false };
+  if (!travelerPricesComplete(inquiry)) return { label: "Set traveler prices", detail: "Enter and save each traveler’s confirmed Trip Price before asking the primary contact to choose a payment option.", actionLabel: "Open travelers", section: "travelers", blocked: false };
+  if (!inquiry.confirmedBookingTotalCents) return { label: "Prepare payment-choice link", detail: "Enter the confirmed group total and create the secure payment-choice link.", actionLabel: "Open payments", section: "payments", blocked: false };
+  if (!inquiry.paymentPreference) return { label: "Await payment choice", detail: "The customer has not recorded a payment preference. Creating or opening a draft does not mean it was sent.", actionLabel: "Open payments", section: "payments", blocked: false };
   if (hasInvoiceIssue(inquiry)) {
     const invoiceStatus = getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus);
     return { label: "Review invoice issue", detail: invoiceStatus.description, actionLabel: "Review payment", section: "payments", blocked: invoiceStatus.tone === "danger" };
   }
-  if (!inquiry.confirmedBookingTotalCents) return { label: "Set booking total", detail: "Enter the confirmed group total before creating the secure payment-choice link.", actionLabel: "Open payments", section: "payments", blocked: false };
-  if (!inquiry.paymentPreference) return { label: "Prepare payment-choice link", detail: "The customer has not recorded a payment preference. Creating or opening a draft does not mean it was sent.", actionLabel: "Open payments", section: "payments", blocked: false };
+  if (hasIncompleteAgreements(inquiry)) return { label: "Review agreements", detail: `${inquiry.partySize - acceptedAgreementCount(inquiry)} personalized Agreement 1.0 acceptance${inquiry.partySize - acceptedAgreementCount(inquiry) === 1 ? " is" : "s are"} still needed before the Square draft can be issued.`, actionLabel: "Open agreements", section: "travelers", blocked: false };
   if (getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus).invoiceExists) return { label: inquiry.squareDepositInvoiceStatus === "paid" ? "Review completed payment" : "Open Square invoice", detail: "Square's persisted invoice status is shown. Paid amounts and balances are omitted because they are not stored in D1.", actionLabel: "Open payments", section: "payments", blocked: false };
   return { label: "Review payment setup", detail: "The payment preference is recorded, but a published Square invoice is not available.", actionLabel: "Open payments", section: "payments", blocked: false };
 }
 
 function hasMissingTravelerDetails(inquiry: DashboardInquiry) { return inquiry.travelers.length < inquiry.partySize; }
+function travelerPricesComplete(inquiry: DashboardInquiry) { return inquiry.travelers.length === inquiry.partySize && inquiry.travelers.every((traveler) => Boolean(traveler.confirmedTripPriceCents && traveler.confirmedTripPriceCents >= 50_000 && (traveler.confirmedOccupancy === "shared" || traveler.confirmedOccupancy === "private"))); }
 function acceptedAgreementCount(inquiry: DashboardInquiry) { const accepted = new Set(inquiry.acceptedTravelerIds); return inquiry.travelers.filter((traveler) => accepted.has(traveler.id)).length; }
 function hasIncompleteAgreements(inquiry: DashboardInquiry) { return acceptedAgreementCount(inquiry) < inquiry.partySize; }
 function hasInvoiceIssue(inquiry: DashboardInquiry) { return getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus).needsAttention; }

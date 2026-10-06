@@ -1,8 +1,7 @@
-import { env } from "cloudflare:workers";
 import { and, eq } from "drizzle-orm";
-import { agreementAcceptances, travelers } from "@/db/schema";
+import { agreementAcceptances, agreementInvitations, travelers } from "@/db/schema";
 import { getDb } from "@/db";
-import { currentTravelerAgreement, hashAgreementDocument } from "@/lib/traveler-agreement";
+import { currentTravelerAgreement } from "@/lib/traveler-agreement";
 
 export type AgreementReadiness = {
   agreementActive: boolean;
@@ -14,30 +13,12 @@ export type AgreementReadiness = {
   message: string;
 };
 
-function sandboxAgreementBypassEnabled() {
-  const runtime = env as unknown as Record<string, string | undefined>;
-  return runtime.SQUARE_ENV === "sandbox"
-    && runtime.ALLOW_SANDBOX_INVOICE_WITHOUT_AGREEMENT === "true";
-}
-
 export async function getAgreementReadiness(bookingRequestId: number, expectedPartySize: number): Promise<AgreementReadiness> {
   const db = getDb();
   const travelerRecords = await db
     .select({ id: travelers.id })
     .from(travelers)
     .where(eq(travelers.bookingRequestId, bookingRequestId));
-
-  if (sandboxAgreementBypassEnabled()) {
-    return {
-      agreementActive: false,
-      expectedPartySize,
-      travelerCount: travelerRecords.length,
-      acceptedCount: 0,
-      acceptedTravelerIds: [],
-      readyForInvoice: true,
-      message: "Sandbox-only agreement bypass is enabled for invoice testing.",
-    };
-  }
 
   if (!currentTravelerAgreement) {
     return {
@@ -51,15 +32,15 @@ export async function getAgreementReadiness(bookingRequestId: number, expectedPa
     };
   }
 
-  const agreementHash = await hashAgreementDocument(currentTravelerAgreement);
   const acceptedRecords = await db
     .select({ travelerId: agreementAcceptances.travelerId })
     .from(agreementAcceptances)
+    .innerJoin(agreementInvitations, eq(agreementAcceptances.invitationId, agreementInvitations.id))
     .innerJoin(travelers, eq(agreementAcceptances.travelerId, travelers.id))
     .where(and(
       eq(travelers.bookingRequestId, bookingRequestId),
       eq(agreementAcceptances.agreementVersion, currentTravelerAgreement.version),
-      eq(agreementAcceptances.agreementDocumentHash, agreementHash),
+      eq(agreementAcceptances.agreementDocumentHash, agreementInvitations.agreementDocumentHash),
     ));
 
   const travelerIds = new Set(travelerRecords.map((traveler) => traveler.id));

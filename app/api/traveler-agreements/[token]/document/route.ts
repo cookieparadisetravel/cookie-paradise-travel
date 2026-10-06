@@ -15,7 +15,7 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
   }
 
   try {
-    const pdf = await generateAgreementPdf({ agreement: currentTravelerAgreement });
+    const pdf = await generateAgreementPdf({ agreement: result.agreement });
     const travelerName = `${result.invitation.firstName} ${result.invitation.lastName}`;
     return new Response(pdf, {
       status: 200,

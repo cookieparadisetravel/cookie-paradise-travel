@@ -6,6 +6,8 @@ import {
   hashAgreementDocument,
   hashInvitationToken,
   isValidInvitationToken,
+  parseAgreementDocument,
+  type AgreementDocument,
 } from "@/lib/traveler-agreement";
 
 export type AgreementInvitationView = {
@@ -21,6 +23,8 @@ export type AgreementInvitationView = {
   guardianLegalName: string | null;
   guardianRelationship: string | null;
   recipientEmail: string;
+  companyAcceptedAt: string;
+  companyAcceptedBy: string;
   verificationCodeSentAt: string | null;
   verificationCodeExpiresAt: string | null;
   verificationAttempts: number;
@@ -38,6 +42,7 @@ export type AgreementInvitationResult =
       status: "ready";
       invitation: AgreementInvitationView;
       agreementHash: string;
+      agreement: AgreementDocument;
     };
 
 export async function getAgreementInvitation(token: string): Promise<AgreementInvitationResult> {
@@ -61,12 +66,15 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
       guardianLegalName: travelers.guardianLegalName,
       guardianRelationship: travelers.guardianRelationship,
       recipientEmail: agreementInvitations.recipientEmail,
+      companyAcceptedAt: bookingRequests.companyAcceptedAt,
+      companyAcceptedBy: bookingRequests.companyAcceptedBy,
       verificationCodeSentAt: agreementInvitations.verificationCodeSentAt,
       verificationCodeExpiresAt: agreementInvitations.verificationCodeExpiresAt,
       verificationAttempts: agreementInvitations.verificationAttempts,
       emailVerifiedAt: agreementInvitations.emailVerifiedAt,
       agreementVersion: agreementInvitations.agreementVersion,
       agreementDocumentHash: agreementInvitations.agreementDocumentHash,
+      agreementDocumentJson: agreementInvitations.agreementDocumentJson,
       expiresAt: agreementInvitations.expiresAt,
       acceptedAt: agreementInvitations.acceptedAt,
       revokedAt: agreementInvitations.revokedAt,
@@ -92,8 +100,14 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
   const expiresAt = Date.parse(record.expiresAt);
   if (!Number.isFinite(expiresAt) || expiresAt <= Date.now()) return { status: "expired" };
 
-  const agreementHash = await hashAgreementDocument(agreement);
-  if (record.agreementVersion !== agreement.version || record.agreementDocumentHash !== agreementHash) {
+  const personalizedAgreement = record.agreementDocumentJson
+    ? parseAgreementDocument(record.agreementDocumentJson)
+    : null;
+  if (!personalizedAgreement || record.agreementVersion !== agreement.version || personalizedAgreement.version !== agreement.version) {
+    return { status: "invalid" };
+  }
+  if (!record.companyAcceptedAt || !record.companyAcceptedBy) return { status: "invalid" };
+  if (await hashAgreementDocument(personalizedAgreement) !== record.agreementDocumentHash) {
     return { status: "invalid" };
   }
 
@@ -112,13 +126,16 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
       guardianLegalName: record.guardianLegalName,
       guardianRelationship: record.guardianRelationship,
       recipientEmail: record.recipientEmail ?? record.email,
+      companyAcceptedAt: record.companyAcceptedAt,
+      companyAcceptedBy: record.companyAcceptedBy,
       verificationCodeSentAt: record.verificationCodeSentAt,
       verificationCodeExpiresAt: record.verificationCodeExpiresAt,
       verificationAttempts: record.verificationAttempts,
       emailVerifiedAt: record.emailVerifiedAt,
       expiresAt: record.expiresAt,
     },
-    agreementHash,
+    agreementHash: record.agreementDocumentHash,
+    agreement: personalizedAgreement,
   };
 }
 
