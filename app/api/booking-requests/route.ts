@@ -7,7 +7,7 @@ import { env } from "cloudflare:workers";
 import { z } from "zod";
 
 const validDepartures = new Set(["2027-06-01"]);
-const validRooms = new Set(["shared", "private", "unsure"]);
+const validRooms = new Set(["shared", "private"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
 const emailSchema = z.string().email().max(180);
 

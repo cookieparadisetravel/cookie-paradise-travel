@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNull, sql } from "drizzle-orm";
 import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
@@ -21,7 +21,8 @@ export async function POST(
   if (!hasValidOrigin(request)) {
     return Response.json({ error: "Invalid request origin" }, { status: 403 });
   }
-  if (!(await requireOwner("/admin/inquiries"))) {
+  const owner = await requireOwner("/admin/inquiries");
+  if (!owner) {
     return Response.json({ error: "Not authorized" }, { status: 403 });
   }
   if (!currentTravelerAgreement) {
@@ -60,6 +61,13 @@ export async function POST(
     .where(eq(bookingRequests.id, inquiryId))
     .limit(1);
   if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+  const now = new Date();
+  if (!inquiry.companyAcceptedAt || !inquiry.companyAcceptedBy) {
+    await db.update(bookingRequests).set({
+      companyAcceptedAt: sql`coalesce(${bookingRequests.companyAcceptedAt}, ${now.toISOString()})`,
+      companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${owner.email})`,
+    }).where(eq(bookingRequests.id, inquiryId));
+  }
   const bookingTravelers = await db.select({
     id: travelers.id,
     confirmedTripPriceCents: travelers.confirmedTripPriceCents,
@@ -95,7 +103,6 @@ export async function POST(
     return Response.json({ error: "This traveler has already accepted the current agreement." }, { status: 409 });
   }
 
-  const now = new Date();
   const expiresAt = new Date(now.getTime() + INVITATION_LIFETIME_DAYS * 86_400_000).toISOString();
   const token = createInvitationToken();
   const tokenHash = await hashInvitationToken(token);

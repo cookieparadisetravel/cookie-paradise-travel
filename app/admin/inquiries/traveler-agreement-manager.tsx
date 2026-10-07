@@ -22,6 +22,7 @@ type Traveler = {
 type Props = {
   inquiryId: number;
   expectedPartySize: number;
+  initialRoomPreference: string;
   initialTravelers: Traveler[];
   agreementActive: boolean;
   acceptedTravelerIds: number[];
@@ -39,7 +40,7 @@ const emptyForm = {
   guardianRelationship: "",
 };
 
-export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries, invoiceExists }: Props) {
+export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialRoomPreference, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries, invoiceExists }: Props) {
   const router = useRouter();
   const [travelerList, setTravelerList] = useState(initialTravelers);
   const [form, setForm] = useState(emptyForm);
@@ -56,7 +57,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
     initialTravelers.map((traveler) => [traveler.id, traveler.confirmedTripPriceCents ? (traveler.confirmedTripPriceCents / 100).toFixed(2) : ""]),
   ));
   const [occupancyValues, setOccupancyValues] = useState<Record<number, string>>(() => Object.fromEntries(
-    initialTravelers.map((traveler) => [traveler.id, traveler.confirmedOccupancy ?? ""]),
+    initialTravelers.map((traveler) => [traveler.id, traveler.confirmedOccupancy ?? occupancyFromRoomPreference(initialRoomPreference)]),
   ));
   const complete = travelerList.length === expectedPartySize;
   const travelerCountMismatch = travelerList.length > expectedPartySize;
@@ -119,6 +120,10 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
       if (!response.ok || !payload.traveler) throw new Error(payload.error || "The traveler could not be added.");
       const nextList = [...travelerList, payload.traveler];
       setTravelerList(nextList);
+      setOccupancyValues((current) => ({
+        ...current,
+        [payload.traveler!.id]: payload.traveler!.confirmedOccupancy ?? occupancyFromRoomPreference(initialRoomPreference),
+      }));
       setForm(emptyForm);
       if (nextList.length >= expectedPartySize) setShowForm(false);
       router.refresh();
@@ -308,6 +313,10 @@ function formatTimestamp(value: string) {
 
 function expectedTravelerPriceCents(basePriceCents: number, occupancy: string) {
   return basePriceCents + (occupancy === "private" ? privateRoomSupplementCents : 0);
+}
+
+function occupancyFromRoomPreference(roomPreference: string) {
+  return roomPreference === "shared" || roomPreference === "private" ? roomPreference : "";
 }
 
 function inferPublishedBasePrice(travelers: Traveler[]) {

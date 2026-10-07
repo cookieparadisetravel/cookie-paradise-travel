@@ -296,7 +296,6 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                   <SelectContent>
                     <SelectItem value="shared">Shared double/twin room</SelectItem>
                     <SelectItem value="private">Private room (+$399 per traveler)</SelectItem>
-                    <SelectItem value="unsure">Not sure yet</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
