@@ -455,7 +455,13 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
           {section === "travelers" && (
             <div className="space-y-4">
               <SectionHeading description={`${inquiry.travelers.length} of ${inquiry.partySize} traveler records · ${acceptedCount} current agreements accepted`} title="Travelers & agreements" />
-              <TravelerListInvitationAction inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} currentTravelerCount={inquiry.travelers.length} initialGeneratedDraft={travelerListDraft} onGeneratedDraftChange={onTravelerListDraftChange} />
+              {inquiry.partySize > 1 ? (
+                <TravelerListInvitationAction inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} currentTravelerCount={inquiry.travelers.length} initialGeneratedDraft={travelerListDraft} onGeneratedDraftChange={onTravelerListDraftChange} />
+              ) : inquiry.travelers.length === 1 ? (
+                <p className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-950">Single-traveler inquiry: the primary contact’s name and email were added automatically, so no traveler-list link is needed.</p>
+              ) : (
+                <p role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950">This older single-traveler inquiry does not have an automatic traveler record. Use “Add traveler” below once; no customer traveler-list link is needed.</p>
+              )}
               <TravelerAgreementManager key={`agreements-${inquiry.id}-${inquiry.travelers.length}-${inquiry.acceptedTravelerIds.join("-")}-${Object.values(inquiry.agreementInvitationDeliveries).map((delivery) => delivery.sentAt).join("-")}`} inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} initialRoomPreference={inquiry.roomPreference} initialTravelers={inquiry.travelers} agreementActive={inquiry.agreementActive} acceptedTravelerIds={inquiry.acceptedTravelerIds} initialInvitationDeliveries={inquiry.agreementInvitationDeliveries} invoiceExists={Boolean(inquiry.squareDepositInvoiceId)} />
             </div>
           )}
@@ -686,7 +692,9 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
 function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string; actionLabel: string; section: DetailSection; blocked: boolean } {
   if (inquiry.travelers.length > inquiry.partySize) return { label: "Resolve traveler-count mismatch", detail: `${inquiry.travelers.length} traveler records exist for a party of ${inquiry.partySize}. Agreement and payment steps remain blocked until the extra record is resolved.`, actionLabel: "Review travelers", section: "travelers", blocked: true };
   if (inquiry.sellerOfTravelStateResident) return { label: "Review residency screening", detail: `Review seller-of-travel requirements for ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the customer's state"} before proceeding with a sale.`, actionLabel: "Review overview", section: "overview", blocked: true };
-  if (hasMissingTravelerDetails(inquiry)) return { label: "Collect traveler details", detail: `${inquiry.partySize - inquiry.travelers.length} traveler record${inquiry.partySize - inquiry.travelers.length === 1 ? " is" : "s are"} still needed. Create or replace the secure traveler-list link in the traveler section.`, actionLabel: "Open travelers", section: "travelers", blocked: false };
+  if (hasMissingTravelerDetails(inquiry)) return inquiry.partySize === 1
+    ? { label: "Add primary traveler", detail: "This older single-traveler inquiry is missing its traveler record. Add the primary contact once in the traveler section; no customer traveler-list link is needed.", actionLabel: "Open travelers", section: "travelers", blocked: false }
+    : { label: "Collect traveler details", detail: `${inquiry.partySize - inquiry.travelers.length} traveler record${inquiry.partySize - inquiry.travelers.length === 1 ? " is" : "s are"} still needed. Create or replace the secure traveler-list link in the traveler section.`, actionLabel: "Open travelers", section: "travelers", blocked: false };
   if (inquiry.departure === "flexible") return { label: "Confirm departure", detail: "A specific departure must be confirmed before agreement acceptance and payment scheduling can proceed.", actionLabel: "Review overview", section: "overview", blocked: true };
   if (!inquiry.agreementActive) return { label: "Await agreement activation", detail: "Traveler agreement invitations remain disabled until the legally approved agreement is activated.", actionLabel: "Review travelers", section: "travelers", blocked: true };
   if (!travelerPricesComplete(inquiry)) return { label: "Set traveler prices", detail: "Enter and save each traveler’s confirmed Trip Price before asking the primary contact to choose a payment option.", actionLabel: "Open travelers", section: "travelers", blocked: false };

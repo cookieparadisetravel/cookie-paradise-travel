@@ -434,6 +434,7 @@ function InitialsInput({ initialsKey, value, invalid, onChange }: {
         value={value}
         onChange={(event) => onChange(initialsKey, event.target.value)}
       />
+      {invalid && <span role="alert" className="ml-1 whitespace-nowrap text-sm font-bold normal-case tracking-normal text-red-700">Initials must match.</span>}
     </label>
   );
 }

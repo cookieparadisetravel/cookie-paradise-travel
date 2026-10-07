@@ -1,4 +1,4 @@
-import { bookingRequests } from "@/db/schema";
+import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { eq } from "drizzle-orm";
 import { addConsentedSubscriber } from "@/lib/mailerlite";
@@ -110,6 +110,20 @@ export async function POST(request: Request) {
       mailerLiteStatus: marketingConsent ? "pending" : "not_requested",
       ownerNotificationStatus: "pending",
     }).returning({ id: bookingRequests.id });
+
+    if (partySize === 1) {
+      try {
+        await db.insert(travelers).values({
+          bookingRequestId: saved.id,
+          firstName,
+          lastName,
+          email,
+          travelerType: "adult",
+        });
+      } catch (error) {
+        console.error("Single-traveler inquiry saved, but its traveler record could not be created", error);
+      }
+    }
 
     let mailerLiteStatus = marketingConsent ? "pending" : "not_requested";
     if (marketingConsent) {

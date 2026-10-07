@@ -28,6 +28,9 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .where(eq(bookingRequests.id, bookingRequestId))
     .limit(1);
   if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+  if (inquiry.partySize === 1) {
+    return Response.json({ error: "A traveler-list link is not needed for a single-traveler inquiry." }, { status: 409 });
+  }
 
   const [travelerCount] = await db.select({ value: count() }).from(travelers)
     .where(eq(travelers.bookingRequestId, bookingRequestId));
