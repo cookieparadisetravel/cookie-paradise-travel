@@ -32,6 +32,8 @@ test("builds a concise personalized agreement without an installment schedule", 
   assert.ok(summary);
   assert.equal(schedule, undefined);
   assert.match(canonicalizeAgreement(agreement), /Mary Ann Smith/u);
+  assert.match(canonicalizeAgreement(agreement), /June 1, 2027/u);
+  assert.doesNotMatch(canonicalizeAgreement(agreement), /2027-06-01/u);
   assert.match(canonicalizeAgreement(agreement), /Private room supplement/u);
   assert.match(canonicalizeAgreement(agreement), /\$3,274\.00/u);
   assert.match(canonicalizeAgreement(agreement), /Square’s hosted invoice and payment process/u);

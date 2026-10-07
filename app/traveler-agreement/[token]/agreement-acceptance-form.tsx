@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Download, KeyRound, Loader2, MailCheck, ShieldCheck } from "lucide-react";
-import type { AgreementDocument } from "@/lib/traveler-agreement";
+import type { AgreementDocument, AgreementSegment } from "@/lib/traveler-agreement";
 
 type Props = {
   token: string;
@@ -22,7 +22,6 @@ type Props = {
 
 type FormState = {
   signerLegalName: string;
-  travelerInitials: string;
   guardianRelationship: string;
   minorDateOfBirth: string;
   electronicSignatureConsent: boolean;
@@ -41,7 +40,6 @@ type FormState = {
 
 const initialForm: FormState = {
   signerLegalName: "",
-  travelerInitials: "",
   guardianRelationship: "",
   minorDateOfBirth: "",
   electronicSignatureConsent: false,
@@ -58,8 +56,28 @@ const initialForm: FormState = {
   photoMediaOptIn: false,
 };
 
+type InitialsKey =
+  | "deposit"
+  | "cancellation"
+  | "healthFitness"
+  | "insurance"
+  | "release"
+  | "liabilityLimit"
+  | "safetyBriefing";
+
+const initialInitials: Record<InitialsKey, string> = {
+  deposit: "",
+  cancellation: "",
+  healthFitness: "",
+  insurance: "",
+  release: "",
+  liabilityLimit: "",
+  safetyBriefing: "",
+};
+
 export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
   const [form, setForm] = useState({ ...initialForm, minorDateOfBirth: traveler.dateOfBirth ?? "" });
+  const [initials, setInitials] = useState(initialInitials);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [acceptedAt, setAcceptedAt] = useState("");
@@ -129,13 +147,22 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitting(true);
     setError("");
+    const enteredInitials = Object.values(initials).map((value) => value.trim().toLocaleUpperCase("en-US"));
+    if (enteredInitials.some((value) => !value)) {
+      setError("Enter your initials at every required acknowledgment in the agreement above.");
+      return;
+    }
+    if (new Set(enteredInitials).size !== 1) {
+      setError("Please use the same initials for every required acknowledgment.");
+      return;
+    }
+    setSubmitting(true);
     try {
       const response = await fetch(`/api/traveler-agreements/${encodeURIComponent(token)}/accept`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ ...form, agreementViewedToEnd: viewedToEnd }),
+        body: JSON.stringify({ ...form, travelerInitials: enteredInitials[0], agreementViewedToEnd: viewedToEnd }),
       });
       const payload = await response.json() as {
         error?: string;
@@ -167,6 +194,21 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
     link.download = signedPdfFilename;
     link.click();
     URL.revokeObjectURL(url);
+  }
+
+  function updateInitials(key: InitialsKey, value: string) {
+    const nextValue = value.replace(/[^\p{L}\p{M} .'-]/gu, "").toLocaleUpperCase("en-US").slice(0, 12);
+    setInitials((current) => ({ ...current, [key]: nextValue }));
+    const acknowledgmentKey = {
+      deposit: "depositAcknowledged",
+      cancellation: "cancellationAcknowledged",
+      healthFitness: "healthFitnessAcknowledged",
+      insurance: "insuranceAcknowledged",
+      release: "releaseAcknowledged",
+      liabilityLimit: "liabilityLimitAcknowledged",
+      safetyBriefing: "safetyBriefingAcknowledged",
+    }[key] as keyof Pick<FormState, "depositAcknowledged" | "cancellationAcknowledged" | "healthFitnessAcknowledged" | "insuranceAcknowledged" | "releaseAcknowledged" | "liabilityLimitAcknowledged" | "safetyBriefingAcknowledged">;
+    setForm((current) => ({ ...current, [acknowledgmentKey]: Boolean(nextValue.trim()) }));
   }
 
   if (acceptedAt) {
@@ -225,11 +267,13 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
               <h3 className={section.level === 1 ? "font-serif text-2xl text-[var(--ink)]" : "font-serif text-xl text-[var(--ink)]"}>{section.heading}</h3>
               <div className="mt-3 space-y-3 leading-7 text-[var(--ink)]">
                 {section.blocks.map((block, blockIndex) => block.type === "paragraph" ? (
-                  <p className="whitespace-pre-line" key={`${section.heading}-p-${blockIndex}`}>
-                    {block.segments.map((segment, segmentIndex) => segment.strong
-                      ? <strong key={segmentIndex}>{segment.text}</strong>
-                      : <span key={segmentIndex}>{segment.text}</span>)}
-                  </p>
+                  <AgreementParagraph
+                    key={`${section.heading}-p-${blockIndex}`}
+                    sectionHeading={section.heading}
+                    segments={block.segments}
+                    initials={initials}
+                    onInitialsChange={updateInitials}
+                  />
                 ) : (
                   <div className="overflow-x-auto" key={`${section.heading}-t-${blockIndex}`}>
                     <table className="w-full min-w-[36rem] border-collapse text-left text-sm">
@@ -245,7 +289,7 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
         </div>
       </article>
 
-      <form className="mt-6 rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-9" onSubmit={submit}>
+      <form id="agreement-acceptance" className="mt-6 rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-9" onSubmit={submit}>
         <div className="flex items-center gap-3">
           <ShieldCheck className="h-6 w-6 text-[var(--orange)]" />
           <h2 className="font-serif text-3xl text-[var(--ink)]">Acceptance</h2>
@@ -254,7 +298,6 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
           <label className="text-sm font-semibold text-[var(--ink)]">{isMinor ? "Parent or guardian legal name" : "Traveler legal name"}<input required maxLength={160} className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.signerLegalName} onChange={(event) => setForm({ ...form, signerLegalName: event.target.value })} /></label>
-          <label className="text-sm font-semibold text-[var(--ink)]">Traveler (or parent/guardian) initials<input required maxLength={12} className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 uppercase outline-none focus:border-[var(--orange)]" value={form.travelerInitials} onChange={(event) => setForm({ ...form, travelerInitials: event.target.value })} /></label>
           {isMinor && <label className="text-sm font-semibold text-[var(--ink)]">Relationship to minor<input required maxLength={80} className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.guardianRelationship} onChange={(event) => setForm({ ...form, guardianRelationship: event.target.value })} /></label>}
           {isMinor && <label className="text-sm font-semibold text-[var(--ink)]">Minor traveler date of birth<input required type="date" className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.minorDateOfBirth} onChange={(event) => setForm({ ...form, minorDateOfBirth: event.target.value })} /></label>}
           <label className="text-sm font-semibold text-[var(--ink)]">Travel insurance decision<select required className="mt-2 w-full rounded-xl border border-[var(--input)] bg-white px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.insuranceSelection} onChange={(event) => setForm({ ...form, insuranceSelection: event.target.value })}><option value="">Choose one</option><option value="will_purchase">I will purchase travel insurance</option><option value="declined">I understand travel insurance is strongly recommended, but I decline it at this time</option></select></label>
@@ -263,13 +306,9 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
         <div className="mt-7 space-y-4">
           <RequiredCheckbox checked={form.electronicSignatureConsent} onChange={(value) => setForm({ ...form, electronicSignatureConsent: value, electronicRecordsDisclosureAccepted: value })}>I consent to use an electronic signature and understand it has the same legal effect as a handwritten signature. I can request a paper copy at no charge, or withdraw consent to electronic signing, by emailing <a className="font-bold underline" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>. I need a device that can receive email and open PDF files.</RequiredCheckbox>
           <RequiredCheckbox checked={form.agreementConsent} onChange={(value) => setForm({ ...form, agreementConsent: value })}>I have read, understand and agree to the Traveler Agreement and Booking Terms shown above.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.depositAcknowledged} onChange={(value) => setForm({ ...form, depositAcknowledged: value })}>I understand that the $500 per traveler reservation deposit is nonrefundable, subject to Sections 4, 12 and 14 of the agreement.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.cancellationAcknowledged} onChange={(value) => setForm({ ...form, cancellationAcknowledged: value })}>I have reviewed and acknowledge the cancellation terms in the agreement.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.healthFitnessAcknowledged} onChange={(value) => setForm({ ...form, healthFitnessAcknowledged: value })}>I reviewed the itinerary and its physical demands and acknowledge the health and ability-to-participate statement in Section 17.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.insuranceAcknowledged} onChange={(value) => setForm({ ...form, insuranceAcknowledged: value })}>I separately confirm the travel-insurance decision selected above.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.releaseAcknowledged} onChange={(value) => setForm({ ...form, releaseAcknowledged: value })}>I have read and understand the release of claims for the Company’s own ordinary negligence in Section 20A.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.liabilityLimitAcknowledged} onChange={(value) => setForm({ ...form, liabilityLimitAcknowledged: value })}>I separately acknowledge the limitation-of-liability provision in Section 20B.</RequiredCheckbox>
-          <RequiredCheckbox checked={form.safetyBriefingAcknowledged} onChange={(value) => setForm({ ...form, safetyBriefingAcknowledged: value })}>I reviewed Appendix C, the Vietnam Traveler Safety Briefing, and agree to follow applicable laws and reasonable safety instructions.</RequiredCheckbox>
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm leading-6 text-emerald-950">
+            <strong>Required initials:</strong> Complete all seven initials fields in the agreement above. They cover the deposit, cancellation terms, health and participation, insurance decision, release, liability limit, and safety briefing.
+          </div>
           <label className="flex gap-3 rounded-2xl border border-[var(--line)] p-4 text-sm leading-6 text-[var(--ink)]"><input className="mt-1 h-4 w-4 accent-[var(--orange)]" type="checkbox" checked={form.photoMediaOptIn} onChange={(event) => setForm({ ...form, photoMediaOptIn: event.target.checked })} /><span><strong>Optional:</strong> I permit Cookie Paradise Travel Company to use trip photos or video featuring me for promotional purposes.</span></label>
         </div>
 
@@ -280,6 +319,85 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
       </form>
     </>
   );
+}
+
+function AgreementParagraph({ sectionHeading, segments, initials, onInitialsChange }: {
+  sectionHeading: string;
+  segments: AgreementSegment[];
+  initials: Record<InitialsKey, string>;
+  onInitialsChange: (key: InitialsKey, value: string) => void;
+}) {
+  const text = segments.map((segment) => segment.text).join("");
+  const initialsKey = getInitialsKey(sectionHeading, text);
+  if (!initialsKey || !text.includes("__________")) {
+    return (
+      <p className="whitespace-pre-line">
+        {segments.map((segment, segmentIndex) => segment.strong
+          ? <strong key={segmentIndex}>{segment.text}</strong>
+          : <span key={segmentIndex}>{segment.text}</span>)}
+      </p>
+    );
+  }
+
+  return (
+    <p className="whitespace-pre-line">
+      {segments.map((segment, segmentIndex) => {
+        if (!segment.text.includes("__________")) {
+          return segment.strong
+            ? <strong key={segmentIndex}>{segment.text}</strong>
+            : <span key={segmentIndex}>{segment.text}</span>;
+        }
+        const [before, ...afterParts] = segment.text.split("__________");
+        const contents = <><span>{before}</span><InitialsInput initialsKey={initialsKey} value={initials[initialsKey]} onChange={onInitialsChange} /><span>{afterParts.join("__________")}</span></>;
+        return segment.strong ? <strong key={segmentIndex}>{contents}</strong> : <span key={segmentIndex}>{contents}</span>;
+      })}
+    </p>
+  );
+}
+
+function InitialsInput({ initialsKey, value, onChange }: {
+  initialsKey: InitialsKey;
+  value: string;
+  onChange: (key: InitialsKey, value: string) => void;
+}) {
+  return (
+    <label className="mx-2 inline-flex align-middle">
+      <span className="sr-only">Required initials for {initialsLabel(initialsKey)}</span>
+      <input
+        aria-label={`Required initials for ${initialsLabel(initialsKey)}`}
+        autoComplete="off"
+        className="h-10 w-28 rounded-lg border-2 border-[var(--gold)] bg-[#fffaf0] px-3 text-center font-bold uppercase tracking-[0.16em] text-[var(--ink)] outline-none transition focus:border-[var(--orange)] focus:ring-4 focus:ring-[var(--gold)]/30"
+        form="agreement-acceptance"
+        maxLength={12}
+        required
+        value={value}
+        onChange={(event) => onChange(initialsKey, event.target.value)}
+      />
+    </label>
+  );
+}
+
+function getInitialsKey(sectionHeading: string, text: string): InitialsKey | null {
+  if (text.includes("THE $500 PER TRAVELER RESERVATION DEPOSIT")) return "deposit";
+  if (text.includes("Cancellation schedule acknowledgment")) return "cancellation";
+  if (text.includes("Based on my own assessment")) return "healthFitness";
+  if (text.includes("Traveler selection:") && text.includes("Traveler (or parent/guardian) initials")) return "insurance";
+  if (text.includes("I HAVE READ AND UNDERSTAND THIS RELEASE")) return "release";
+  if (text.includes("Company’s total liability for direct economic loss")) return "liabilityLimit";
+  if (text.includes("Traveler acknowledgment: I have reviewed this safety briefing")) return "safetyBriefing";
+  return null;
+}
+
+function initialsLabel(key: InitialsKey) {
+  return {
+    deposit: "the reservation deposit",
+    cancellation: "the cancellation terms",
+    healthFitness: "health and ability to participate",
+    insurance: "the travel-insurance decision",
+    release: "the Section 20A release",
+    liabilityLimit: "the Section 20B liability limit",
+    safetyBriefing: "the Vietnam Traveler Safety Briefing",
+  }[key];
 }
 
 function RequiredCheckbox({ checked, onChange, children }: { checked: boolean; onChange: (value: boolean) => void; children: React.ReactNode }) {
