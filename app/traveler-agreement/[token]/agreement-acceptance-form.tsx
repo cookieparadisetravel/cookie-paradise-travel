@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Download, KeyRound, Loader2, MailCheck, ShieldCheck } from "lucide-react";
+import { ArrowRight, CheckCircle2, Download, KeyRound, Loader2, MailCheck, ShieldCheck } from "lucide-react";
 import type { AgreementDocument, AgreementSegment } from "@/lib/traveler-agreement";
 
 type Props = {
@@ -75,9 +75,12 @@ const initialInitials: Record<InitialsKey, string> = {
   safetyBriefing: "",
 };
 
+const initialsKeys = Object.keys(initialInitials) as InitialsKey[];
+
 export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
   const [form, setForm] = useState({ ...initialForm, minorDateOfBirth: traveler.dateOfBirth ?? "" });
   const [initials, setInitials] = useState(initialInitials);
+  const [initialsErrorKey, setInitialsErrorKey] = useState<InitialsKey | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [acceptedAt, setAcceptedAt] = useState("");
@@ -93,6 +96,15 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
   const [viewedToEnd, setViewedToEnd] = useState(false);
   const agreementEndRef = useRef<HTMLDivElement>(null);
   const isMinor = traveler.travelerType === "minor";
+  const hasUnsavedAgreementProgress = Boolean(
+    form.signerLegalName.trim()
+    || form.guardianRelationship.trim()
+    || form.insuranceSelection
+    || form.electronicSignatureConsent
+    || form.agreementConsent
+    || form.photoMediaOptIn
+    || Object.values(initials).some((value) => value.trim()),
+  );
 
   useEffect(() => {
     const element = agreementEndRef.current;
@@ -103,6 +115,16 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
     observer.observe(element);
     return () => observer.disconnect();
   }, [viewedToEnd]);
+
+  useEffect(() => {
+    if (!hasUnsavedAgreementProgress || acceptedAt) return;
+    const warnAboutUnsavedAgreement = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warnAboutUnsavedAgreement);
+    return () => window.removeEventListener("beforeunload", warnAboutUnsavedAgreement);
+  }, [acceptedAt, hasUnsavedAgreementProgress]);
 
   async function sendVerificationCode() {
     setSendingCode(true);
@@ -148,15 +170,25 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
-    const enteredInitials = Object.values(initials).map((value) => value.trim().toLocaleUpperCase("en-US"));
+    const enteredInitials = initialsKeys.map((key) => initials[key].trim().toLocaleUpperCase("en-US"));
     if (enteredInitials.some((value) => !value)) {
       setError("Enter your initials at every required acknowledgment in the agreement above.");
+      const missingIndex = enteredInitials.findIndex((value) => !value);
+      focusInitialsField(initialsKeys[missingIndex]);
       return;
     }
     if (new Set(enteredInitials).size !== 1) {
       setError("Please use the same initials for every required acknowledgment.");
+      const counts = new Map<string, number>();
+      enteredInitials.forEach((value) => counts.set(value, (counts.get(value) ?? 0) + 1));
+      const expectedInitials = [...counts.entries()].sort((left, right) => right[1] - left[1])[0][0];
+      const mismatchIndex = enteredInitials.findIndex((value) => value !== expectedInitials);
+      const mismatchKey = initialsKeys[mismatchIndex];
+      setInitialsErrorKey(mismatchKey);
+      focusInitialsField(mismatchKey);
       return;
     }
+    setInitialsErrorKey(null);
     setSubmitting(true);
     try {
       const response = await fetch(`/api/traveler-agreements/${encodeURIComponent(token)}/accept`, {
@@ -199,6 +231,7 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
   function updateInitials(key: InitialsKey, value: string) {
     const nextValue = value.replace(/[^\p{L}\p{M} .'-]/gu, "").toLocaleUpperCase("en-US").slice(0, 12);
     setInitials((current) => ({ ...current, [key]: nextValue }));
+    if (initialsErrorKey === key) setInitialsErrorKey(null);
     const acknowledgmentKey = {
       deposit: "depositAcknowledged",
       cancellation: "cancellationAcknowledged",
@@ -209,6 +242,15 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
       safetyBriefing: "safetyBriefingAcknowledged",
     }[key] as keyof Pick<FormState, "depositAcknowledged" | "cancellationAcknowledged" | "healthFitnessAcknowledged" | "insuranceAcknowledged" | "releaseAcknowledged" | "liabilityLimitAcknowledged" | "safetyBriefingAcknowledged">;
     setForm((current) => ({ ...current, [acknowledgmentKey]: Boolean(nextValue.trim()) }));
+  }
+
+  function focusInitialsField(key: InitialsKey) {
+    setInitialsErrorKey(key);
+    requestAnimationFrame(() => {
+      const field = document.querySelector<HTMLInputElement>(`[data-initials-key="${key}"]`);
+      field?.scrollIntoView({ behavior: "smooth", block: "center" });
+      field?.focus({ preventScroll: true });
+    });
   }
 
   if (acceptedAt) {
@@ -272,7 +314,10 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
                     sectionHeading={section.heading}
                     segments={block.segments}
                     initials={initials}
+                    insuranceSelection={form.insuranceSelection}
+                    initialsErrorKey={initialsErrorKey}
                     onInitialsChange={updateInitials}
+                    onInsuranceSelectionChange={(value) => setForm((current) => ({ ...current, insuranceSelection: value }))}
                   />
                 ) : (
                   <div className="overflow-x-auto" key={`${section.heading}-t-${blockIndex}`}>
@@ -295,12 +340,18 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
           <h2 className="font-serif text-3xl text-[var(--ink)]">Acceptance</h2>
         </div>
         <p className="mt-3 leading-7 text-[var(--muted-ink)]">Complete every required item below. Your typed legal name and submission will serve as your electronic signature.</p>
+        <p className="mt-4 rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950">Your entries are not saved until you select “Accept and sign agreement.” If you close or leave this page first, you will need to enter them again.</p>
 
         <div className="mt-6 grid gap-5 sm:grid-cols-2">
-          <label className="text-sm font-semibold text-[var(--ink)]">{isMinor ? "Parent or guardian legal name" : "Traveler legal name"}<input required maxLength={160} className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.signerLegalName} onChange={(event) => setForm({ ...form, signerLegalName: event.target.value })} /></label>
+          <label className="text-sm font-semibold text-[var(--ink)]">
+            {isMinor ? "Parent or guardian legal name (electronic signature)" : "Traveler legal name (electronic signature)"}
+            <span className="mt-2 flex items-center gap-2">
+              <ArrowRight aria-hidden="true" strokeWidth={3.5} className="h-7 w-7 shrink-0 text-red-600" />
+              <input required maxLength={160} className="w-full rounded-xl border-2 border-red-300 px-4 py-3 outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-100" value={form.signerLegalName} onChange={(event) => setForm({ ...form, signerLegalName: event.target.value })} />
+            </span>
+          </label>
           {isMinor && <label className="text-sm font-semibold text-[var(--ink)]">Relationship to minor<input required maxLength={80} className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.guardianRelationship} onChange={(event) => setForm({ ...form, guardianRelationship: event.target.value })} /></label>}
           {isMinor && <label className="text-sm font-semibold text-[var(--ink)]">Minor traveler date of birth<input required type="date" className="mt-2 w-full rounded-xl border border-[var(--input)] px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.minorDateOfBirth} onChange={(event) => setForm({ ...form, minorDateOfBirth: event.target.value })} /></label>}
-          <label className="text-sm font-semibold text-[var(--ink)]">Travel insurance decision<select required className="mt-2 w-full rounded-xl border border-[var(--input)] bg-white px-4 py-3 outline-none focus:border-[var(--orange)]" value={form.insuranceSelection} onChange={(event) => setForm({ ...form, insuranceSelection: event.target.value })}><option value="">Choose one</option><option value="will_purchase">I will purchase travel insurance</option><option value="declined">I understand travel insurance is strongly recommended, but I decline it at this time</option></select></label>
         </div>
 
         <div className="mt-7 space-y-4">
@@ -321,11 +372,14 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
   );
 }
 
-function AgreementParagraph({ sectionHeading, segments, initials, onInitialsChange }: {
+function AgreementParagraph({ sectionHeading, segments, initials, insuranceSelection, initialsErrorKey, onInitialsChange, onInsuranceSelectionChange }: {
   sectionHeading: string;
   segments: AgreementSegment[];
   initials: Record<InitialsKey, string>;
+  insuranceSelection: string;
+  initialsErrorKey: InitialsKey | null;
   onInitialsChange: (key: InitialsKey, value: string) => void;
+  onInsuranceSelectionChange: (value: string) => void;
 }) {
   const text = segments.map((segment) => segment.text).join("");
   const initialsKey = getInitialsKey(sectionHeading, text);
@@ -342,31 +396,38 @@ function AgreementParagraph({ sectionHeading, segments, initials, onInitialsChan
   return (
     <p className="whitespace-pre-line">
       {segments.map((segment, segmentIndex) => {
+        if (segment.text.startsWith("Traveler selection:")) {
+          return <InsuranceSelection key={segmentIndex} value={insuranceSelection} onChange={onInsuranceSelectionChange} />;
+        }
         if (!segment.text.includes("__________")) {
           return segment.strong
             ? <strong key={segmentIndex}>{segment.text}</strong>
             : <span key={segmentIndex}>{segment.text}</span>;
         }
         const [before, ...afterParts] = segment.text.split("__________");
-        const contents = <><span>{before}</span><InitialsInput initialsKey={initialsKey} value={initials[initialsKey]} onChange={onInitialsChange} /><span>{afterParts.join("__________")}</span></>;
+        const contents = <><span>{before}</span><InitialsInput initialsKey={initialsKey} value={initials[initialsKey]} invalid={initialsErrorKey === initialsKey} onChange={onInitialsChange} /><span>{afterParts.join("__________")}</span></>;
         return segment.strong ? <strong key={segmentIndex}>{contents}</strong> : <span key={segmentIndex}>{contents}</span>;
       })}
     </p>
   );
 }
 
-function InitialsInput({ initialsKey, value, onChange }: {
+function InitialsInput({ initialsKey, value, invalid, onChange }: {
   initialsKey: InitialsKey;
   value: string;
+  invalid: boolean;
   onChange: (key: InitialsKey, value: string) => void;
 }) {
   return (
-    <label className="mx-2 inline-flex align-middle">
+    <label className="mx-2 inline-flex items-center gap-1 align-middle">
       <span className="sr-only">Required initials for {initialsLabel(initialsKey)}</span>
+      <ArrowRight aria-hidden="true" strokeWidth={3.5} className="h-7 w-7 shrink-0 text-red-600" />
       <input
         aria-label={`Required initials for ${initialsLabel(initialsKey)}`}
+        aria-invalid={invalid}
         autoComplete="off"
-        className="h-10 w-28 rounded-lg border-2 border-[var(--gold)] bg-[#fffaf0] px-3 text-center font-bold uppercase tracking-[0.16em] text-[var(--ink)] outline-none transition focus:border-[var(--orange)] focus:ring-4 focus:ring-[var(--gold)]/30"
+        className={`h-10 w-28 rounded-lg border-2 bg-[#fffaf0] px-3 text-center font-bold uppercase tracking-[0.16em] text-[var(--ink)] outline-none transition focus:border-red-600 focus:ring-4 focus:ring-red-100 ${invalid ? "border-red-700 ring-4 ring-red-100" : "border-red-300"}`}
+        data-initials-key={initialsKey}
         form="agreement-acceptance"
         maxLength={12}
         required
@@ -374,6 +435,45 @@ function InitialsInput({ initialsKey, value, onChange }: {
         onChange={(event) => onChange(initialsKey, event.target.value)}
       />
     </label>
+  );
+}
+
+function InsuranceSelection({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <fieldset className="my-3 rounded-2xl border-2 border-red-300 bg-red-50/40 p-4">
+      <legend className="flex items-center gap-2 px-1 font-bold text-[var(--ink)]">
+        <ArrowRight aria-hidden="true" strokeWidth={3.5} className="h-7 w-7 text-red-600" />
+        Required travel-insurance selection
+      </legend>
+      <div className="mt-2 grid gap-3">
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--line)] bg-white p-3 transition hover:border-[var(--gold)] hover:bg-[var(--cream)]">
+          <input
+            className="mt-1 h-5 w-5 shrink-0 accent-[var(--orange)]"
+            form="agreement-acceptance"
+            name="insurance-selection"
+            required
+            type="radio"
+            value="will_purchase"
+            checked={value === "will_purchase"}
+            onChange={(event) => onChange(event.target.value)}
+          />
+          <span>I will purchase travel insurance.</span>
+        </label>
+        <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[var(--line)] bg-white p-3 transition hover:border-[var(--gold)] hover:bg-[var(--cream)]">
+          <input
+            className="mt-1 h-5 w-5 shrink-0 accent-[var(--orange)]"
+            form="agreement-acceptance"
+            name="insurance-selection"
+            required
+            type="radio"
+            value="declined"
+            checked={value === "declined"}
+            onChange={(event) => onChange(event.target.value)}
+          />
+          <span>I understand that travel insurance is strongly recommended, but I decline it at this time.</span>
+        </label>
+      </div>
+    </fieldset>
   );
 }
 
