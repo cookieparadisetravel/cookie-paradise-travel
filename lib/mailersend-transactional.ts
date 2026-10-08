@@ -227,6 +227,38 @@ export async function sendTravelInsuranceReferralEmail(input: {
   });
 }
 
+export async function sendAutopayAuthorizationInvitationEmail(input: {
+  toEmail: string;
+  toName: string;
+  authorizationUrl: string;
+  expiresAt: string;
+}) {
+  const expires = formatDateTime(input.expiresAt);
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: "Optional automatic installments for your Vietnam trip",
+    text: [
+      `Hello ${input.toName},`,
+      "",
+      "Thank you for making your reservation deposit for Discover Southern Vietnam.",
+      "",
+      "Automatic installments are optional. If you saved your card securely with Square and would like Square to charge the remaining installments automatically, use the secure link below. The page will show the exact remaining amounts and due dates before you authorize anything:",
+      input.authorizationUrl,
+      "",
+      `This secure one-time link expires ${expires}.`,
+      "If you prefer to make each installment manually, no action is required.",
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>Thank you for making your reservation deposit for <strong>Discover Southern Vietnam</strong>.</p>
+      <p>Automatic installments are optional. If you saved your card securely with Square and would like Square to charge the remaining installments automatically, use the secure link below. The page will show the exact remaining amounts and due dates before you authorize anything.</p>
+      <p><a href="${escapeHtml(input.authorizationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review automatic installments</a></p>
+      <p>This secure one-time link expires ${escapeHtml(expires)}. If you prefer to make each installment manually, no action is required.</p>
+    `,
+  });
+}
+
 async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResult> {
   const runtime = env as unknown as Record<string, string | undefined>;
   const token = runtime.MAILERSEND_API_TOKEN?.trim();

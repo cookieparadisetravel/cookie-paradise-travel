@@ -593,6 +593,9 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
 function autopayStatusLabel(value: string) {
   const labels: Record<string, string> = {
     not_requested: "Not requested",
+    awaiting_deposit: "Available after the deposit",
+    authorization_sending: "Sending post-deposit authorization",
+    authorization_sent: "Authorization link sent",
     awaiting_saved_card: "Authorized; awaiting saved card",
     activating: "Activation in progress",
     active: "Active",

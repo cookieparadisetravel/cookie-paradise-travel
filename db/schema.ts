@@ -101,6 +101,24 @@ export const paymentPreferenceInvitations = sqliteTable("payment_preference_invi
   index("payment_preference_invitations_booking_request_idx").on(table.bookingRequestId),
 ]);
 
+export const autopayAuthorizationInvitations = sqliteTable("autopay_authorization_invitations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bookingRequestId: integer("booking_request_id")
+    .notNull()
+    .references(() => bookingRequests.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  recipientEmail: text("recipient_email").notNull(),
+  expiresAt: text("expires_at").notNull(),
+  invitationEmailSentAt: text("invitation_email_sent_at"),
+  invitationEmailMessageId: text("invitation_email_message_id"),
+  completedAt: text("completed_at"),
+  revokedAt: text("revoked_at"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  uniqueIndex("autopay_authorization_invitations_token_hash_unique").on(table.tokenHash),
+  index("autopay_authorization_invitations_booking_request_idx").on(table.bookingRequestId),
+]);
+
 export const agreementInvitations = sqliteTable("agreement_invitations", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   travelerId: integer("traveler_id")

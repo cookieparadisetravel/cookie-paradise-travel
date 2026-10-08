@@ -206,7 +206,7 @@ function depositInvoiceDescription(
     : installments.length === 1
       ? `The remaining balance is due in one payment on ${formatInvoiceDate(installments[0].dueDate)}.`
       : `The remaining balance is divided into ${installments.length} monthly installments beginning ${formatInvoiceDate(installments[0].dueDate)}; the final installment is due ${formatInvoiceDate(installments.at(-1)!.dueDate)}.`;
-  return `Total booking price for ${travelerLabel}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first payment is a $${depositAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} reservation deposit ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, 90 days before departure. No payment surcharge is added.`;
+  return `Total booking price for ${travelerLabel}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first payment is a $${depositAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} reservation deposit ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, 90 days before departure. To request optional automatic installments after paying the deposit, select Save my card on file in Square. A separate authorization showing the remaining schedule will be emailed after the deposit is received. No payment surcharge is added.`;
 }
 
 function buildPaymentRequests(input: {
@@ -307,8 +307,32 @@ type SquareInvoicePaymentRequest = {
   uid?: string;
   request_type?: string;
   due_date?: string;
+  computed_amount_money?: { amount?: number | string };
   total_completed_amount_money?: { amount?: number | string };
 };
+
+export type SquareAutopayInstallment = {
+  dueDate: string;
+  amountCents: number;
+};
+
+export async function getSquareAutopaySchedule(invoiceId: string): Promise<SquareAutopayInstallment[]> {
+  const result = await squareRequest<{
+    invoice?: { payment_requests?: SquareInvoicePaymentRequest[] };
+  }>(`/v2/invoices/${encodeURIComponent(invoiceId)}`, { method: "GET" });
+  if (!result.invoice?.payment_requests) {
+    throw new Error("Square did not return the invoice schedule.");
+  }
+
+  return result.invoice.payment_requests.flatMap((request) => {
+    if (request.request_type === "DEPOSIT" || !request.due_date) return [];
+    const scheduledAmount = Number(request.computed_amount_money?.amount ?? 0);
+    const completedAmount = Number(request.total_completed_amount_money?.amount ?? 0);
+    const remainingAmount = scheduledAmount - completedAmount;
+    if (!Number.isSafeInteger(remainingAmount) || remainingAmount <= 0) return [];
+    return [{ dueDate: request.due_date, amountCents: remainingAmount }];
+  });
+}
 
 export type SquareAutopayActivationResult =
   | {

@@ -30,8 +30,6 @@ export function PaymentPreferenceForm({
   fullPaymentRequired,
 }: Props) {
   const [paymentPreference, setPaymentPreference] = useState<PaymentPreference | "">(fullPaymentRequired ? "full" : "");
-  const [autopayAuthorized, setAutopayAuthorized] = useState(false);
-  const [autopayPayerName, setAutopayPayerName] = useState(primaryContactName);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [completedAt, setCompletedAt] = useState("");
@@ -48,11 +46,7 @@ export function PaymentPreferenceForm({
       const response = await fetch(`/api/payment-preferences/${encodeURIComponent(token)}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          paymentPreference,
-          autopayAuthorized: paymentPreference === "payment_plan" && autopayAuthorized,
-          autopayPayerName: paymentPreference === "payment_plan" && autopayAuthorized ? autopayPayerName : null,
-        }),
+        body: JSON.stringify({ paymentPreference }),
       });
       const payload = await response.json() as { error?: string; completedAt?: string; invoiceUrl?: string | null };
       if (!response.ok || !payload.completedAt) throw new Error(payload.error || "Your payment preference could not be submitted.");
@@ -111,47 +105,19 @@ export function PaymentPreferenceForm({
                 icon={CreditCard}
                 title="Pay in full now"
                 description={`The full ${money(bookingTotalCents)} will be due when the Square invoice is created. The first ${money(depositAmountCents)} is the nonrefundable reservation-deposit portion.`}
-                onChange={() => {
-                  setPaymentPreference("full");
-                  setAutopayAuthorized(false);
-                }}
+                onChange={() => setPaymentPreference("full")}
               />
             </div>
           </fieldset>
         )}
 
         {!fullPaymentRequired && paymentPreference === "payment_plan" && (
-          <fieldset className="mt-6 rounded-2xl border border-[var(--gold)]/60 bg-[var(--gold)]/10 p-5">
-            <legend className="px-1 text-lg font-bold">Optional automatic installments</legend>
-            <label className="mt-2 flex cursor-pointer items-start gap-3">
-              <input
-                checked={autopayAuthorized}
-                className="mt-1 h-4 w-4 shrink-0 accent-[var(--orange)]"
-                onChange={(event) => setAutopayAuthorized(event.target.checked)}
-                type="checkbox"
-              />
-              <span className="text-sm leading-6">
-                I authorize Cookie Paradise Travel Company to automatically charge the card I choose to save securely with Square for each remaining installment on the dates shown in the Square invoice. I understand that I can contact the Company before a due date to withdraw this authorization for future installments.
-              </span>
-            </label>
-            {autopayAuthorized && (
-              <div className="mt-4">
-                <label className="text-sm font-bold" htmlFor="autopayPayerName">Cardholder’s full legal name</label>
-                <input
-                  autoComplete="cc-name"
-                  className="mt-2 w-full rounded-xl border border-[var(--line)] bg-white px-4 py-3 outline-none focus:border-[var(--orange)] focus:ring-2 focus:ring-[var(--gold)]/40"
-                  id="autopayPayerName"
-                  maxLength={120}
-                  onChange={(event) => setAutopayPayerName(event.target.value)}
-                  required
-                  value={autopayPayerName}
-                />
-                <p className="mt-3 text-sm font-semibold leading-6 text-[var(--brown)]">
-                  Important: on Square’s payment page, check “Save my card on file” when paying the deposit. If you do not save the card, future installments will remain manual.
-                </p>
-              </div>
-            )}
-          </fieldset>
+          <div className="mt-6 rounded-2xl border border-[var(--gold)]/60 bg-[var(--gold)]/10 p-5">
+            <h2 className="text-lg font-bold">Optional automatic installments after your deposit</h2>
+            <p className="mt-2 text-sm leading-6 text-[var(--muted-ink)]">
+              Square will first show your complete invoice with the exact installment amounts and due dates. If you want automatic installments, save your card securely with Square while paying the deposit. After the deposit is received, we will email a separate secure authorization showing the remaining Square schedule. You may also keep every installment manual.
+            </p>
+          </div>
         )}
 
         <div className="mt-6 flex gap-3 rounded-2xl border border-[var(--gold)]/50 bg-[var(--gold)]/10 p-4 text-sm leading-6">
