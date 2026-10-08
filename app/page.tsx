@@ -117,10 +117,10 @@ export default function Home() {
       <section id="top" className="relative isolate min-h-[760px] overflow-hidden bg-[var(--navy)] text-white">
         <img
           className="absolute inset-0 -z-20 h-full w-full object-cover opacity-50"
-          src="/hoi-an-hero.jpg"
+          src="/hoi-an-hero.webp"
           alt="Historic yellow buildings and lanterns in Hội An Ancient Town"
-          width={1800}
-          height={1158}
+          width={1536}
+          height={1024}
           fetchPriority="high"
         />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.96)_0%,rgba(45,29,16,.76)_50%,rgba(45,29,16,.22)_100%)]" />
@@ -150,7 +150,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-        <a className="absolute bottom-4 right-5 text-[11px] text-white/60 underline" href="https://commons.wikimedia.org/wiki/File:H%E1%BB%99i_An,_Ancient_Town,_2020-01_CN-06.jpg" target="_blank" rel="noreferrer">Photo: Steffen Schmitz / CC BY-SA 4.0</a>
       </section>
 
       <section className="border-b border-[var(--line)] bg-white">
