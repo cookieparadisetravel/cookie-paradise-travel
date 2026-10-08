@@ -566,6 +566,10 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
           <InfoItem label="Traveler list submitted">{formatTimestamp(inquiry.latestTravelerListCompletedAt)}</InfoItem>
           <InfoItem label="Payment-choice link created">{formatTimestamp(inquiry.latestPaymentChoiceLinkCreatedAt)}</InfoItem>
           <InfoItem label="Payment choice recorded">{formatTimestamp(inquiry.paymentPreferenceSelectedAt)}</InfoItem>
+          <InfoItem label="Automatic installments">{autopayStatusLabel(inquiry.installmentAutopayStatus)}</InfoItem>
+          <InfoItem label="Autopay authorization recorded">{formatTimestamp(inquiry.installmentAutopayAuthorizedAt)}</InfoItem>
+          <InfoItem label="Authorized cardholder">{inquiry.installmentAutopayPayerName ?? "Not recorded"}</InfoItem>
+          <InfoItem label="Saved payment card">{inquiry.installmentAutopayCardLast4 ? `${readableValue(inquiry.installmentAutopayCardBrand ?? "card")} ending in ${inquiry.installmentAutopayCardLast4}` : "Not confirmed"}</InfoItem>
           <InfoItem label="Square invoice created">{formatTimestamp(inquiry.squareDepositCreatedAt)}</InfoItem>
           <InfoItem label="Square environment">{squareMode === "sandbox" ? "Sandbox testing" : "Production"}</InfoItem>
           <InfoItem label="Company accepted booking">{formatTimestamp(inquiry.companyAcceptedAt)}</InfoItem>
@@ -573,6 +577,7 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
           <InfoItem label="Automation updated">{formatTimestamp(inquiry.automatedBookingUpdatedAt)}</InfoItem>
         </dl>
       </section>
+      {inquiry.installmentAutopayError && <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950"><strong>Automatic installment notice:</strong> {inquiry.installmentAutopayError}</p>}
       <details className="rounded-2xl border border-[var(--line)] bg-white p-4">
         <summary className="cursor-pointer font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">Recorded agreement email deliveries ({agreementDeliveries.length})</summary>
         {agreementDeliveries.length === 0 ? <p className="mt-3 text-sm text-[var(--muted-ink)]">No persisted agreement-email delivery timestamp is available.</p> : <ul className="mt-3 space-y-2 text-sm">{agreementDeliveries.map((delivery) => <li key={`${delivery.email}-${delivery.sentAt}`} className="rounded-xl bg-[var(--cream)] p-3"><strong>{delivery.email}</strong><br /><span className="text-[var(--muted-ink)]">Sent {formatTimestamp(delivery.sentAt)}{delivery.acceptedAt ? ` · accepted ${formatTimestamp(delivery.acceptedAt)}` : ""}</span></li>)}</ul>}
@@ -583,6 +588,21 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
       </details>
     </div>
   );
+}
+
+function autopayStatusLabel(value: string) {
+  const labels: Record<string, string> = {
+    not_requested: "Not requested",
+    awaiting_saved_card: "Authorized; awaiting saved card",
+    activating: "Activation in progress",
+    active: "Active",
+    card_not_saved: "Card was not saved; payments remain manual",
+    not_card_payment: "Deposit was not paid by card; payments remain manual",
+    no_remaining_payments: "No remaining installments",
+    charge_failed: "Scheduled charge failed",
+    error: "Activation error",
+  };
+  return labels[value] ?? readableValue(value);
 }
 
 function SectionHeading({ description, title }: { description: string; title: string }) {

@@ -186,6 +186,7 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
         paymentType: paymentPlan.paymentType,
         installments: paymentPlan.installments,
         finalPaymentDeadline: paymentPlan.finalPaymentDeadline,
+        allowStoredPaymentMethod: inquiry.installmentAutopayAuthorized && paymentPlan.paymentType === "deposit",
       });
       invoiceId = draft.id;
       invoiceVersion = draft.version;

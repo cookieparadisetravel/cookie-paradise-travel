@@ -24,7 +24,7 @@ function squareConfig() {
   };
 }
 
-async function squareRequest<T>(path: string, options: { method?: "GET" | "POST"; body?: JsonObject } = {}): Promise<T> {
+async function squareRequest<T>(path: string, options: { method?: "GET" | "POST" | "PUT"; body?: JsonObject } = {}): Promise<T> {
   const config = squareConfig();
   const response = await fetch(`${config.baseUrl}${path}`, {
     method: options.method || "POST",
@@ -134,6 +134,7 @@ export async function createSquareDepositInvoice(input: {
   paymentType: "deposit" | "full";
   installments: PaymentInstallment[];
   finalPaymentDeadline: string;
+  allowStoredPaymentMethod: boolean;
 }) {
   const { locationId } = squareConfig();
   const bookingTotal = input.bookingTotalCents / 100;
@@ -159,7 +160,7 @@ export async function createSquareDepositInvoice(input: {
         ? depositInvoiceDescription(input.partySize, initialAmount, bookingTotal, input.installments, input.finalPaymentDeadline)
         : `Full payment selected for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`,
       ...(input.departure !== "flexible" ? { sale_or_service_date: input.departure } : {}),
-      store_payment_method_enabled: false,
+      store_payment_method_enabled: input.allowStoredPaymentMethod,
     },
   } });
   if (!result.invoice?.id || result.invoice.version === undefined) {
@@ -299,5 +300,142 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
     paymentType: result.invoice.payment_requests?.some((request) => request.request_type === "DEPOSIT" || request.request_type === "INSTALLMENT")
       ? "deposit" as const
       : "full" as const,
+  };
+}
+
+type SquareInvoicePaymentRequest = {
+  uid?: string;
+  request_type?: string;
+  due_date?: string;
+  total_completed_amount_money?: { amount?: number | string };
+};
+
+export type SquareAutopayActivationResult =
+  | {
+    status: "active";
+    invoiceVersion: number;
+    invoiceStatus: string;
+    cardBrand: string | null;
+    cardLast4: string | null;
+  }
+  | {
+    status: "card_not_saved" | "not_card_payment" | "no_remaining_payments";
+    message: string;
+  };
+
+export async function activateSquareInvoiceAutopay(input: {
+  inquiryId: number;
+  invoiceId: string;
+  orderId: string;
+  customerId: string;
+}): Promise<SquareAutopayActivationResult> {
+  const orderResult = await squareRequest<{
+    order?: { tenders?: Array<{ id?: string }> };
+  }>(`/v2/orders/${encodeURIComponent(input.orderId)}`, { method: "GET" });
+  const paymentId = orderResult.order?.tenders?.at(-1)?.id;
+  if (!paymentId) {
+    return {
+      status: "not_card_payment",
+      message: "Square did not identify the deposit payment used for this invoice.",
+    };
+  }
+
+  const paymentResult = await squareRequest<{
+    payment?: {
+      source_type?: string;
+      card_details?: {
+        card?: {
+          id?: string;
+          fingerprint?: string;
+          card_brand?: string;
+          last_4?: string;
+        };
+      };
+    };
+  }>(`/v2/payments/${encodeURIComponent(paymentId)}`, { method: "GET" });
+  const paymentCard = paymentResult.payment?.card_details?.card;
+  if (paymentResult.payment?.source_type !== "CARD" || !paymentCard) {
+    return {
+      status: "not_card_payment",
+      message: "Automatic installments require the reservation deposit to be paid by a saved credit or debit card.",
+    };
+  }
+
+  const cardsResult = await squareRequest<{
+    cards?: Array<{
+      id?: string;
+      fingerprint?: string;
+      card_brand?: string;
+      last_4?: string;
+      enabled?: boolean;
+    }>;
+  }>(`/v2/cards?customer_id=${encodeURIComponent(input.customerId)}`, { method: "GET" });
+  const savedCard = cardsResult.cards?.find((card) => (
+    card.enabled !== false
+    && Boolean(card.id)
+    && (
+      (paymentCard.id && card.id === paymentCard.id)
+      || (paymentCard.fingerprint && card.fingerprint === paymentCard.fingerprint)
+    )
+  ));
+  if (!savedCard?.id) {
+    return {
+      status: "card_not_saved",
+      message: "The card used for the deposit was not saved in Square. Future installments remain manual.",
+    };
+  }
+
+  const invoiceResult = await squareRequest<{
+    invoice?: {
+      version?: number;
+      status?: string;
+      payment_requests?: SquareInvoicePaymentRequest[];
+    };
+  }>(`/v2/invoices/${encodeURIComponent(input.invoiceId)}`, { method: "GET" });
+  const invoice = invoiceResult.invoice;
+  if (invoice?.version === undefined || !invoice.status || !invoice.payment_requests) {
+    throw new Error("Square did not return the invoice information needed to enable automatic installments.");
+  }
+
+  const remainingRequests = invoice.payment_requests.filter((request) => {
+    const completedAmount = Number(request.total_completed_amount_money?.amount ?? 0);
+    return request.request_type !== "DEPOSIT"
+      && Boolean(request.uid)
+      && Number.isFinite(completedAmount)
+      && completedAmount === 0;
+  });
+  if (remainingRequests.length === 0) {
+    return {
+      status: "no_remaining_payments",
+      message: "This invoice has no unpaid installments to configure for automatic payment.",
+    };
+  }
+
+  const updated = await squareRequest<{
+    invoice?: { version?: number; status?: string };
+  }>(`/v2/invoices/${encodeURIComponent(input.invoiceId)}`, {
+    method: "PUT",
+    body: {
+      idempotency_key: `cpt-inquiry-${input.inquiryId}-autopay-v1-${invoice.version}`,
+      invoice: {
+        version: invoice.version,
+        payment_requests: remainingRequests.map((request) => ({
+          uid: request.uid,
+          automatic_payment_source: "CARD_ON_FILE",
+          card_id: savedCard.id,
+        })),
+      },
+    },
+  });
+  if (updated.invoice?.version === undefined || !updated.invoice.status) {
+    throw new Error("Square did not confirm that automatic installments were enabled.");
+  }
+
+  return {
+    status: "active",
+    invoiceVersion: updated.invoice.version,
+    invoiceStatus: updated.invoice.status.toLowerCase(),
+    cardBrand: savedCard.card_brand || paymentCard.card_brand || null,
+    cardLast4: savedCard.last_4 || paymentCard.last_4 || null,
   };
 }

@@ -1,8 +1,9 @@
 import { env } from "cloudflare:workers";
-import { and, eq, isNull, lt, or } from "drizzle-orm";
+import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
 import { bookingRequests } from "@/db/schema";
 import { sendTravelInsuranceReferralEmail } from "@/lib/mailersend-transactional";
+import { activateSquareInvoiceAutopay } from "@/lib/square";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -99,7 +100,11 @@ export async function POST(request: Request) {
     return Response.json({ error: "Invalid Square webhook payload." }, { status: 400 });
   }
 
-  if (payload.type !== "invoice.payment_made" && payload.type !== "invoice.updated") {
+  if (
+    payload.type !== "invoice.payment_made"
+    && payload.type !== "invoice.updated"
+    && payload.type !== "invoice.scheduled_charge_failed"
+  ) {
     return Response.json({ ok: true, ignored: true });
   }
 
@@ -140,8 +145,92 @@ export async function POST(request: Request) {
     ))
     .returning({ id: bookingRequests.id });
 
+  if (payload.type === "invoice.scheduled_charge_failed") {
+    await getDb().update(bookingRequests).set({
+      installmentAutopayStatus: "charge_failed",
+      installmentAutopayError: "Square could not collect a scheduled installment automatically. The customer must pay from the invoice page or update the saved card.",
+    }).where(and(
+      eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+      eq(bookingRequests.installmentAutopayAuthorized, true),
+    ));
+  }
+
   let insuranceReferralSent = false;
+  let installmentAutopayStatus: string | null = null;
   if (payload.type === "invoice.payment_made") {
+    const autopayClaimedAt = new Date().toISOString();
+    const [autopayClaim] = await getDb().update(bookingRequests).set({
+      installmentAutopayStatus: "activating",
+      installmentAutopayError: null,
+    }).where(and(
+      eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+      eq(bookingRequests.installmentAutopayAuthorized, true),
+      inArray(bookingRequests.installmentAutopayStatus, ["awaiting_saved_card", "card_not_saved", "error"]),
+    )).returning({
+      id: bookingRequests.id,
+      squareCustomerId: bookingRequests.squareCustomerId,
+      squareOrderId: bookingRequests.squareDepositOrderId,
+      squareInvoiceId: bookingRequests.squareDepositInvoiceId,
+    });
+
+    if (autopayClaim?.squareCustomerId && autopayClaim.squareOrderId && autopayClaim.squareInvoiceId) {
+      try {
+        const autopayResult = await activateSquareInvoiceAutopay({
+          inquiryId: autopayClaim.id,
+          invoiceId: autopayClaim.squareInvoiceId,
+          orderId: autopayClaim.squareOrderId,
+          customerId: autopayClaim.squareCustomerId,
+        });
+        installmentAutopayStatus = autopayResult.status;
+        if (autopayResult.status === "active") {
+          await getDb().update(bookingRequests).set({
+            installmentAutopayStatus: "active",
+            installmentAutopayCardBrand: autopayResult.cardBrand,
+            installmentAutopayCardLast4: autopayResult.cardLast4,
+            installmentAutopayError: null,
+            squareDepositInvoiceVersion: autopayResult.invoiceVersion,
+            squareDepositInvoiceStatus: autopayResult.invoiceStatus,
+          }).where(and(
+            eq(bookingRequests.id, autopayClaim.id),
+            eq(bookingRequests.installmentAutopayStatus, "activating"),
+          ));
+        } else {
+          await getDb().update(bookingRequests).set({
+            installmentAutopayStatus: autopayResult.status,
+            installmentAutopayError: autopayResult.message,
+          }).where(and(
+            eq(bookingRequests.id, autopayClaim.id),
+            eq(bookingRequests.installmentAutopayStatus, "activating"),
+          ));
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : "Square could not enable automatic installments.";
+        console.error("Automatic installment activation failed", {
+          inquiryId: autopayClaim.id,
+          claimedAt: autopayClaimedAt,
+          error: message,
+        });
+        await getDb().update(bookingRequests).set({
+          installmentAutopayStatus: "error",
+          installmentAutopayError: message,
+        }).where(and(
+          eq(bookingRequests.id, autopayClaim.id),
+          eq(bookingRequests.installmentAutopayStatus, "activating"),
+        ));
+        installmentAutopayStatus = "error";
+      }
+    } else if (autopayClaim) {
+      const message = "Square customer, order, or invoice information is missing, so automatic installments could not be enabled.";
+      await getDb().update(bookingRequests).set({
+        installmentAutopayStatus: "error",
+        installmentAutopayError: message,
+      }).where(and(
+        eq(bookingRequests.id, autopayClaim.id),
+        eq(bookingRequests.installmentAutopayStatus, "activating"),
+      ));
+      installmentAutopayStatus = "error";
+    }
+
     const claimTimestamp = new Date().toISOString();
     const staleClaimCutoff = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     const [claimed] = await getDb()
@@ -197,5 +286,10 @@ export async function POST(request: Request) {
     }
   }
 
-  return Response.json({ ok: true, updated: Boolean(updated), insuranceReferralSent });
+  return Response.json({
+    ok: true,
+    updated: Boolean(updated),
+    insuranceReferralSent,
+    installmentAutopayStatus,
+  });
 }

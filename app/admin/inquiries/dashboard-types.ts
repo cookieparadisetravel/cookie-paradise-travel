@@ -66,6 +66,13 @@ export type DashboardInquiry = {
   confirmedBookingTotalCents: number | null;
   paymentPreference: string | null;
   paymentPreferenceSelectedAt: string | null;
+  installmentAutopayAuthorized: boolean;
+  installmentAutopayAuthorizedAt: string | null;
+  installmentAutopayPayerName: string | null;
+  installmentAutopayStatus: string;
+  installmentAutopayCardBrand: string | null;
+  installmentAutopayCardLast4: string | null;
+  installmentAutopayError: string | null;
   squareDepositInvoiceId: string | null;
   squareDepositInvoiceStatus: string;
   squareDepositInvoiceUrl: string | null;

@@ -35,6 +35,15 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   if (invitation.fullPaymentRequired && paymentPreference !== "full") {
     return Response.json({ error: "This booking is within 90 days of departure and requires full payment." }, { status: 400 });
   }
+  const autopayAuthorized = paymentPreference === "payment_plan"
+    && "autopayAuthorized" in body
+    && body.autopayAuthorized === true;
+  const autopayPayerName = autopayAuthorized && "autopayPayerName" in body && typeof body.autopayPayerName === "string"
+    ? body.autopayPayerName.trim()
+    : null;
+  if (autopayAuthorized && (!autopayPayerName || autopayPayerName.length < 2 || autopayPayerName.length > 120)) {
+    return Response.json({ error: "Enter the cardholder's full legal name to authorize automatic installments." }, { status: 400 });
+  }
 
   const db = getDb();
   const agreementReadiness = await getAgreementReadiness(invitation.bookingRequestId, invitation.partySize);
@@ -63,6 +72,13 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     const updated = await db.update(bookingRequests).set({
       paymentPreference,
       paymentPreferenceSelectedAt: completedAt,
+      installmentAutopayAuthorized: autopayAuthorized,
+      installmentAutopayAuthorizedAt: autopayAuthorized ? completedAt : null,
+      installmentAutopayPayerName: autopayPayerName,
+      installmentAutopayStatus: autopayAuthorized ? "awaiting_saved_card" : "not_requested",
+      installmentAutopayCardBrand: null,
+      installmentAutopayCardLast4: null,
+      installmentAutopayError: null,
       companyAcceptedAt: sql`coalesce(${bookingRequests.companyAcceptedAt}, ${completedAt})`,
       companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${invitation.createdBy ?? "Secure payment-choice link"})`,
     }).where(and(
