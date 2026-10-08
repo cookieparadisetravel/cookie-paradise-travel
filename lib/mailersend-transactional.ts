@@ -186,8 +186,14 @@ export async function sendSignedAgreementEmail(input: {
 export async function sendTravelInsuranceReferralEmail(input: {
   toEmail: string;
   toName: string;
+  paymentPreference: "payment_plan" | "full" | null;
 }) {
   const affiliateUrl = "https://purchase.sevencorners.com/product/u/0/ecf1f871-6681-4c8c-b6fc-2017e2ffa317";
+  const paymentAcknowledgment = input.paymentPreference === "full"
+    ? "Thank you for paying for your Cookie Paradise Travel Company trip in full."
+    : input.paymentPreference === "payment_plan"
+      ? "Thank you for making your reservation deposit toward your Cookie Paradise Travel Company trip."
+      : "Thank you for making a payment toward your Cookie Paradise Travel Company trip.";
   return sendEmail({
     toEmail: input.toEmail,
     toName: input.toName,
@@ -195,7 +201,7 @@ export async function sendTravelInsuranceReferralEmail(input: {
     text: [
       `Hello ${input.toName},`,
       "",
-      "Thank you for making your first payment toward your Cookie Paradise Travel Company trip.",
+      paymentAcknowledgment,
       "",
       "Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you. You may review available Seven Corners options using our referral link:",
       affiliateUrl,
@@ -210,7 +216,7 @@ export async function sendTravelInsuranceReferralEmail(input: {
     ].join("\n"),
     html: `
       <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Thank you for making your first payment toward your Cookie Paradise Travel Company trip.</p>
+      <p>${escapeHtml(paymentAcknowledgment)}</p>
       <p>Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you.</p>
       <p><a href="${affiliateUrl}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review Seven Corners options</a></p>
       <p><strong>Why consider Seven Corners?</strong> Seven Corners is a privately held travel insurance and healthcare company founded in 1993 and headquartered in Carmel, Indiana. It is BBB Accredited with an A+ rating and has an in-house 24/7 travel assistance team with live translation support in more than 130 languages. You can also speak with a licensed live agent before purchasing to compare available benefits, limits, exclusions, and optional coverage for your needs.</p>

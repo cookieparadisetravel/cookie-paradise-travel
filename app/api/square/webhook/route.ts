@@ -248,6 +248,7 @@ export async function POST(request: Request) {
         id: bookingRequests.id,
         email: bookingRequests.email,
         fullName: bookingRequests.fullName,
+        paymentPreference: bookingRequests.paymentPreference,
       });
 
     if (claimed) {
@@ -255,6 +256,9 @@ export async function POST(request: Request) {
         const result = await sendTravelInsuranceReferralEmail({
           toEmail: claimed.email,
           toName: claimed.fullName,
+          paymentPreference: claimed.paymentPreference === "payment_plan" || claimed.paymentPreference === "full"
+            ? claimed.paymentPreference
+            : null,
         });
         await getDb()
           .update(bookingRequests)
