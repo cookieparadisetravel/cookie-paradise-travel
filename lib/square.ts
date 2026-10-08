@@ -435,15 +435,20 @@ export async function activateSquareInvoiceAutopay(input: {
     };
   }
 
+  const paymentRequests = invoice.payment_requests.filter((request) => Boolean(request.uid));
+  if (paymentRequests.length !== invoice.payment_requests.length) {
+    throw new Error("Square did not return an identifier for every invoice payment request.");
+  }
+
   const updated = await squareRequest<{
     invoice?: { version?: number; status?: string };
   }>(`/v2/invoices/${encodeURIComponent(input.invoiceId)}`, {
     method: "PUT",
     body: {
-      idempotency_key: `cpt-inquiry-${input.inquiryId}-autopay-v1-${invoice.version}`,
+      idempotency_key: `cpt-inquiry-${input.inquiryId}-autopay-v2-${invoice.version}`,
       invoice: {
         version: invoice.version,
-        payment_requests: remainingRequests.map((request) => ({
+        payment_requests: paymentRequests.map((request) => ({
           uid: request.uid,
           automatic_payment_source: "CARD_ON_FILE",
           card_id: savedCard.id,
