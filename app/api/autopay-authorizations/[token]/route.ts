@@ -3,7 +3,7 @@ import { autopayAuthorizationInvitations, bookingRequests } from "@/db/schema";
 import { getDb } from "@/db";
 import { getAutopayAuthorizationInvitation } from "@/lib/autopay-authorization-invitation";
 import { hasValidOrigin } from "@/lib/same-origin";
-import { activateSquareInvoiceAutopay } from "@/lib/square";
+import { findAutopayCardAndSchedule, setInvoiceAutopay } from "@/lib/square";
 
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   if (!hasValidOrigin(request)) return Response.json({ error: "Invalid request origin" }, { status: 403 });
@@ -71,24 +71,30 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   }
 
   try {
-    const result = await activateSquareInvoiceAutopay({
-      inquiryId: booking.id,
+    const readiness = await findAutopayCardAndSchedule({
       invoiceId: booking.squareInvoiceId,
       orderId: booking.squareOrderId,
       customerId: booking.squareCustomerId,
     });
-    if (result.status !== "active") {
-      await db.update(bookingRequests).set({ installmentAutopayStatus: result.status, installmentAutopayError: result.message }).where(eq(bookingRequests.id, booking.id));
+    if (readiness.status !== "ready") {
+      await db.update(bookingRequests).set({ installmentAutopayStatus: readiness.status, installmentAutopayError: readiness.message }).where(eq(bookingRequests.id, booking.id));
       await releaseClaim();
-      return Response.json({ error: result.message }, { status: 409 });
+      return Response.json({ error: readiness.message }, { status: 409 });
     }
+    const result = await setInvoiceAutopay({
+      invoiceId: booking.squareInvoiceId,
+      version: readiness.invoiceVersion,
+      requestUids: readiness.requestUids,
+      cardId: readiness.cardId,
+      idempotencyKey: `cpt-inquiry-${booking.id}-autopay-v3-${readiness.invoiceVersion}`,
+    });
     await db.update(bookingRequests).set({
       installmentAutopayStatus: "active",
-      installmentAutopayCardBrand: result.cardBrand,
-      installmentAutopayCardLast4: result.cardLast4,
+      installmentAutopayCardBrand: readiness.cardBrand,
+      installmentAutopayCardLast4: readiness.cardLast4,
       installmentAutopayError: null,
-      squareDepositInvoiceVersion: result.invoiceVersion,
-      squareDepositInvoiceStatus: result.invoiceStatus,
+      squareDepositInvoiceVersion: result.version,
+      squareDepositInvoiceStatus: result.status,
     }).where(eq(bookingRequests.id, booking.id));
     return Response.json({ completedAt, status: "active" }, { status: 201 });
   } catch (error) {

@@ -4,6 +4,7 @@ import { getDb } from "@/db";
 import { autopayAuthorizationInvitations, bookingRequests } from "@/db/schema";
 import { createAutopayAuthorizationToken } from "@/lib/autopay-authorization-invitation";
 import { sendAutopayAuthorizationInvitationEmail, sendTravelInsuranceReferralEmail } from "@/lib/mailersend-transactional";
+import { findAutopayCardAndSchedule } from "@/lib/square";
 import { hashInvitationToken } from "@/lib/traveler-agreement";
 
 type JsonRecord = Record<string, unknown>;
@@ -170,42 +171,64 @@ export async function POST(request: Request) {
       id: bookingRequests.id,
       fullName: bookingRequests.fullName,
       email: bookingRequests.email,
+      squareCustomerId: bookingRequests.squareCustomerId,
+      squareOrderId: bookingRequests.squareDepositOrderId,
+      squareInvoiceId: bookingRequests.squareDepositInvoiceId,
     });
 
     if (autopayClaim) {
-      const token = createAutopayAuthorizationToken();
-      const tokenHash = await hashInvitationToken(token);
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + 14 * 86_400_000).toISOString();
       let invitationId: number | null = null;
       try {
-        const [invitation] = await getDb().insert(autopayAuthorizationInvitations).values({
-          bookingRequestId: autopayClaim.id,
-          tokenHash,
-          recipientEmail: autopayClaim.email.trim().toLowerCase(),
-          expiresAt,
-          createdAt: now.toISOString(),
-        }).returning({ id: autopayAuthorizationInvitations.id });
-        if (!invitation) throw new Error("The automatic-payment authorization invitation could not be saved.");
-        invitationId = invitation.id;
-        const authorizationUrl = new URL(`/autopay-authorization/${encodeURIComponent(token)}`, notificationUrl).toString();
-        const delivery = await sendAutopayAuthorizationInvitationEmail({
-          toEmail: autopayClaim.email,
-          toName: autopayClaim.fullName,
-          authorizationUrl,
-          expiresAt,
+        if (!autopayClaim.squareCustomerId || !autopayClaim.squareOrderId || !autopayClaim.squareInvoiceId) {
+          throw new Error("The Square invoice information is incomplete for automatic installments.");
+        }
+        const readiness = await findAutopayCardAndSchedule({
+          customerId: autopayClaim.squareCustomerId,
+          orderId: autopayClaim.squareOrderId,
+          invoiceId: autopayClaim.squareInvoiceId,
         });
-        await getDb().update(autopayAuthorizationInvitations).set({
-          invitationEmailSentAt: delivery.sentAt,
-          invitationEmailMessageId: delivery.messageId,
-        }).where(eq(autopayAuthorizationInvitations.id, invitation.id));
-        await getDb().update(bookingRequests).set({ installmentAutopayStatus: "authorization_sent" }).where(and(
-          eq(bookingRequests.id, autopayClaim.id),
-          eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
-        ));
-        installmentAutopayStatus = "authorization_sent";
+        if (readiness.status !== "ready") {
+          await getDb().update(bookingRequests).set({
+            installmentAutopayStatus: readiness.status,
+            installmentAutopayError: readiness.message,
+          }).where(and(
+            eq(bookingRequests.id, autopayClaim.id),
+            eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
+          ));
+          installmentAutopayStatus = readiness.status;
+        } else {
+          const token = createAutopayAuthorizationToken();
+          const tokenHash = await hashInvitationToken(token);
+          const now = new Date();
+          const expiresAt = new Date(now.getTime() + 14 * 86_400_000).toISOString();
+          const [invitation] = await getDb().insert(autopayAuthorizationInvitations).values({
+            bookingRequestId: autopayClaim.id,
+            tokenHash,
+            recipientEmail: autopayClaim.email.trim().toLowerCase(),
+            expiresAt,
+            createdAt: now.toISOString(),
+          }).returning({ id: autopayAuthorizationInvitations.id });
+          if (!invitation) throw new Error("The automatic-payment authorization invitation could not be saved.");
+          invitationId = invitation.id;
+          const authorizationUrl = new URL(`/autopay-authorization/${encodeURIComponent(token)}`, notificationUrl).toString();
+          const delivery = await sendAutopayAuthorizationInvitationEmail({
+            toEmail: autopayClaim.email,
+            toName: autopayClaim.fullName,
+            authorizationUrl,
+            expiresAt,
+          });
+          await getDb().update(autopayAuthorizationInvitations).set({
+            invitationEmailSentAt: delivery.sentAt,
+            invitationEmailMessageId: delivery.messageId,
+          }).where(eq(autopayAuthorizationInvitations.id, invitation.id));
+          await getDb().update(bookingRequests).set({ installmentAutopayStatus: "authorization_sent" }).where(and(
+            eq(bookingRequests.id, autopayClaim.id),
+            eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
+          ));
+          installmentAutopayStatus = "authorization_sent";
+        }
       } catch (error) {
-        console.error("Automatic-installment authorization email failed", {
+        console.error("Automatic-installment authorization preparation failed", {
           inquiryId: autopayClaim.id,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -213,8 +236,8 @@ export async function POST(request: Request) {
           await getDb().delete(autopayAuthorizationInvitations).where(eq(autopayAuthorizationInvitations.id, invitationId));
         }
         await getDb().update(bookingRequests).set({
-          installmentAutopayStatus: "awaiting_deposit",
-          installmentAutopayError: "The optional automatic-installment authorization email could not be sent.",
+          installmentAutopayStatus: "error",
+          installmentAutopayError: "The optional automatic-installment authorization could not be prepared or sent.",
         }).where(and(
           eq(bookingRequests.id, autopayClaim.id),
           eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),

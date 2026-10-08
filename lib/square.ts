@@ -1,5 +1,8 @@
 import { env } from "cloudflare:workers";
 import type { PaymentInstallment } from "@/lib/payment-schedule";
+import type { AutopayScheduleRequest } from "@/lib/square-autopay";
+
+export { autopayScheduleFingerprint } from "@/lib/square-autopay";
 
 const SQUARE_API_VERSION = "2026-09-16";
 
@@ -334,25 +337,27 @@ export async function getSquareAutopaySchedule(invoiceId: string): Promise<Squar
   });
 }
 
-export type SquareAutopayActivationResult =
+export type SquareAutopayReadiness =
   | {
-    status: "active";
-    invoiceVersion: number;
-    invoiceStatus: string;
+    status: "ready";
+    cardId: string;
     cardBrand: string | null;
     cardLast4: string | null;
+    invoiceVersion: number;
+    invoiceStatus: string;
+    requestUids: string[];
+    requests: AutopayScheduleRequest[];
   }
   | {
     status: "card_not_saved" | "not_card_payment" | "no_remaining_payments";
     message: string;
   };
 
-export async function activateSquareInvoiceAutopay(input: {
-  inquiryId: number;
+export async function findAutopayCardAndSchedule(input: {
   invoiceId: string;
   orderId: string;
   customerId: string;
-}): Promise<SquareAutopayActivationResult> {
+}): Promise<SquareAutopayReadiness> {
   const orderResult = await squareRequest<{
     order?: { tenders?: Array<{ id?: string }> };
   }>(`/v2/orders/${encodeURIComponent(input.orderId)}`, { method: "GET" });
@@ -421,37 +426,69 @@ export async function activateSquareInvoiceAutopay(input: {
     throw new Error("Square did not return the invoice information needed to enable automatic installments.");
   }
 
-  const remainingRequests = invoice.payment_requests.filter((request) => {
+  const requestUids = invoice.payment_requests.map((request) => request.uid);
+  if (requestUids.some((uid) => !uid)) {
+    throw new Error("Square did not return an identifier for every invoice payment request.");
+  }
+
+  const requests = invoice.payment_requests.flatMap((request) => {
+    if (
+      (request.request_type !== "INSTALLMENT" && request.request_type !== "BALANCE")
+      || !request.uid
+      || !request.due_date
+    ) return [];
+    const scheduledAmount = Number(request.computed_amount_money?.amount ?? 0);
     const completedAmount = Number(request.total_completed_amount_money?.amount ?? 0);
-    return request.request_type !== "DEPOSIT"
-      && Boolean(request.uid)
-      && Number.isFinite(completedAmount)
-      && completedAmount === 0;
+    const amountCents = scheduledAmount - completedAmount;
+    if (
+      !Number.isSafeInteger(scheduledAmount)
+      || !Number.isSafeInteger(completedAmount)
+      || !Number.isSafeInteger(amountCents)
+      || amountCents <= 0
+    ) return [];
+    return [{ uid: request.uid, dueDate: request.due_date, amountCents }];
   });
-  if (remainingRequests.length === 0) {
+  if (requests.length === 0) {
     return {
       status: "no_remaining_payments",
       message: "This invoice has no unpaid installments to configure for automatic payment.",
     };
   }
 
-  const paymentRequests = invoice.payment_requests.filter((request) => Boolean(request.uid));
-  if (paymentRequests.length !== invoice.payment_requests.length) {
-    throw new Error("Square did not return an identifier for every invoice payment request.");
-  }
+  return {
+    status: "ready",
+    cardId: savedCard.id,
+    cardBrand: savedCard.card_brand || paymentCard.card_brand || null,
+    cardLast4: savedCard.last_4 || paymentCard.last_4 || null,
+    invoiceVersion: invoice.version,
+    invoiceStatus: invoice.status.toLowerCase(),
+    requestUids: requestUids as string[],
+    requests,
+  };
+}
 
+export async function setInvoiceAutopay(input: {
+  invoiceId: string;
+  version: number;
+  requestUids: string[];
+  cardId: string | null;
+  idempotencyKey: string;
+}) {
+  if (input.requestUids.length === 0) {
+    throw new Error("Square did not return any invoice payment requests to update.");
+  }
   const updated = await squareRequest<{
     invoice?: { version?: number; status?: string };
   }>(`/v2/invoices/${encodeURIComponent(input.invoiceId)}`, {
     method: "PUT",
     body: {
-      idempotency_key: `cpt-inquiry-${input.inquiryId}-autopay-v2-${invoice.version}`,
+      idempotency_key: input.idempotencyKey,
       invoice: {
-        version: invoice.version,
-        payment_requests: paymentRequests.map((request) => ({
-          uid: request.uid,
-          automatic_payment_source: "CARD_ON_FILE",
-          card_id: savedCard.id,
+        version: input.version,
+        payment_requests: input.requestUids.map((uid) => ({
+          uid,
+          automatic_payment_source: input.cardId ? "CARD_ON_FILE" : "NONE",
+          card_id: input.cardId,
         })),
       },
     },
@@ -460,11 +497,5 @@ export async function activateSquareInvoiceAutopay(input: {
     throw new Error("Square did not confirm that automatic installments were enabled.");
   }
 
-  return {
-    status: "active",
-    invoiceVersion: updated.invoice.version,
-    invoiceStatus: updated.invoice.status.toLowerCase(),
-    cardBrand: savedCard.card_brand || paymentCard.card_brand || null,
-    cardLast4: savedCard.last_4 || paymentCard.last_4 || null,
-  };
+  return { version: updated.invoice.version, status: updated.invoice.status.toLowerCase() };
 }
