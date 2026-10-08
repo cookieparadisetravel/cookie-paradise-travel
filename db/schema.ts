@@ -33,6 +33,7 @@ export const bookingRequests = sqliteTable("booking_requests", {
   installmentAutopayCardBrand: text("installment_autopay_card_brand"),
   installmentAutopayCardLast4: text("installment_autopay_card_last_4"),
   installmentAutopayError: text("installment_autopay_error"),
+  installmentAutopayClaimedAt: text("installment_autopay_claimed_at"),
   squareCustomerId: text("square_customer_id"),
   squareDepositOrderId: text("square_deposit_order_id"),
   squareDepositInvoiceId: text("square_deposit_invoice_id"),
@@ -117,6 +118,58 @@ export const autopayAuthorizationInvitations = sqliteTable("autopay_authorizatio
 }, (table) => [
   uniqueIndex("autopay_authorization_invitations_token_hash_unique").on(table.tokenHash),
   index("autopay_authorization_invitations_booking_request_idx").on(table.bookingRequestId),
+]);
+
+export const autopayAuthorizations = sqliteTable("autopay_authorizations", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  bookingRequestId: integer("booking_request_id")
+    .notNull()
+    .references(() => bookingRequests.id, { onDelete: "restrict" }),
+  invitationId: integer("invitation_id")
+    .notNull()
+    .references(() => autopayAuthorizationInvitations.id, { onDelete: "restrict" }),
+  status: text("status").notNull().default("saving"),
+  cardholderName: text("cardholder_name").notNull(),
+  cardholderEmail: text("cardholder_email").notNull(),
+  consentedAt: text("consented_at").notNull(),
+  consentedAtLocal: text("consented_at_local").notNull(),
+  ipHash: text("ip_hash").notNull(),
+  userAgent: text("user_agent").notNull(),
+  agreementVersion: text("agreement_version").notNull(),
+  authorizationVersion: text("authorization_version").notNull(),
+  authorizationText: text("authorization_text").notNull(),
+  squareCustomerId: text("square_customer_id").notNull(),
+  squareCardId: text("square_card_id").notNull(),
+  cardBrand: text("card_brand").notNull(),
+  cardLast4: text("card_last_4").notNull(),
+  squareInvoiceId: text("square_invoice_id").notNull(),
+  scheduleSnapshot: text("schedule_snapshot").notNull(),
+  totalCents: integer("total_cents").notNull(),
+  finalDueDate: text("final_due_date").notNull(),
+  squareInvoiceVersionAfterEnable: integer("square_invoice_version_after_enable"),
+  confirmationEmailSentAt: text("confirmation_email_sent_at"),
+  confirmationEmailError: text("confirmation_email_error"),
+  stopRequestedAt: text("stop_requested_at"),
+  stopSource: text("stop_source"),
+  stoppedAt: text("stopped_at"),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  uniqueIndex("autopay_authorizations_invitation_unique").on(table.invitationId),
+  index("autopay_authorizations_booking_request_idx").on(table.bookingRequestId),
+  index("autopay_authorizations_status_idx").on(table.status),
+]);
+
+export const autopayEvents = sqliteTable("autopay_events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  authorizationId: integer("authorization_id")
+    .notNull()
+    .references(() => autopayAuthorizations.id, { onDelete: "restrict" }),
+  eventType: text("event_type").notNull(),
+  detail: text("detail").notNull(),
+  createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
+}, (table) => [
+  index("autopay_events_authorization_idx").on(table.authorizationId),
+  index("autopay_events_event_type_idx").on(table.eventType),
 ]);
 
 export const agreementInvitations = sqliteTable("agreement_invitations", {
