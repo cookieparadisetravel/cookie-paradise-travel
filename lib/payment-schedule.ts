@@ -113,6 +113,54 @@ export function applyPaymentPreference(
   };
 }
 
+export function combineTravelerPaymentPlans(
+  plans: PaymentPlan[],
+  bookingTotalCents: number,
+): PaymentPlan | null {
+  const firstPlan = plans[0];
+  if (!firstPlan || !Number.isSafeInteger(bookingTotalCents) || bookingTotalCents < 1) {
+    return null;
+  }
+
+  const schedulesMatch = plans.every((plan) => (
+    plan.paymentType === firstPlan.paymentType
+    && plan.finalPaymentDeadline === firstPlan.finalPaymentDeadline
+    && plan.installments.length === firstPlan.installments.length
+    && plan.installments.every((installment, index) => (
+      installment.dueDate === firstPlan.installments[index]?.dueDate
+    ))
+  ));
+  if (!schedulesMatch) return null;
+
+  const combinedPlan: PaymentPlan = {
+    paymentType: firstPlan.paymentType,
+    initialAmountCents: plans.reduce((sum, plan) => sum + plan.initialAmountCents, 0),
+    depositAmountCents: plans.reduce((sum, plan) => sum + plan.depositAmountCents, 0),
+    remainingBalanceCents: plans.reduce((sum, plan) => sum + plan.remainingBalanceCents, 0),
+    finalPaymentDeadline: firstPlan.finalPaymentDeadline,
+    installments: firstPlan.installments.map((installment, index) => ({
+      dueDate: installment.dueDate,
+      amountCents: plans.reduce((sum, plan) => sum + plan.installments[index].amountCents, 0),
+    })),
+  };
+
+  const installmentTotalCents = combinedPlan.installments.reduce(
+    (sum, installment) => sum + installment.amountCents,
+    0,
+  );
+  const scheduledTotalCents = combinedPlan.initialAmountCents + installmentTotalCents;
+  const depositScheduleIsValid = combinedPlan.paymentType === "full"
+    || (
+      combinedPlan.initialAmountCents === combinedPlan.depositAmountCents
+      && combinedPlan.depositAmountCents + installmentTotalCents === bookingTotalCents
+      && combinedPlan.remainingBalanceCents === installmentTotalCents
+    );
+
+  return scheduledTotalCents === bookingTotalCents && depositScheduleIsValid
+    ? combinedPlan
+    : null;
+}
+
 export function todayInIndiana(referenceDate = new Date()) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: "America/Indiana/Indianapolis",

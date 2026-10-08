@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   applyPaymentPreference,
+  combineTravelerPaymentPlans,
   createPaymentPlan,
   getFinalPaymentDeadline,
   isFullPaymentRequired,
@@ -237,6 +238,59 @@ test("keeps the standard schedule when the customer selects installments", () =>
   });
 
   assert.strictEqual(applyPaymentPreference(standardPlan, 1_725_000, "payment_plan"), standardPlan);
+});
+
+test("combines compatible traveler schedules and reconciles to the booking total", () => {
+  const firstPlan = createPaymentPlan({
+    acceptanceDate: "2026-10-08",
+    departure: "2027-06-01",
+    bookingTotalCents: 287_500,
+    partySize: 1,
+  });
+  const secondPlan = createPaymentPlan({
+    acceptanceDate: "2026-10-08",
+    departure: "2027-06-01",
+    bookingTotalCents: 250_000,
+    partySize: 1,
+  });
+
+  const combined = combineTravelerPaymentPlans([firstPlan, secondPlan], 537_500);
+
+  assert.ok(combined);
+  assert.equal(combined.initialAmountCents, 100_000);
+  assert.equal(
+    combined.initialAmountCents
+      + combined.installments.reduce((sum, installment) => sum + installment.amountCents, 0),
+    537_500,
+  );
+});
+
+test("rejects traveler schedules with different installment counts", () => {
+  const depositOnlyPlan = createPaymentPlan({
+    acceptanceDate: "2026-10-08",
+    departure: "2027-06-01",
+    bookingTotalCents: 50_000,
+    partySize: 1,
+  });
+  const installmentPlan = createPaymentPlan({
+    acceptanceDate: "2026-10-08",
+    departure: "2027-06-01",
+    bookingTotalCents: 287_500,
+    partySize: 1,
+  });
+
+  assert.equal(combineTravelerPaymentPlans([depositOnlyPlan, installmentPlan], 337_500), null);
+});
+
+test("rejects a combined traveler schedule that does not equal the booking total", () => {
+  const plan = createPaymentPlan({
+    acceptanceDate: "2026-10-08",
+    departure: "2027-06-01",
+    bookingTotalCents: 287_500,
+    partySize: 1,
+  });
+
+  assert.equal(combineTravelerPaymentPlans([plan], 300_000), null);
 });
 
 test("identifies when the secure payment choice must require full payment", () => {

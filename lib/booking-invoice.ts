@@ -3,7 +3,12 @@ import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { isPaymentPreference } from "@/lib/payment-preference-invitation";
-import { applyPaymentPreference, createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
+import {
+  applyPaymentPreference,
+  combineTravelerPaymentPlans,
+  createPaymentPlan,
+  todayInIndiana,
+} from "@/lib/payment-schedule";
 import {
   createSquareCustomer,
   createSquareDepositInvoice,
@@ -82,18 +87,10 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
       });
       return applyPaymentPreference(standard, tripPriceCents, paymentPreference);
     });
-    const firstPlan = individualPlans[0];
-    paymentPlan = {
-      paymentType: firstPlan.paymentType,
-      initialAmountCents: individualPlans.reduce((sum, plan) => sum + plan.initialAmountCents, 0),
-      depositAmountCents: individualPlans.reduce((sum, plan) => sum + plan.depositAmountCents, 0),
-      remainingBalanceCents: individualPlans.reduce((sum, plan) => sum + plan.remainingBalanceCents, 0),
-      finalPaymentDeadline: firstPlan.finalPaymentDeadline,
-      installments: firstPlan.installments.map((installment, index) => ({
-        dueDate: installment.dueDate,
-        amountCents: individualPlans.reduce((sum, plan) => sum + (plan.installments[index]?.amountCents ?? 0), 0),
-      })),
-    };
+    paymentPlan = combineTravelerPaymentPlans(individualPlans, bookingTotalCents);
+    if (!paymentPlan) {
+      return failure(409, "The traveler payment schedules could not be combined. Check that every Trip Price is more than the $500 deposit.");
+    }
   } catch (error) {
     return failure(400, error instanceof Error ? error.message : "The payment schedule could not be calculated.");
   }
