@@ -56,9 +56,7 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
 
   const paymentPreference = inquiry.paymentPreference;
   const bookingTotalCents = inquiry.confirmedBookingTotalCents;
-  const acceptanceDate = inquiry.companyAcceptedAt
-    ? todayInIndiana(new Date(inquiry.companyAcceptedAt))
-    : todayInIndiana();
+  const acceptanceDate = todayInIndiana();
   let paymentPlan;
   try {
     const travelerPrices = await db.select({

@@ -62,12 +62,6 @@ export async function POST(
     .limit(1);
   if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
   const now = new Date();
-  if (!inquiry.companyAcceptedAt || !inquiry.companyAcceptedBy) {
-    await db.update(bookingRequests).set({
-      companyAcceptedAt: sql`coalesce(${bookingRequests.companyAcceptedAt}, ${now.toISOString()})`,
-      companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${owner.email})`,
-    }).where(eq(bookingRequests.id, inquiryId));
-  }
   const bookingTravelers = await db.select({
     id: travelers.id,
     confirmedTripPriceCents: travelers.confirmedTripPriceCents,
@@ -114,6 +108,13 @@ export async function POST(
       isNull(agreementInvitations.acceptedAt),
       isNull(agreementInvitations.revokedAt),
     ));
+
+  if (!inquiry.companyAcceptedAt || !inquiry.companyAcceptedBy) {
+    await db.update(bookingRequests).set({
+      companyAcceptedAt: sql`coalesce(${bookingRequests.companyAcceptedAt}, ${now.toISOString()})`,
+      companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${owner.email})`,
+    }).where(eq(bookingRequests.id, inquiryId));
+  }
 
   const [invitation] = await db.insert(agreementInvitations).values({
     travelerId,
