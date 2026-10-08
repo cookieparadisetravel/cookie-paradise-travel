@@ -37,17 +37,14 @@ type InvoiceCreationFailure = {
 
 export type BookingInvoiceResult = InvoiceCreationSuccess | InvoiceCreationFailure;
 
-export async function createBookingInvoice(input: { inquiryId: number; acceptedBy: string; publish?: boolean }): Promise<BookingInvoiceResult> {
+export async function createBookingInvoice(input: { inquiryId: number; acceptedBy: string }): Promise<BookingInvoiceResult> {
   const db = getDb();
-  const shouldPublish = input.publish !== false;
   const [inquiry] = await db.select().from(bookingRequests).where(eq(bookingRequests.id, input.inquiryId)).limit(1);
   if (!inquiry) return failure(404, "Inquiry not found");
 
-  if (shouldPublish) {
-    const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize);
-    if (!agreementReadiness.readyForInvoice) {
-      return failure(409, `Payment invoice is locked. ${agreementReadiness.message}`);
-    }
+  const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize);
+  if (!agreementReadiness.readyForInvoice) {
+    return failure(409, `Payment invoice is locked. ${agreementReadiness.message}`);
   }
   if (!inquiry.confirmedBookingTotalCents || inquiry.confirmedBookingTotalCents < 1) {
     return failure(409, "Create the secure payment-choice link with the confirmed booking total before invoicing.");
@@ -205,14 +202,10 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
       }
       invoiceVersion = existingInvoice.version;
       published = existingInvoice.status === "draft"
-        ? shouldPublish
-          ? await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion })
-          : { status: "draft", publicUrl: existingInvoice.publicUrl, version: existingInvoice.version }
+        ? await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion })
         : { status: existingInvoice.status, publicUrl: existingInvoice.publicUrl, version: existingInvoice.version };
     } else {
-      published = shouldPublish
-        ? await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion })
-        : { status: "draft", publicUrl: null, version: invoiceVersion };
+      published = await publishSquareInvoice({ inquiryId: input.inquiryId, invoiceId, version: invoiceVersion });
     }
 
     const companyAcceptedAt = inquiry.companyAcceptedAt ?? new Date().toISOString();
@@ -221,7 +214,7 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
       squareDepositInvoiceVersion: published.version,
       squareDepositAmountCents: squareOrderAmountCents,
       squareDepositInvoiceUrl: published.publicUrl,
-      squareDepositCreatedAt: shouldPublish ? new Date().toISOString() : inquiry.squareDepositCreatedAt,
+      squareDepositCreatedAt: new Date().toISOString(),
       squareDepositClaimedAt: null,
       companyAcceptedAt,
       companyAcceptedBy: inquiry.companyAcceptedBy ?? input.acceptedBy,
