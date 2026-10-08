@@ -1,7 +1,12 @@
 import { env } from "cloudflare:workers";
 import { and, eq, isNull, lt, or } from "drizzle-orm";
 import { getDb } from "@/db";
-import { autopayAuthorizationInvitations, bookingRequests } from "@/db/schema";
+import {
+  autopayAuthorizationInvitations,
+  autopayAuthorizations,
+  autopayEvents,
+  bookingRequests,
+} from "@/db/schema";
 import { createAutopayAuthorizationToken } from "@/lib/autopay-authorization-invitation";
 import { sendAutopayAuthorizationInvitationEmail, sendTravelInsuranceReferralEmail } from "@/lib/mailersend-transactional";
 import { findAutopayCardAndSchedule } from "@/lib/square";
@@ -147,18 +152,62 @@ export async function POST(request: Request) {
     ))
     .returning({ id: bookingRequests.id });
 
-  if (payload.type === "invoice.scheduled_charge_failed") {
-    await getDb().update(bookingRequests).set({
-      installmentAutopayStatus: "charge_failed",
-      installmentAutopayError: "Square could not collect a scheduled installment automatically. The customer must pay from the invoice page or update the saved card.",
-    }).where(and(
-      eq(bookingRequests.squareDepositInvoiceId, invoice.id),
-      eq(bookingRequests.installmentAutopayAuthorized, true),
-    ));
-  }
-
   let insuranceReferralSent = false;
   let installmentAutopayStatus: string | null = null;
+  if (updated && payload.type === "invoice.scheduled_charge_failed") {
+    const stoppedAt = new Date().toISOString();
+    const stoppedAuthorizations = await getDb().update(autopayAuthorizations).set({
+      status: "stopped_by_square",
+      stopSource: "square_charge_failed",
+      stoppedAt,
+    }).where(and(
+      eq(autopayAuthorizations.squareInvoiceId, invoice.id),
+      eq(autopayAuthorizations.status, "active"),
+    )).returning({ id: autopayAuthorizations.id });
+    for (const authorization of stoppedAuthorizations) {
+      await getDb().insert(autopayEvents).values({
+        authorizationId: authorization.id,
+        eventType: "stopped_by_square",
+        detail: JSON.stringify({ invoiceVersion: invoice.version, stoppedAt }),
+      });
+    }
+    if (stoppedAuthorizations.length > 0) {
+      await getDb().update(bookingRequests).set({
+        installmentAutopayAuthorized: false,
+        installmentAutopayStatus: "stopped_by_square",
+        installmentAutopayError: "Square could not collect a scheduled installment automatically. Automatic payments are no longer active; the customer must pay from the invoice page or update the saved card.",
+        installmentAutopayClaimedAt: null,
+      }).where(eq(bookingRequests.squareDepositInvoiceId, invoice.id));
+      installmentAutopayStatus = "stopped_by_square";
+    }
+  }
+
+  if (updated && invoice.status.toUpperCase() === "PAID") {
+    const completedAt = new Date().toISOString();
+    const completedAuthorizations = await getDb().update(autopayAuthorizations).set({
+      status: "completed",
+    }).where(and(
+      eq(autopayAuthorizations.squareInvoiceId, invoice.id),
+      eq(autopayAuthorizations.status, "active"),
+    )).returning({ id: autopayAuthorizations.id });
+    for (const authorization of completedAuthorizations) {
+      await getDb().insert(autopayEvents).values({
+        authorizationId: authorization.id,
+        eventType: "completed",
+        detail: JSON.stringify({ invoiceVersion: invoice.version, completedAt }),
+      });
+    }
+    if (completedAuthorizations.length > 0) {
+      await getDb().update(bookingRequests).set({
+        installmentAutopayAuthorized: false,
+        installmentAutopayStatus: "completed",
+        installmentAutopayError: null,
+        installmentAutopayClaimedAt: null,
+      }).where(eq(bookingRequests.squareDepositInvoiceId, invoice.id));
+      installmentAutopayStatus = "completed";
+    }
+  }
+
   if (payload.type === "invoice.payment_made") {
     const autopayClaimedAt = new Date().toISOString();
     const [autopayClaim] = await getDb().update(bookingRequests).set({

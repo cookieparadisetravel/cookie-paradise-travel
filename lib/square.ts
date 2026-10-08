@@ -287,7 +287,7 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
       version?: number;
       status?: string;
       public_url?: string;
-      payment_requests?: Array<{ request_type?: string }>;
+      payment_requests?: Array<{ uid?: string; request_type?: string }>;
     };
   }>(
     `/v2/invoices/${encodeURIComponent(invoiceId)}`,
@@ -296,6 +296,10 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
   if (result.invoice?.version === undefined || !result.invoice.status) {
     throw new Error("Square did not return the complete invoice state.");
   }
+  const paymentRequestUids = result.invoice.payment_requests?.map((request) => request.uid) ?? [];
+  if (paymentRequestUids.length === 0 || paymentRequestUids.some((uid) => !uid)) {
+    throw new Error("Square did not return the invoice payment requests.");
+  }
   return {
     version: result.invoice.version,
     status: result.invoice.status.toLowerCase(),
@@ -303,6 +307,7 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
     paymentType: result.invoice.payment_requests?.some((request) => request.request_type === "DEPOSIT" || request.request_type === "INSTALLMENT")
       ? "deposit" as const
       : "full" as const,
+    paymentRequestUids: paymentRequestUids as string[],
   };
 }
 

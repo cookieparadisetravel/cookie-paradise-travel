@@ -307,6 +307,30 @@ export async function sendAutopayAuthorizationConfirmationEmail(input: {
   });
 }
 
+export async function sendAutopayStoppedEmail(input: {
+  toEmail: string;
+  toName: string;
+}) {
+  const message = "Automatic payments are turned off. Your remaining installments stay on your Square invoice to pay manually; your payment deadlines have not changed.";
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: "Automatic installment payments turned off",
+    text: [
+      `Hello ${input.toName},`,
+      "",
+      message,
+      "",
+      "If you have questions, email trung@cookieparadise.co.",
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>${escapeHtml(message)}</p>
+      <p>If you have questions, email <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>.</p>
+    `,
+  });
+}
+
 async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResult> {
   const runtime = env as unknown as Record<string, string | undefined>;
   const token = runtime.MAILERSEND_API_TOKEN?.trim();

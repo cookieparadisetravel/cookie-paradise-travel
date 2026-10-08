@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { DepositInvoiceAction } from "./deposit-invoice-action";
 import { AutopayRetryAction } from "./autopay-retry-action";
+import { AutopayStopAction } from "./autopay-stop-action";
 import { PaymentPreferenceInvitationAction } from "./payment-preference-invitation-action";
 import { StatusSelect } from "./status-select";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
@@ -580,6 +581,7 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
       </section>
       {inquiry.installmentAutopayError && <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950"><strong>Automatic installment notice:</strong> {inquiry.installmentAutopayError}</p>}
       {inquiry.installmentAutopayClaimIsStale && <AutopayRetryAction inquiryId={inquiry.id} />}
+      {inquiry.installmentAutopayAuthorized && (inquiry.installmentAutopayStatus === "active" || inquiry.installmentAutopayStatus === "charge_failed") && <AutopayStopAction inquiryId={inquiry.id} />}
       <details className="rounded-2xl border border-[var(--line)] bg-white p-4">
         <summary className="cursor-pointer font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">Recorded agreement email deliveries ({agreementDeliveries.length})</summary>
         {agreementDeliveries.length === 0 ? <p className="mt-3 text-sm text-[var(--muted-ink)]">No persisted agreement-email delivery timestamp is available.</p> : <ul className="mt-3 space-y-2 text-sm">{agreementDeliveries.map((delivery) => <li key={`${delivery.email}-${delivery.sentAt}`} className="rounded-xl bg-[var(--cream)] p-3"><strong>{delivery.email}</strong><br /><span className="text-[var(--muted-ink)]">Sent {formatTimestamp(delivery.sentAt)}{delivery.acceptedAt ? ` · accepted ${formatTimestamp(delivery.acceptedAt)}` : ""}</span></li>)}</ul>}
@@ -603,6 +605,10 @@ function autopayStatusLabel(value: string) {
     activating: "Activation in progress",
     active: "Active",
     square_failed: "Square activation failed; payments remain manual",
+    stopped: "Stopped; installments remain manual",
+    cancelled: "Stopped because the booking was cancelled",
+    stopped_by_square: "Stopped by Square after a failed scheduled charge",
+    completed: "Completed",
     card_not_saved: "Card was not saved; payments remain manual",
     not_card_payment: "Deposit was not paid by card; payments remain manual",
     no_remaining_payments: "No remaining installments",
