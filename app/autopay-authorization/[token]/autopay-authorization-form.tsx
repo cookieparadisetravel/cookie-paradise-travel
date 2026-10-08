@@ -1,43 +1,56 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
-import type { SquareAutopayInstallment } from "@/lib/square";
+import { CheckCircle2, CreditCard, Loader2, ShieldCheck } from "lucide-react";
+import { buildAutopayAuthorizationText, formatCardBrand } from "@/lib/autopay-authorization";
+import type { AutopayScheduleRequest } from "@/lib/square-autopay";
 
-export function AutopayAuthorizationForm({ token, primaryContactName, recipientEmail, departure, installments }: {
+export function AutopayAuthorizationForm({ token, primaryContactName, recipientEmail, departure, cardBrand, cardLast4, requests, scheduleFingerprint }: {
   token: string;
   primaryContactName: string;
   recipientEmail: string;
   departure: string;
-  installments: SquareAutopayInstallment[];
+  cardBrand: string;
+  cardLast4: string;
+  requests: AutopayScheduleRequest[];
+  scheduleFingerprint: string;
 }) {
   const [payerName, setPayerName] = useState(primaryContactName);
   const [authorized, setAuthorized] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
-  const [completed, setCompleted] = useState(false);
+  const [submitting, setSubmitting] = useState<"authorize" | "decline" | null>(null);
+  const [completed, setCompleted] = useState<"active" | "manual" | null>(null);
   const [error, setError] = useState("");
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitting(true);
+    await submitChoice("authorize");
+  }
+
+  async function submitChoice(action: "authorize" | "decline") {
+    setSubmitting(action);
     setError("");
     try {
       const response = await fetch(`/api/autopay-authorizations/${encodeURIComponent(token)}`, {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ authorized, payerName }),
+        body: JSON.stringify({
+          action,
+          authorized: action === "authorize" ? authorized : false,
+          payerName: action === "authorize" ? payerName : "",
+          scheduleFingerprint,
+        }),
       });
-      const payload = await response.json() as { error?: string; completedAt?: string };
+      const payload = await response.json() as { error?: string; completedAt?: string; status?: string };
       if (!response.ok || !payload.completedAt) throw new Error(payload.error || "Automatic installments could not be authorized.");
-      setCompleted(true);
+      setCompleted(payload.status === "manual" ? "manual" : "active");
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Automatic installments could not be authorized.");
     } finally {
-      setSubmitting(false);
+      setSubmitting(null);
     }
   }
 
-  if (completed) {
+  if (completed === "active") {
     return (
       <section className="rounded-3xl border border-emerald-200 bg-emerald-50 p-7 text-emerald-950 shadow-sm sm:p-10">
         <CheckCircle2 className="h-11 w-11 text-emerald-700" />
@@ -47,7 +60,29 @@ export function AutopayAuthorizationForm({ token, primaryContactName, recipientE
     );
   }
 
-  const remainingTotal = installments.reduce((sum, installment) => sum + installment.amountCents, 0);
+  if (completed === "manual") {
+    return (
+      <section className="rounded-3xl border border-[var(--line)] bg-white p-7 shadow-sm sm:p-10">
+        <CheckCircle2 className="h-11 w-11 text-[var(--orange)]" />
+        <h1 className="mt-5 font-serif text-3xl sm:text-4xl">Your installments remain manual</h1>
+        <p className="mt-4 leading-7 text-[var(--muted-ink)]">No automatic-payment authorization was given. Continue paying each installment from your Square invoice by its listed due date.</p>
+      </section>
+    );
+  }
+
+  const remainingTotal = requests.reduce((sum, installment) => sum + installment.amountCents, 0);
+  const finalDueDate = requests.reduce(
+    (latest, request) => request.dueDate > latest ? request.dueDate : latest,
+    "",
+  );
+  const authorizationText = buildAutopayAuthorizationText({
+    cardholderName: payerName.trim() || "[cardholder name]",
+    cardBrand,
+    last4: cardLast4,
+    paymentCount: requests.length,
+    totalCents: remainingTotal,
+    finalDueDate,
+  });
   return (
     <form onSubmit={submit}>
       <section className="rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-9">
@@ -55,15 +90,25 @@ export function AutopayAuthorizationForm({ token, primaryContactName, recipientE
         <h1 className="mt-2 font-serif text-3xl sm:text-4xl">Review your remaining Square schedule</h1>
         <p className="mt-4 leading-7 text-[var(--muted-ink)]">This authorization is for the {departure} departure and was sent to {recipientEmail}. Automatic payments are optional. The person whose saved card will be charged must complete this authorization. If someone else paid the deposit, do not submit this form; contact Cookie Paradise Travel Company so the cardholder can receive a separate authorization.</p>
 
+        <div className="mt-6 flex items-center gap-3 rounded-2xl border border-[var(--line)] bg-[var(--cream)] p-5">
+          <CreditCard className="h-6 w-6 shrink-0 text-[var(--orange)]" />
+          <div><p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Saved card to be charged</p><p className="mt-1 font-bold">{formatCardBrand(cardBrand)} ending in {cardLast4}</p></div>
+        </div>
+
         <div className="mt-6 overflow-hidden rounded-2xl border border-[var(--line)]">
           <div className="grid grid-cols-[1fr_auto] gap-4 bg-[var(--cream)] px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-ink)]"><span>Due date</span><span>Amount</span></div>
-          {installments.map((installment) => (
-            <div className="grid grid-cols-[1fr_auto] gap-4 border-t border-[var(--line)] px-5 py-4" key={`${installment.dueDate}-${installment.amountCents}`}>
+          {requests.map((installment) => (
+            <div className="grid grid-cols-[1fr_auto] gap-4 border-t border-[var(--line)] px-5 py-4" key={installment.uid}>
               <span className="font-semibold">{formatDate(installment.dueDate)}</span>
               <span className="font-bold">{money(installment.amountCents)}</span>
             </div>
           ))}
           <div className="grid grid-cols-[1fr_auto] gap-4 border-t-2 border-[var(--brown)] bg-[var(--gold)]/10 px-5 py-4"><span className="font-bold">Total remaining</span><span className="font-bold">{money(remainingTotal)}</span></div>
+        </div>
+
+        <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--cream)] p-5">
+          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Authorization you are giving</p>
+          <p className="mt-3 text-sm leading-7">{authorizationText}</p>
         </div>
 
         <div className="mt-6">
@@ -73,12 +118,15 @@ export function AutopayAuthorizationForm({ token, primaryContactName, recipientE
 
         <label className="mt-6 flex cursor-pointer items-start gap-3 rounded-2xl border border-[var(--gold)]/60 bg-[var(--gold)]/10 p-5">
           <input checked={authorized} className="mt-1 h-4 w-4 shrink-0 accent-[var(--orange)]" onChange={(event) => setAuthorized(event.target.checked)} required type="checkbox" />
-          <span className="text-sm leading-6">I am the cardholder named above. I reviewed the exact remaining amounts, due dates, and total shown above. I authorize Cookie Paradise Travel Company to instruct Square to charge the card I saved with Square for each remaining installment on its listed due date. I may withdraw this authorization for future installments by contacting the Company before a due date.</span>
+          <span className="text-sm leading-6">I am the cardholder named above. I reviewed the saved card, exact remaining amounts, due dates, total, and complete authorization shown above. I agree to that authorization.</span>
         </label>
 
         <div className="mt-6 flex gap-3 rounded-2xl border border-[var(--gold)]/50 bg-[var(--gold)]/10 p-4 text-sm leading-6"><ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--orange)]" /><p>Cookie Paradise Travel Company does not receive or store your full card number or security code. Square securely stores and charges the selected card.</p></div>
         {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">{error}</p>}
-        <button disabled={submitting || !authorized} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" type="submit">{submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Authorizing…</> : "Authorize automatic installments"}</button>
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+          <button disabled={submitting !== null || !authorized} className="inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1" type="submit">{submitting === "authorize" ? <><Loader2 className="h-4 w-4 animate-spin" /> Authorizing…</> : "Authorize automatic installments"}</button>
+          <button disabled={submitting !== null} className="inline-flex w-full items-center justify-center gap-2 rounded-full border-2 border-[var(--brown)] bg-white px-6 py-3 font-bold text-[var(--brown)] transition hover:bg-[var(--cream)] disabled:cursor-not-allowed disabled:opacity-50 sm:flex-1" onClick={() => void submitChoice("decline")} type="button">{submitting === "decline" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : "No thanks, I’ll pay each installment manually"}</button>
+        </div>
       </section>
     </form>
   );

@@ -24,16 +24,36 @@ export default async function AutopayAuthorizationPage({ params }: { params: Pro
     <PageShell>
       {(result.status === "invalid" || result.status === "revoked") && <StatusCard icon="alert" title="This authorization link is unavailable">The link is invalid, has been replaced or is no longer available. Your remaining installments are still manual.</StatusCard>}
       {result.status === "expired" && <StatusCard icon="alert" title="This authorization link has expired">Please contact Cookie Paradise Travel Company if you still want automatic installments. Your remaining installments are still manual.</StatusCard>}
-      {result.status === "completed" && <StatusCard icon="check" title="Automatic installments authorized">This secure link has already been used{result.completedAt ? ` on ${new Date(result.completedAt).toLocaleDateString("en-US", { dateStyle: "long" })}` : ""}.</StatusCard>}
+      {result.status === "manual" && <StatusCard icon="alert" title="Your installments remain manual">{result.message}</StatusCard>}
+      {result.status === "completed" && <CompletedStatus completedAt={result.completedAt} autopayStatus={result.autopayStatus} />}
       {result.status === "ready" && <AutopayAuthorizationForm
         token={token}
         primaryContactName={result.primaryContactName}
         recipientEmail={result.recipientEmail}
         departure={formatDate(result.departure)}
-        installments={result.installments}
+        cardBrand={result.cardBrand}
+        cardLast4={result.cardLast4}
+        requests={result.requests}
+        scheduleFingerprint={result.scheduleFingerprint}
       />}
     </PageShell>
   );
+}
+
+function CompletedStatus({ completedAt, autopayStatus }: { completedAt: string | null; autopayStatus: string }) {
+  const usedOn = completedAt
+    ? ` This secure link was used on ${new Date(completedAt).toLocaleDateString("en-US", { dateStyle: "long" })}.`
+    : "";
+  if (autopayStatus === "active") {
+    return <StatusCard icon="check" title="Automatic installments authorized">Square is configured to charge the saved card for the approved remaining installments.{usedOn}</StatusCard>;
+  }
+  if (["square_failed", "error", "charge_failed", "stopped_by_square"].includes(autopayStatus)) {
+    return <StatusCard icon="alert" title="Automatic installments could not be turned on">Your installments stay manual. Please use your Square invoice to make each remaining payment.{usedOn}</StatusCard>;
+  }
+  if (["manual_selected", "stopped", "cancelled"].includes(autopayStatus)) {
+    return <StatusCard icon="check" title="Your installments remain manual">No automatic-payment authorization was given. Continue paying each installment from your Square invoice.{usedOn}</StatusCard>;
+  }
+  return <StatusCard icon="check" title="Your request is being processed">We are confirming the automatic-payment setting with Square. Your card will not be charged automatically unless Square confirms activation.{usedOn}</StatusCard>;
 }
 
 function PageShell({ children }: { children: React.ReactNode }) {

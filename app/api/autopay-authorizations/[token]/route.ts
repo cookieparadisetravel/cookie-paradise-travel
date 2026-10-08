@@ -28,8 +28,28 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     return Response.json({ error: "Request body must be valid JSON." }, { status: 400 });
   }
   if (!body || typeof body !== "object" || Array.isArray(body)) return Response.json({ error: "Request body must be a JSON object." }, { status: 400 });
+  const action = "action" in body && body.action === "decline" ? "decline" : "authorize";
   const authorized = "authorized" in body && body.authorized === true;
   const payerName = "payerName" in body && typeof body.payerName === "string" ? body.payerName.trim() : "";
+  if (action === "decline") {
+    const completedAt = new Date().toISOString();
+    const [claimed] = await getDb().update(autopayAuthorizationInvitations).set({ completedAt }).where(and(
+      eq(autopayAuthorizationInvitations.id, readyInvitation.invitationId),
+      isNull(autopayAuthorizationInvitations.completedAt),
+      isNull(autopayAuthorizationInvitations.revokedAt),
+    )).returning({ id: autopayAuthorizationInvitations.id });
+    if (!claimed) return Response.json({ error: "This automatic-payment authorization has already been submitted." }, { status: 409 });
+    await getDb().update(bookingRequests).set({
+      installmentAutopayAuthorized: false,
+      installmentAutopayAuthorizedAt: null,
+      installmentAutopayPayerName: null,
+      installmentAutopayStatus: "manual_selected",
+      installmentAutopayCardBrand: null,
+      installmentAutopayCardLast4: null,
+      installmentAutopayError: null,
+    }).where(eq(bookingRequests.id, readyInvitation.bookingRequestId));
+    return Response.json({ completedAt, status: "manual" }, { status: 201 });
+  }
   if (!authorized) return Response.json({ error: "Review the schedule and check the authorization box before continuing." }, { status: 400 });
   if (payerName.length < 2 || payerName.length > 120) return Response.json({ error: "Enter the cardholder's full legal name." }, { status: 400 });
 
