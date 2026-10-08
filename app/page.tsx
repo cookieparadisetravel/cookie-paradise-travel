@@ -133,7 +133,7 @@ export default function Home() {
               Discover Southern Vietnam
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
-              Eight thoughtfully paced days from Saigon and the Mekong to imperial Huế and lantern-lit Hội An, personally hosted by Trung Le.
+              Eight thoughtfully paced days from the energy of Saigon through Mekong waterways and imperial Huế to lantern-lit Hội An—created by Trung Le and hosted by Trung or a trusted Cookie Paradise Travel Company host.
             </p>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <BookingDialog triggerLabel="Request your spot" />
