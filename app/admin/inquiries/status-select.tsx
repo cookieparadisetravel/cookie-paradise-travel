@@ -1,17 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { inquiryStageOptions, normalizeInquiryStage } from "@/lib/inquiry-stage";
 
-export function StatusSelect({ compact = false, id, initialStatus }: { compact?: boolean; id: number; initialStatus: string }) {
+export function StatusSelect({ compact = false, id, initialStatus, onBusyChange }: { compact?: boolean; id: number; initialStatus: string; onBusyChange?: (busy: boolean) => void }) {
   const router = useRouter();
   const [status, setStatus] = useState(() => normalizeInquiryStage(initialStatus));
   const [saving, setSaving] = useState(false);
+  const [refreshing, startRefreshTransition] = useTransition();
   const [error, setError] = useState(false);
   const [saved, setSaved] = useState(false);
+  const busy = saving || refreshing;
+
+  useEffect(() => {
+    onBusyChange?.(busy);
+    return () => onBusyChange?.(false);
+  }, [busy, onBusyChange]);
 
   async function update(nextStatus: string) {
+    if (busy) return;
     const previous = status;
     setStatus(nextStatus);
     setSaving(true);
@@ -25,7 +33,7 @@ export function StatusSelect({ compact = false, id, initialStatus }: { compact?:
       });
       if (!response.ok) throw new Error("Status update failed");
       setSaved(true);
-      router.refresh();
+      startRefreshTransition(() => router.refresh());
     } catch {
       setStatus(previous);
       setError(true);
@@ -43,7 +51,7 @@ export function StatusSelect({ compact = false, id, initialStatus }: { compact?:
         className={compact
           ? "h-8 w-auto min-w-[13.5rem] max-w-full rounded-full border border-[#d99a3b] bg-[var(--gold)] px-3 py-0 text-sm font-extrabold leading-none text-[var(--ink)] shadow-sm hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/50"
           : "mt-1 w-full rounded-lg border border-[var(--input)] bg-white px-3 py-2 text-sm font-semibold text-[var(--ink)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40"}
-        disabled={saving}
+        disabled={busy}
         id={`inquiry-status-${id}`}
         title={compact ? "Manual sales stage; this does not prove agreement or payment completion." : undefined}
         value={status}
@@ -52,7 +60,7 @@ export function StatusSelect({ compact = false, id, initialStatus }: { compact?:
         {inquiryStageOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
       </select>
       <p aria-live="polite" className={`${compact ? "sr-only" : "mt-1 text-xs"} font-semibold ${error ? "text-red-700" : "text-[var(--muted-ink)]"}`} id={compact ? `inquiry-status-note-${id}` : undefined}>
-        {saving ? "Saving…" : error ? "Could not save." : saved ? "Saved" : compact ? "Manual stage only" : "Update after each follow-up."}
+        {busy ? "Saving and refreshing…" : error ? "Could not save." : saved ? "Saved" : compact ? "Manual stage only" : "Update after each follow-up."}
       </p>
     </div>
   );

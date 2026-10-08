@@ -412,12 +412,14 @@ function InquiryList({ inquiries, onOpen, squareMode }: { inquiries: DashboardIn
 function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; backButtonRef: React.RefObject<HTMLButtonElement | null>; inquiry: DashboardInquiry; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
   const workflow = workflowFor(inquiry);
   const acceptedCount = acceptedAgreementCount(inquiry);
+  const [stageBusy, setStageBusy] = useState(false);
 
   return (
     <div className="mx-auto w-full max-w-[1500px] px-4 py-5 sm:px-7 sm:py-7">
-      <button ref={backButtonRef} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 text-sm font-extrabold shadow-sm hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={onClose} type="button">
-        <ArrowLeft className="h-4 w-4" /> Back to inquiries
+      <button ref={backButtonRef} aria-describedby={stageBusy ? "stage-navigation-status" : undefined} className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 text-sm font-extrabold shadow-sm hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40 disabled:cursor-wait disabled:opacity-60" disabled={stageBusy} onClick={onClose} type="button">
+        <ArrowLeft className="h-4 w-4" /> {stageBusy ? "Saving stage…" : "Back to inquiries"}
       </button>
+      <p aria-live="polite" className="sr-only" id="stage-navigation-status">{stageBusy ? "Please wait while the inquiry stage is saved before returning to the inquiry list." : ""}</p>
 
       <section className="mt-4 overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
         <header className="px-4 pt-4 sm:px-6 sm:pt-5">
@@ -426,7 +428,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
               <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[var(--orange)]">Inquiry #{inquiry.id}</p>
               <div className="mt-1 flex flex-wrap items-center gap-x-6 gap-y-3 sm:gap-x-8">
                 <h2 className="min-w-0 truncate font-serif text-3xl font-bold leading-tight">{inquiry.fullName}</h2>
-                <StatusSelect compact key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} />
+                <StatusSelect compact key={`${inquiry.id}-${inquiry.status}`} id={inquiry.id} initialStatus={inquiry.status} onBusyChange={setStageBusy} />
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-2 text-sm">
