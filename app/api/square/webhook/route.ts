@@ -160,9 +160,11 @@ export async function POST(request: Request) {
   let insuranceReferralSent = false;
   let installmentAutopayStatus: string | null = null;
   if (payload.type === "invoice.payment_made") {
+    const autopayClaimedAt = new Date().toISOString();
     const [autopayClaim] = await getDb().update(bookingRequests).set({
       installmentAutopayStatus: "authorization_sending",
       installmentAutopayError: null,
+      installmentAutopayClaimedAt: autopayClaimedAt,
     }).where(and(
       eq(bookingRequests.squareDepositInvoiceId, invoice.id),
       eq(bookingRequests.paymentPreference, "payment_plan"),
@@ -191,6 +193,7 @@ export async function POST(request: Request) {
           await getDb().update(bookingRequests).set({
             installmentAutopayStatus: readiness.status,
             installmentAutopayError: readiness.message,
+            installmentAutopayClaimedAt: null,
           }).where(and(
             eq(bookingRequests.id, autopayClaim.id),
             eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
@@ -221,7 +224,10 @@ export async function POST(request: Request) {
             invitationEmailSentAt: delivery.sentAt,
             invitationEmailMessageId: delivery.messageId,
           }).where(eq(autopayAuthorizationInvitations.id, invitation.id));
-          await getDb().update(bookingRequests).set({ installmentAutopayStatus: "authorization_sent" }).where(and(
+          await getDb().update(bookingRequests).set({
+            installmentAutopayStatus: "authorization_sent",
+            installmentAutopayClaimedAt: null,
+          }).where(and(
             eq(bookingRequests.id, autopayClaim.id),
             eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
           ));
@@ -238,6 +244,7 @@ export async function POST(request: Request) {
         await getDb().update(bookingRequests).set({
           installmentAutopayStatus: "error",
           installmentAutopayError: "The optional automatic-installment authorization could not be prepared or sent.",
+          installmentAutopayClaimedAt: null,
         }).where(and(
           eq(bookingRequests.id, autopayClaim.id),
           eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),

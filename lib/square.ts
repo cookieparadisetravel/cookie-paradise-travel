@@ -310,6 +310,8 @@ type SquareInvoicePaymentRequest = {
   uid?: string;
   request_type?: string;
   due_date?: string;
+  automatic_payment_source?: string;
+  card_id?: string;
   computed_amount_money?: { amount?: number | string };
   total_completed_amount_money?: { amount?: number | string };
 };
@@ -347,6 +349,7 @@ export type SquareAutopayReadiness =
     invoiceStatus: string;
     requestUids: string[];
     requests: AutopayScheduleRequest[];
+    autopayAlreadyEnabled: boolean;
   }
   | {
     status: "card_not_saved" | "not_card_payment" | "no_remaining_payments";
@@ -455,6 +458,14 @@ export async function findAutopayCardAndSchedule(input: {
     };
   }
 
+  const remainingRequestUids = new Set(requests.map((request) => request.uid));
+  const autopayAlreadyEnabled = invoice.payment_requests
+    .filter((request) => request.uid && remainingRequestUids.has(request.uid))
+    .every((request) => (
+      request.automatic_payment_source === "CARD_ON_FILE"
+      && request.card_id === savedCard.id
+    ));
+
   return {
     status: "ready",
     cardId: savedCard.id,
@@ -464,6 +475,7 @@ export async function findAutopayCardAndSchedule(input: {
     invoiceStatus: invoice.status.toLowerCase(),
     requestUids: requestUids as string[],
     requests,
+    autopayAlreadyEnabled,
   };
 }
 

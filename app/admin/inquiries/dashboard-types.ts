@@ -70,6 +70,7 @@ export type DashboardInquiry = {
   installmentAutopayAuthorizedAt: string | null;
   installmentAutopayPayerName: string | null;
   installmentAutopayStatus: string;
+  installmentAutopayClaimedAt: string | null;
   installmentAutopayCardBrand: string | null;
   installmentAutopayCardLast4: string | null;
   installmentAutopayError: string | null;
@@ -78,6 +79,7 @@ export type DashboardInquiry = {
   squareDepositInvoiceUrl: string | null;
   squareDepositCreatedAt: string | null;
   squareDepositClaimIsStale: boolean;
+  installmentAutopayClaimIsStale: boolean;
   companyAcceptedAt: string | null;
   companyAcceptedBy: string | null;
   companyAcceptanceDate: string;

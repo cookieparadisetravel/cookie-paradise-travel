@@ -259,6 +259,54 @@ export async function sendAutopayAuthorizationInvitationEmail(input: {
   });
 }
 
+export async function sendAutopayAuthorizationConfirmationEmail(input: {
+  toEmail: string;
+  toName: string;
+  authorizationText: string;
+  cardBrand: string;
+  cardLast4: string;
+  schedule: Array<{ uid: string; dueDate: string; amountCents: number }>;
+  totalCents: number;
+}) {
+  const scheduleText = input.schedule
+    .map((payment) => `${formatCalendarDate(payment.dueDate)} — ${money(payment.amountCents)}`)
+    .join("\n");
+  const scheduleHtml = input.schedule
+    .map((payment) => `<tr><td style="padding:8px 12px;border-bottom:1px solid #eadfce">${escapeHtml(formatCalendarDate(payment.dueDate))}</td><td style="padding:8px 12px;border-bottom:1px solid #eadfce;text-align:right;font-weight:700">${escapeHtml(money(payment.amountCents))}</td></tr>`)
+    .join("");
+
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: "Automatic installment authorization confirmed",
+    text: [
+      `Hello ${input.toName},`,
+      "",
+      `Automatic installments are now authorized for your ${input.cardBrand} card ending in ${input.cardLast4}.`,
+      "",
+      "Remaining payment schedule:",
+      scheduleText,
+      `Total authorized: ${money(input.totalCents)}`,
+      "",
+      "Authorization:",
+      input.authorizationText,
+      "",
+      "To stop future automatic payments, email trung@cookieparadise.co at least 3 business days before a scheduled charge. Stopping automatic payments does not cancel your booking or change a payment deadline.",
+      "",
+      "Please keep this email for your records.",
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>Automatic installments are now authorized for your <strong>${escapeHtml(input.cardBrand)} card ending in ${escapeHtml(input.cardLast4)}</strong>.</p>
+      <table style="width:100%;border-collapse:collapse;margin:18px 0"><thead><tr><th style="padding:8px 12px;text-align:left;background:#f7efe2">Due date</th><th style="padding:8px 12px;text-align:right;background:#f7efe2">Amount</th></tr></thead><tbody>${scheduleHtml}<tr><td style="padding:10px 12px;font-weight:700">Total authorized</td><td style="padding:10px 12px;text-align:right;font-weight:700">${escapeHtml(money(input.totalCents))}</td></tr></tbody></table>
+      <p><strong>Authorization:</strong></p>
+      <p>${escapeHtml(input.authorizationText)}</p>
+      <p>To stop future automatic payments, email <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a> at least 3 business days before a scheduled charge. Stopping automatic payments does not cancel your booking or change a payment deadline.</p>
+      <p>Please keep this email for your records.</p>
+    `,
+  });
+}
+
 async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResult> {
   const runtime = env as unknown as Record<string, string | undefined>;
   const token = runtime.MAILERSEND_API_TOKEN?.trim();
@@ -306,6 +354,17 @@ function formatDateTime(value: string) {
         timeZone: "America/Indiana/Indianapolis",
       })
     : value;
+}
+
+function formatCalendarDate(value: string) {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/u.exec(value);
+  if (!match) return value;
+  return new Intl.DateTimeFormat("en-US", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3]))));
 }
 
 function money(cents: number) {

@@ -71,6 +71,7 @@ export async function loadInquiryDashboardData() {
   // This forced-dynamic server request snapshots the recovery cutoff once.
   const requestTime = Date.now();
   const staleSquareClaimBefore = requestTime - 5 * 60_000;
+  const staleAutopayClaimBefore = requestTime - 10 * 60_000;
 
   const inquiries: DashboardInquiry[] = inquiryRows.map((inquiry) => {
     const inquiryTravelers = travelersByInquiry.get(inquiry.id) ?? [];
@@ -84,6 +85,9 @@ export async function loadInquiryDashboardData() {
     const travelerListInvitation = latestTravelerListByInquiry.get(inquiry.id);
     const paymentChoiceInvitation = latestPaymentChoiceByInquiry.get(inquiry.id);
     const claimedAtTime = inquiry.squareDepositClaimedAt ? Date.parse(inquiry.squareDepositClaimedAt) : NaN;
+    const autopayClaimedAtTime = inquiry.installmentAutopayClaimedAt
+      ? Date.parse(inquiry.installmentAutopayClaimedAt)
+      : NaN;
 
     return {
       ...inquiry,
@@ -112,6 +116,10 @@ export async function loadInquiryDashboardData() {
       } : null,
       squareDepositClaimIsStale: inquiry.squareDepositInvoiceStatus === "creating"
         && (!Number.isFinite(claimedAtTime) || claimedAtTime <= staleSquareClaimBefore),
+      installmentAutopayClaimIsStale:
+        (inquiry.installmentAutopayStatus === "authorization_sending"
+          || inquiry.installmentAutopayStatus === "activating")
+        && (!Number.isFinite(autopayClaimedAtTime) || autopayClaimedAtTime <= staleAutopayClaimBefore),
     };
   });
 
