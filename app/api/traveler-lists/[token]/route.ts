@@ -5,6 +5,7 @@ import { getDb } from "@/db";
 import { sendOwnerTravelerListNotification } from "@/lib/owner-notification";
 import { getTravelerListInvitation } from "@/lib/traveler-list-invitation";
 import { isValidPastDate } from "@/lib/agreement-acceptance-record";
+import { continueAutomatedBookingAfterTravelerList } from "@/lib/booking-automation";
 
 const travelerSchema = z.object({
   firstName: z.string().trim().min(1, "Enter each traveler's legal first name.").max(80),
@@ -140,6 +141,18 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     console.error("Traveler list was saved, but the owner notification could not be delivered", {
       bookingRequestId,
       invitationId,
+    });
+  }
+
+  try {
+    await continueAutomatedBookingAfterTravelerList({
+      inquiryId: bookingRequestId,
+      requestUrl: request.url,
+    });
+  } catch (error) {
+    console.error("Traveler list was saved, but automated agreement delivery could not continue", {
+      bookingRequestId,
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 

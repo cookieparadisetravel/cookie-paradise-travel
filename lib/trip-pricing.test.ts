@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   calculateExpectedBookingTotalCents,
+  automaticTravelerPriceCents,
   inferPriceCheckSelection,
   isPublishedPerTravelerPriceCents,
   privateRoomSupplementCents,
@@ -15,6 +16,11 @@ test("recognizes only the published per-traveler prices", () => {
   }
   assert.equal(isPublishedPerTravelerPriceCents(300_000), false);
   assert.deepEqual(publishedPerTravelerPricesCents.map((price) => publishedTravelerCountByPriceCents[price]), [8, 10, 12, 15]);
+});
+
+test("uses the advertised price and only adds the private-room supplement when selected", () => {
+  assert.equal(automaticTravelerPriceCents("shared"), 287_500);
+  assert.equal(automaticTravelerPriceCents("private"), 327_400);
 });
 
 test("calculates the expected group total with private-room supplements", () => {

@@ -529,6 +529,7 @@ function OverviewSection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
   return (
     <div className="space-y-5">
       {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
+      {inquiry.automatedBookingError && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><AlertCircle className="h-5 w-5" /> Automated booking needs attention</p><p className="mt-1 text-sm leading-6">{inquiry.automatedBookingError}</p></div>}
       <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
         <SectionHeading description="Information submitted with the inquiry." title="Overview" />
         <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
@@ -537,6 +538,8 @@ function OverviewSection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
           <InfoItem label="Departure">{departureLabel(inquiry.departure)}</InfoItem>
           <InfoItem label="Party size">{inquiry.partySize}</InfoItem>
           <InfoItem label="Room preference">{readableValue(inquiry.roomPreference)}</InfoItem>
+          <InfoItem label="Customer intent">{bookingIntentLabel(inquiry.bookingIntent)}</InfoItem>
+          <InfoItem label="Automated booking">{automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>
           <InfoItem label="Trip contact consent">{inquiry.contactConsent ? "Recorded" : "Not recorded"}</InfoItem>
           <InfoItem label="Marketing consent">{inquiry.marketingConsent ? "Recorded" : "Not given"}</InfoItem>
           <InfoItem label="Payment environment">Square {squareMode === "sandbox" ? "Sandbox" : "Production"}</InfoItem>
@@ -567,6 +570,7 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
           <InfoItem label="Square environment">{squareMode === "sandbox" ? "Sandbox testing" : "Production"}</InfoItem>
           <InfoItem label="Company accepted booking">{formatTimestamp(inquiry.companyAcceptedAt)}</InfoItem>
           <InfoItem label="Accepted by">{inquiry.companyAcceptedBy ?? "Not recorded"}</InfoItem>
+          <InfoItem label="Automation updated">{formatTimestamp(inquiry.automatedBookingUpdatedAt)}</InfoItem>
         </dl>
       </section>
       <details className="rounded-2xl border border-[var(--line)] bg-white p-4">
@@ -692,6 +696,8 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
 function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string; actionLabel: string; section: DetailSection; blocked: boolean } {
   if (inquiry.travelers.length > inquiry.partySize) return { label: "Resolve traveler-count mismatch", detail: `${inquiry.travelers.length} traveler records exist for a party of ${inquiry.partySize}. Agreement and payment steps remain blocked until the extra record is resolved.`, actionLabel: "Review travelers", section: "travelers", blocked: true };
   if (inquiry.sellerOfTravelStateResident) return { label: "Review residency screening", detail: `Review seller-of-travel requirements for ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the customer's state"} before proceeding with a sale.`, actionLabel: "Review overview", section: "overview", blocked: true };
+  if (inquiry.bookingIntent === "needs_information") return { label: "Follow up with customer", detail: "The customer asked for more information instead of starting the booking flow.", actionLabel: "Review overview", section: "overview", blocked: false };
+  if (inquiry.bookingIntent === "ready_to_book" && inquiry.automatedBookingStatus === "error") return { label: "Review automated booking", detail: inquiry.automatedBookingError ?? "An automated booking step did not finish.", actionLabel: "Review overview", section: "overview", blocked: true };
   if (hasMissingTravelerDetails(inquiry)) return inquiry.partySize === 1
     ? { label: "Add primary traveler", detail: "This older single-traveler inquiry is missing its traveler record. Add the primary contact once in the traveler section; no customer traveler-list link is needed.", actionLabel: "Open travelers", section: "travelers", blocked: false }
     : { label: "Collect traveler details", detail: `${inquiry.partySize - inquiry.travelers.length} traveler record${inquiry.partySize - inquiry.travelers.length === 1 ? " is" : "s are"} still needed. Create or replace the secure traveler-list link in the traveler section.`, actionLabel: "Open travelers", section: "travelers", blocked: false };
@@ -715,6 +721,8 @@ function acceptedAgreementCount(inquiry: DashboardInquiry) { const accepted = ne
 function hasIncompleteAgreements(inquiry: DashboardInquiry) { return acceptedAgreementCount(inquiry) < inquiry.partySize; }
 function hasInvoiceIssue(inquiry: DashboardInquiry) { return getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus).needsAttention; }
 function departureLabel(value: string) { return departureLabels[value] ?? value; }
+function bookingIntentLabel(value: string | null) { return value === "ready_to_book" ? "Ready to book and pay" : value === "needs_information" ? "Wants more information" : "Not recorded"; }
+function automationStatusLabel(value: string) { return value === "not_requested" ? "Not started" : readableValue(value); }
 function departureSortValue(value: string) { if (value === "flexible") return Number.MAX_SAFE_INTEGER; const parsed = Date.parse(`${value}T00:00:00Z`); return Number.isFinite(parsed) ? parsed : Number.MAX_SAFE_INTEGER - 1; }
 function readableValue(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 function formatCurrency(cents: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100); }

@@ -12,6 +12,11 @@ export function isPublishedPerTravelerPriceCents(value: number): value is typeof
   return publishedPerTravelerPricesCents.some((price) => price === value);
 }
 
+export function automaticTravelerPriceCents(roomPreference: string) {
+  return publishedPerTravelerPricesCents[0]
+    + (roomPreference === "private" ? privateRoomSupplementCents : 0);
+}
+
 export function calculateExpectedBookingTotalCents({
   partySize,
   perTravelerPriceCents,

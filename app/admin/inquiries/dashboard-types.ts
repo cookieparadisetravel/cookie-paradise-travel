@@ -59,6 +59,10 @@ export type DashboardInquiry = {
   marketingConsentedAt: string | null;
   mailerLiteStatus: string;
   ownerNotificationStatus: string;
+  bookingIntent: string | null;
+  automatedBookingStatus: string;
+  automatedBookingError: string | null;
+  automatedBookingUpdatedAt: string | null;
   confirmedBookingTotalCents: number | null;
   paymentPreference: string | null;
   paymentPreferenceSelectedAt: string | null;

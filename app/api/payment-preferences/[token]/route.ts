@@ -5,6 +5,7 @@ import { createBookingInvoice } from "@/lib/booking-invoice";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { sendOwnerPaymentPreferenceNotification } from "@/lib/owner-notification";
 import { getPaymentPreferenceInvitation, isPaymentPreference } from "@/lib/payment-preference-invitation";
+import { markAutomatedInvoiceCreated } from "@/lib/booking-automation";
 
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   const { token } = await context.params;
@@ -111,6 +112,15 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     console.error("Payment preference was saved, but the owner notification could not be delivered", {
       bookingRequestId: invitation.bookingRequestId,
       invitationId,
+    });
+  }
+
+  try {
+    await markAutomatedInvoiceCreated(invitation.bookingRequestId);
+  } catch (error) {
+    console.error("Square invoice was created, but automated booking status could not be updated", {
+      bookingRequestId: invitation.bookingRequestId,
+      error: error instanceof Error ? error.message : String(error),
     });
   }
 

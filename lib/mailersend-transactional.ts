@@ -20,6 +20,74 @@ export type TransactionalEmailResult = {
   sentAt: string;
 };
 
+export async function sendTravelerListInvitationEmail(input: {
+  toEmail: string;
+  toName: string;
+  invitationUrl: string;
+  partySize: number;
+  expiresAt: string;
+}) {
+  const expires = formatDateTime(input.expiresAt);
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: "Provide the traveler details for your Vietnam booking",
+    text: [
+      `Hello ${input.toName},`,
+      "",
+      `Thank you for choosing to continue with your Discover Southern Vietnam booking for ${input.partySize} travelers.`,
+      "",
+      "Before we can send each traveler the required agreement, please provide the legal name and email address for every traveler in your party:",
+      input.invitationUrl,
+      "",
+      `This secure one-time link expires ${expires}.`,
+      "No payment is collected on this page.",
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>Thank you for choosing to continue with your <strong>Discover Southern Vietnam</strong> booking for ${input.partySize} travelers.</p>
+      <p>Before we can send each traveler the required agreement, please provide the legal name and email address for every traveler in your party.</p>
+      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Provide traveler details</a></p>
+      <p>This secure one-time link expires ${escapeHtml(expires)}. No payment is collected on this page.</p>
+    `,
+  });
+}
+
+export async function sendPaymentChoiceInvitationEmail(input: {
+  toEmail: string;
+  toName: string;
+  invitationUrl: string;
+  bookingTotalCents: number;
+  expiresAt: string;
+}) {
+  const expires = formatDateTime(input.expiresAt);
+  const total = money(input.bookingTotalCents);
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: "Choose how you would like to pay for your Vietnam trip",
+    text: [
+      `Hello ${input.toName},`,
+      "",
+      "All required Traveler Agreements for your booking have been completed.",
+      `Confirmed booking total: ${total}`,
+      "",
+      "Use the secure link below to choose payment in full or the available payment plan. After you submit your choice, Square will create and email your invoice:",
+      input.invitationUrl,
+      "",
+      `This secure one-time link expires ${expires}.`,
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>All required Traveler Agreements for your booking have been completed.</p>
+      <p><strong>Confirmed booking total: ${escapeHtml(total)}</strong></p>
+      <p>Choose payment in full or the available payment plan. After you submit your choice, Square will create and email your invoice.</p>
+      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Choose payment option</a></p>
+      <p>This secure one-time link expires ${escapeHtml(expires)}.</p>
+    `,
+  });
+}
+
 export async function sendAgreementInvitationEmail(input: {
   toEmail: string;
   toName: string;
@@ -42,7 +110,7 @@ export async function sendAgreementInvitationEmail(input: {
       "",
       "After opening the link, you will be asked to request a separate verification code sent to this email address before signing.",
       "",
-      "If you did not expect this message, please contact trung@cookieparadisetravel.com.",
+      "If you did not expect this message, please contact trung@cookieparadise.co.",
     ].join("\n"),
     html: `
       <p>Hello ${escapeHtml(input.toName)},</p>
@@ -50,7 +118,7 @@ export async function sendAgreementInvitationEmail(input: {
       <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Open secure agreement</a></p>
       <p>This one-time link expires ${escapeHtml(expires)}.</p>
       <p>After opening the link, you will be asked to request a separate verification code sent to this email address before signing.</p>
-      <p>If you did not expect this message, please contact <a href="mailto:trung@cookieparadisetravel.com">trung@cookieparadisetravel.com</a>.</p>
+      <p>If you did not expect this message, please contact <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>.</p>
     `,
   });
 }
@@ -169,7 +237,7 @@ async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResul
     body: JSON.stringify({
       from: { email: fromEmail, name: fromName },
       to: [{ email: input.toEmail, name: input.toName }],
-      reply_to: { email: "trung@cookieparadisetravel.com", name: "Trung Le" },
+      reply_to: { email: "trung@cookieparadise.co", name: "Trung Le" },
       subject: input.subject,
       html: input.html,
       text: input.text,
@@ -197,6 +265,14 @@ function formatDateTime(value: string) {
         timeZone: "America/Indiana/Indianapolis",
       })
     : value;
+}
+
+function money(cents: number) {
+  return (cents / 100).toLocaleString("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 2,
+  });
 }
 
 function escapeHtml(value: string) {

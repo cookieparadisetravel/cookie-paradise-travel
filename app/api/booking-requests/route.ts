@@ -5,10 +5,12 @@ import { addConsentedSubscriber } from "@/lib/mailerlite";
 import { sendOwnerInquiryNotification } from "@/lib/owner-notification";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
+import { startAutomatedReadyToBookFlow } from "@/lib/booking-automation";
 
 const validDepartures = new Set(["2027-06-01"]);
 const validRooms = new Set(["shared", "private"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
+const validBookingIntents = new Set(["ready_to_book", "needs_information"]);
 const emailSchema = z.string().email().max(180);
 
 type TurnstileVerification = {
@@ -76,6 +78,7 @@ export async function POST(request: Request) {
     const contactConsent = payload.contactConsent === true;
     const sellerOfTravelStateResident = payload.sellerOfTravelStateResident === true;
     const residenceState = String(payload.residenceState ?? "").trim().toUpperCase();
+    const bookingIntent = String(payload.bookingIntent ?? "");
 
     if (!firstName || firstName.length > 60 || !lastName || lastName.length > 60 || fullName.length > 121 || !emailSchema.safeParse(email).success) {
       return Response.json({ error: "Valid first name, last name and email are required." }, { status: 400 });
@@ -95,6 +98,9 @@ export async function POST(request: Request) {
     if (sellerOfTravelStateResident && !validSellerOfTravelStates.has(residenceState)) {
       return Response.json({ error: "Please select your state of residence." }, { status: 400 });
     }
+    if (!validBookingIntents.has(bookingIntent)) {
+      return Response.json({ error: "Please tell us whether you are ready to book or would like more information." }, { status: 400 });
+    }
 
     const db = getDb();
     const [saved] = await db.insert(bookingRequests).values({
@@ -109,6 +115,9 @@ export async function POST(request: Request) {
       marketingConsentedAt: marketingConsent ? new Date().toISOString() : null,
       mailerLiteStatus: marketingConsent ? "pending" : "not_requested",
       ownerNotificationStatus: "pending",
+      bookingIntent,
+      automatedBookingStatus: "not_requested",
+      status: bookingIntent === "ready_to_book" ? "booking_in_progress" : "new",
     }).returning({ id: bookingRequests.id });
 
     if (partySize === 1) {
@@ -134,6 +143,7 @@ export async function POST(request: Request) {
       id: saved.id, fullName, email, phone, departure, room, partySize, notes,
       contactConsent: true, sellerOfTravelStateResident,
       residenceState: sellerOfTravelStateResident ? residenceState : null,
+      bookingIntent: bookingIntent as "ready_to_book" | "needs_information",
     });
 
     try {
@@ -144,7 +154,11 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error("Inquiry saved, but follow-up statuses could not be updated", error);
     }
-    return Response.json({ ok: true }, { status: 201 });
+    const automationStatus = bookingIntent === "ready_to_book"
+      ? await startAutomatedReadyToBookFlow({ inquiryId: saved.id, requestUrl: request.url })
+      : "not_requested";
+
+    return Response.json({ ok: true, bookingIntent, automationStatus }, { status: 201 });
   } catch (error) {
     console.error("Booking request failed", error);
     return Response.json({ error: "Booking requests are temporarily unavailable." }, { status: 500 });

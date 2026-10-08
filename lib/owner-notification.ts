@@ -12,6 +12,7 @@ type InquiryNotification = {
   contactConsent: boolean;
   sellerOfTravelStateResident: boolean;
   residenceState: string | null;
+  bookingIntent: "ready_to_book" | "needs_information";
 };
 
 type TravelerListNotification = {

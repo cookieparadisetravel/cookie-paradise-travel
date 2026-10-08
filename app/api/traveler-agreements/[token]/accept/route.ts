@@ -19,6 +19,7 @@ import {
 } from "@/lib/agreement-pdf";
 import { sendSignedAgreementEmail } from "@/lib/mailersend-transactional";
 import { canonicalizeAgreement, currentTravelerAgreement } from "@/lib/traveler-agreement";
+import { continueAutomatedBookingAfterAgreement } from "@/lib/booking-automation";
 
 const acceptanceSchema = z.object({
   signerLegalName: z.string().trim().min(2, "Enter the signer's full legal name.").max(160),
@@ -220,6 +221,18 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   } catch (cause) {
     copyEmailStatus = "error";
     console.error("Agreement accepted but signed PDF email failed", {
+      acceptanceId,
+      error: cause instanceof Error ? cause.message : String(cause),
+    });
+  }
+
+  try {
+    await continueAutomatedBookingAfterAgreement({
+      inquiryId: snapshot.bookingRequestId,
+      requestUrl: request.url,
+    });
+  } catch (cause) {
+    console.error("Agreement was accepted, but the automated booking flow could not continue", {
       acceptanceId,
       error: cause instanceof Error ? cause.message : String(cause),
     });

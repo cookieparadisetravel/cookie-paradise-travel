@@ -12,12 +12,15 @@ import {
 
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
 
+const consultationBookingUrl = "https://calendar.app.google/ofheU1DcPXWaR1Yr9";
+
 type RequiredField =
   | "firstName"
   | "lastName"
   | "email"
   | "phone"
   | "departure"
+  | "bookingIntent"
   | "contactConsent"
   | "residenceState"
   | "turnstile";
@@ -83,6 +86,9 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const [departure, setDeparture] = useState("2027-06-01");
   const [room, setRoom] = useState("shared");
   const [partySize, setPartySize] = useState("1");
+  const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">("");
+  const [submittedIntent, setSubmittedIntent] = useState<"" | "ready_to_book" | "needs_information">("");
+  const [submittedPartySize, setSubmittedPartySize] = useState(1);
   const [contactConsent, setContactConsent] = useState(false);
   const [sellerOfTravelStateResident, setSellerOfTravelStateResident] = useState(false);
   const [residenceState, setResidenceState] = useState("");
@@ -161,6 +167,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
     else if (emailInput && !emailInput.validity.valid) nextErrors.email = "Enter a valid email address.";
     if (!phone) nextErrors.phone = "Enter your phone number.";
     if (!departure) nextErrors.departure = "Choose a preferred departure.";
+    if (!bookingIntent) nextErrors.bookingIntent = "Tell us whether you are ready to book or would like more information.";
     if (!contactConsent) nextErrors.contactConsent = "Please agree before sending your inquiry.";
     if (sellerOfTravelStateResident && !residenceState) nextErrors.residenceState = "Choose your state of residence.";
     if (!turnstileToken) nextErrors.turnstile = "Complete the human verification.";
@@ -194,6 +201,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       sellerOfTravelStateResident,
       residenceState: sellerOfTravelStateResident ? residenceState : "",
       marketingConsent: form.get("marketingConsent") === "yes",
+      bookingIntent,
     };
     try {
       const response = await fetch("/api/booking-requests", {
@@ -207,6 +215,8 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
         const serverMessage = typeof result?.error === "string" ? result.error.trim() : "";
         throw new Error(serverMessage || "We couldn’t save your request. Please try again in a moment.");
       }
+      setSubmittedIntent(bookingIntent);
+      setSubmittedPartySize(Number(partySize));
       setStatus("success");
     } catch (error) {
       setErrorMessage(error instanceof Error && error.message
@@ -243,9 +253,27 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
             <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--orange)]" />
             <DialogTitle className="mt-5 font-serif text-3xl">Your request is in.</DialogTitle>
             <DialogDescription className="mx-auto mt-3 max-w-md text-base leading-7 text-[var(--muted-ink)]">
-              This is not a confirmed reservation and no payment was collected. Trung will follow up with availability and next steps.
+              {submittedIntent === "ready_to_book"
+                ? submittedPartySize === 1
+                  ? "Check your email for your secure Traveler Agreement. After you sign, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
+                  : "Check your email for a secure traveler-details link. After the traveler agreements are signed, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
+                : "Thanks—your inquiry has been saved. Use the button below to choose an available time for a 30-minute Google Meet with Trung. No payment was collected and this is not a confirmed reservation."}
             </DialogDescription>
-            <button className="mt-7 rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-bold text-white" onClick={() => setOpen(false)}>Close</button>
+            {submittedIntent === "needs_information" ? (
+              <div className="mt-7 flex flex-col items-center gap-3">
+                <a
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-7 text-sm font-extrabold text-[var(--orange)] shadow-lg transition hover:-translate-y-0.5 hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/45"
+                  href={consultationBookingUrl}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  Schedule a 30-minute call <ArrowRight className="h-4 w-4" />
+                </a>
+                <button className="rounded-full px-5 py-2 text-sm font-bold text-[var(--muted-ink)] underline" onClick={() => setOpen(false)}>Close</button>
+              </div>
+            ) : (
+              <button className="mt-7 rounded-full bg-[var(--navy)] px-6 py-3 text-sm font-bold text-white" onClick={() => setOpen(false)}>Close</button>
+            )}
           </div>
         ) : (
           <>
@@ -299,6 +327,42 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                   </SelectContent>
                 </Select>
               </div>
+              <fieldset
+                className={`rounded-2xl border p-4 sm:col-span-2 ${fieldErrors.bookingIntent ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : "border-[var(--line)] bg-white/60"}`}
+                aria-invalid={Boolean(fieldErrors.bookingIntent)}
+                aria-describedby={fieldErrors.bookingIntent ? "booking-intent-error" : undefined}
+                data-field="bookingIntent"
+                tabIndex={-1}
+              >
+                <legend className="px-1 text-sm font-extrabold text-[var(--ink)]">Are you ready to book and pay for the trip? <span className="text-red-700">*</span></legend>
+                <div className="mt-3 grid gap-3">
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl p-2 transition hover:bg-[var(--gold)]/15">
+                    <input
+                      type="radio"
+                      name="bookingIntent"
+                      value="ready_to_book"
+                      checked={bookingIntent === "ready_to_book"}
+                      onChange={() => { setBookingIntent("ready_to_book"); clearFieldError("bookingIntent"); }}
+                      className="mt-1 h-4 w-4 accent-[var(--orange)]"
+                      required
+                    />
+                    <span className="text-sm leading-6"><strong>Yes, I am ready to book.</strong><br /><span className="text-xs text-[var(--muted-ink)]">We’ll email the next secure step automatically.</span></span>
+                  </label>
+                  <label className="flex cursor-pointer items-start gap-3 rounded-xl p-2 transition hover:bg-[var(--gold)]/15">
+                    <input
+                      type="radio"
+                      name="bookingIntent"
+                      value="needs_information"
+                      checked={bookingIntent === "needs_information"}
+                      onChange={() => { setBookingIntent("needs_information"); clearFieldError("bookingIntent"); }}
+                      className="mt-1 h-4 w-4 accent-[var(--orange)]"
+                      required
+                    />
+                    <span className="text-sm leading-6"><strong>No, I would like more information.</strong><br /><span className="text-xs text-[var(--muted-ink)]">Trung will follow up with you.</span></span>
+                  </label>
+                </div>
+                {fieldErrors.bookingIntent && <p id="booking-intent-error" className="mt-2 text-xs font-semibold text-red-700">{fieldErrors.bookingIntent}</p>}
+              </fieldset>
               <p className="mt-2 border-t border-[var(--line)] pt-5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--orange)] sm:col-span-2">Your details</p>
               <label className="field-label">First Name
                 <input
