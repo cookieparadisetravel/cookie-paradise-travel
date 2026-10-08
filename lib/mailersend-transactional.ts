@@ -200,6 +200,8 @@ export async function sendTravelInsuranceReferralEmail(input: {
       "Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you. You may review available Seven Corners options using our referral link:",
       affiliateUrl,
       "",
+      "Why consider Seven Corners? Seven Corners is a privately held travel insurance and healthcare company founded in 1993 and headquartered in Carmel, Indiana. It is BBB Accredited with an A+ rating and has an in-house 24/7 travel assistance team with live translation support in more than 130 languages. You can also speak with a licensed live agent before purchasing to compare available benefits, limits, exclusions, and optional coverage for your needs.",
+      "",
       "Affiliate disclosure: Cookie Paradise Travel Company may receive marketing referral compensation if you purchase through this link. You are not required to purchase from Seven Corners, and you may choose any insurance provider.",
       "",
       "For questions about Seven Corners coverage, benefits, exclusions, or purchasing, contact Lakita Brewington at 317-455-3634 or Lakita.Brewington@sevencorners.com.",
@@ -211,6 +213,7 @@ export async function sendTravelInsuranceReferralEmail(input: {
       <p>Thank you for making your first payment toward your Cookie Paradise Travel Company trip.</p>
       <p>Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you.</p>
       <p><a href="${affiliateUrl}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review Seven Corners options</a></p>
+      <p><strong>Why consider Seven Corners?</strong> Seven Corners is a privately held travel insurance and healthcare company founded in 1993 and headquartered in Carmel, Indiana. It is BBB Accredited with an A+ rating and has an in-house 24/7 travel assistance team with live translation support in more than 130 languages. You can also speak with a licensed live agent before purchasing to compare available benefits, limits, exclusions, and optional coverage for your needs.</p>
       <p style="font-size:13px;line-height:1.6;color:#5f5145"><strong>Affiliate disclosure:</strong> Cookie Paradise Travel Company may receive marketing referral compensation if you purchase through this link. You are not required to purchase from Seven Corners, and you may choose any insurance provider.</p>
       <p>For questions about Seven Corners coverage, benefits, exclusions, or purchasing, contact Lakita Brewington at <a href="tel:+13174553634">317-455-3634</a> or <a href="mailto:Lakita.Brewington@sevencorners.com">Lakita.Brewington@sevencorners.com</a>.</p>
       <p>Cookie Paradise Travel Company does not determine eligibility for coverage or provide advice about which policy is right for you.</p>
