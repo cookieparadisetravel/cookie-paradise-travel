@@ -21,7 +21,6 @@ type RequiredField =
   | "phone"
   | "departure"
   | "bookingIntent"
-  | "contactConsent"
   | "residenceState"
   | "turnstile";
 
@@ -89,7 +88,6 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">("");
   const [submittedIntent, setSubmittedIntent] = useState<"" | "ready_to_book" | "needs_information">("");
   const [submittedPartySize, setSubmittedPartySize] = useState(1);
-  const [contactConsent, setContactConsent] = useState(false);
   const [sellerOfTravelStateResident, setSellerOfTravelStateResident] = useState(false);
   const [residenceState, setResidenceState] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -168,7 +166,6 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
     if (!phone) nextErrors.phone = "Enter your phone number.";
     if (!departure) nextErrors.departure = "Choose a preferred departure.";
     if (!bookingIntent) nextErrors.bookingIntent = "Tell us whether you are ready to book or would like more information.";
-    if (!contactConsent) nextErrors.contactConsent = "Please agree before sending your inquiry.";
     if (sellerOfTravelStateResident && !residenceState) nextErrors.residenceState = "Choose your state of residence.";
     if (!turnstileToken) nextErrors.turnstile = "Complete the human verification.";
 
@@ -197,7 +194,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       notes: form.get("notes"),
       website: form.get("website"),
       turnstileToken,
-      contactConsent,
+      contactConsent: true,
       sellerOfTravelStateResident,
       residenceState: sellerOfTravelStateResident ? residenceState : "",
       marketingConsent: form.get("marketingConsent") === "yes",
@@ -429,23 +426,6 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               <label className="field-label sm:col-span-2">Questions or notes <span className="font-normal text-[var(--muted-ink)]">(optional)</span>
                 <textarea className="field-input min-h-24 resize-y py-3" name="notes" maxLength={1000} />
               </label>
-              <label className={`flex items-start gap-3 rounded-2xl border bg-[var(--gold)]/15 p-4 text-sm leading-6 text-[var(--ink)] sm:col-span-2 ${fieldErrors.contactConsent ? "border-red-500 ring-2 ring-red-100" : "border-[var(--orange)]/35"}`}>
-                <input
-                  className="mt-1 h-4 w-4 accent-[var(--orange)]"
-                  type="checkbox"
-                  required
-                  aria-required="true"
-                  aria-invalid={Boolean(fieldErrors.contactConsent)}
-                  aria-describedby={fieldErrors.contactConsent ? "contact-consent-error" : undefined}
-                  data-field="contactConsent"
-                  checked={contactConsent}
-                  onChange={(event) => {
-                    setContactConsent(event.target.checked);
-                    clearFieldError("contactConsent");
-                  }}
-                />
-                <span><span className="font-bold text-red-700" aria-hidden="true">* </span>I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.{fieldErrors.contactConsent && <span id="contact-consent-error" className="mt-2 block text-xs font-semibold text-red-700">{fieldErrors.contactConsent}</span>}</span>
-              </label>
               <label className="flex items-start gap-3 text-xs leading-5 text-[var(--ink)] sm:col-span-2">
                 <input className="mt-1 h-4 w-4 accent-[var(--orange)]" type="checkbox" name="marketingConsent" value="yes" />
                 <span><strong>Email me occasional travel news and future trip announcements.</strong><br /><span className="text-[var(--muted-ink)]">Optional. You can unsubscribe at any time.</span></span>
@@ -504,7 +484,10 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               {status === "error" && (
                 <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{errorMessage}</p>
               )}
-              <button disabled={status === "saving"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
+              <p id="contact-consent-notice" className="rounded-2xl border border-[var(--orange)]/35 bg-[var(--gold)]/15 p-4 text-sm leading-6 text-[var(--ink)] sm:col-span-2">
+                By clicking <strong>“Send my request,”</strong> I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.
+              </p>
+              <button aria-describedby="contact-consent-notice" disabled={status === "saving"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
                 {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>Send my request <ArrowRight className="h-4 w-4" /></>}
               </button>
               <p className="text-center text-xs leading-5 text-[var(--muted-ink)] sm:col-span-2">Please do not enter passport numbers, medical information or payment details here. See our <a className="font-semibold underline" href="/privacy" target="_blank">Privacy Policy</a>.</p>
