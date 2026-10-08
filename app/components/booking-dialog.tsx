@@ -254,7 +254,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 ? submittedPartySize === 1
                   ? "Check your email for your secure Traveler Agreement. After you sign, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
                   : "Check your email for a secure traveler-details link. After the traveler agreements are signed, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
-                : "Thanks—your inquiry has been saved. Use the button below to choose an available time for a 30-minute Google Meet with Trung. No payment was collected and this is not a confirmed reservation."}
+                : "Thanks—your inquiry has been saved. Use the button below to book a 30-minute Google Meet with Trung. No payment was collected and this is not a confirmed reservation."}
             </DialogDescription>
             {submittedIntent === "needs_information" ? (
               <div className="mt-7 flex flex-col items-center gap-3">
