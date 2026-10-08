@@ -26,6 +26,17 @@ const submissionSchema = z.object({
   travelers: z.array(travelerSchema).min(1).max(15),
 });
 
+function getSafeDatabaseErrorDetails(cause: unknown) {
+  const errorName = cause instanceof Error ? cause.name : "UnknownError";
+  const message = cause instanceof Error ? cause.message : "";
+  const d1ErrorMatch = /D1_ERROR:\s*([^:\r\n]+)/u.exec(message);
+
+  return {
+    errorName,
+    d1ErrorCode: d1ErrorMatch?.[1]?.trim() || null,
+  };
+}
+
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   const { token } = await context.params;
   const invitation = await getTravelerListInvitation(token);
@@ -108,23 +119,22 @@ export async function POST(request: Request, context: { params: Promise<{ token:
       ...traveler,
     })));
   } catch (cause) {
+    const databaseError = getSafeDatabaseErrorDetails(cause);
     console.error("Traveler-list database save failed", {
       bookingRequestId,
       invitationId,
       submittedTravelerCount: normalizedTravelers.length,
-      error: cause instanceof Error
-        ? { name: cause.name, message: cause.message, stack: cause.stack }
-        : String(cause),
+      ...databaseError,
     });
     try {
       await releaseClaim();
     } catch (releaseCause) {
+      const databaseError = getSafeDatabaseErrorDetails(releaseCause);
       console.error("Traveler-list claim could not be released after a failed save", {
         bookingRequestId,
         invitationId,
-        error: releaseCause instanceof Error
-          ? { name: releaseCause.name, message: releaseCause.message, stack: releaseCause.stack }
-          : String(releaseCause),
+        submittedTravelerCount: normalizedTravelers.length,
+        ...databaseError,
       });
       return Response.json({ error: "Traveler information could not be saved, and the secure link could not be restored. Please contact Cookie Paradise Travel Company for a new link." }, { status: 500 });
     }
