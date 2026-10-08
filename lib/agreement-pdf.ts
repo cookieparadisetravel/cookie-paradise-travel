@@ -6,6 +6,8 @@ type BrowserRunBinding = {
   quickAction(action: "pdf", input: Record<string, unknown>): Promise<Response>;
 };
 
+const COMPANY_ACCEPTANCE_DISPLAY = "Cookie Paradise Travel Company LLC · trung@cookieparadise.co";
+
 export async function generateAgreementPdf(input: {
   agreement: AgreementDocument;
   snapshot?: AgreementAcceptanceSnapshot;
@@ -76,7 +78,7 @@ function renderAgreementHtml(agreement: AgreementDocument, snapshot?: AgreementA
         ${snapshot.guardianRelationship ? `<dt>Guardian relationship</dt><dd>${escapeHtml(snapshot.guardianRelationship)}</dd>` : ""}
         <dt>Traveler/guardian initials</dt><dd>${escapeHtml(snapshot.travelerInitials)}</dd>
         <dt>Signed</dt><dd>${escapeHtml(formatDateTime(snapshot.acceptedAt))}</dd>
-        <dt>Company acceptance</dt><dd>${escapeHtml(formatDateTime(snapshot.companyAcceptedAt))} · ${escapeHtml(snapshot.companyAcceptedBy)}</dd>
+        <dt>Company acceptance</dt><dd>${escapeHtml(formatDateTime(snapshot.companyAcceptedAt))} · ${escapeHtml(COMPANY_ACCEPTANCE_DISPLAY)}</dd>
         <dt>Agreement version</dt><dd>${escapeHtml(snapshot.agreementVersion)}</dd>
         <dt>Document SHA-256</dt><dd class="hash">${escapeHtml(snapshot.agreementDocumentHash)}</dd>
       </dl>
