@@ -6,6 +6,7 @@ import { sendOwnerInquiryNotification } from "@/lib/owner-notification";
 import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { startAutomatedReadyToBookFlow } from "@/lib/booking-automation";
+import { getSafeDatabaseErrorDetails } from "@/lib/safe-error";
 
 const validDepartures = new Set(["2027-06-01"]);
 const validRooms = new Set(["shared", "private"]);
@@ -134,7 +135,10 @@ export async function POST(request: Request) {
           travelerType: "adult",
         });
       } catch (error) {
-        console.error("Single-traveler inquiry saved, but its traveler record could not be created", error);
+        console.error("Single-traveler inquiry saved, but its traveler record could not be created", {
+          inquiryId: saved.id,
+          ...getSafeDatabaseErrorDetails(error),
+        });
       }
     }
 
@@ -156,7 +160,10 @@ export async function POST(request: Request) {
         ownerNotificationStatus,
       }).where(eq(bookingRequests.id, saved.id));
     } catch (error) {
-      console.error("Inquiry saved, but follow-up statuses could not be updated", error);
+      console.error("Inquiry saved, but follow-up statuses could not be updated", {
+        inquiryId: saved.id,
+        ...getSafeDatabaseErrorDetails(error),
+      });
     }
     const automationStatus = bookingIntent === "ready_to_book" && automatedBookingEnabled
       ? await startAutomatedReadyToBookFlow({ inquiryId: saved.id, requestUrl: request.url })
@@ -164,7 +171,7 @@ export async function POST(request: Request) {
 
     return Response.json({ ok: true, bookingIntent, automationStatus, bookingPaused }, { status: 201 });
   } catch (error) {
-    console.error("Booking request failed", error);
+    console.error("Booking request failed", getSafeDatabaseErrorDetails(error));
     return Response.json({ error: "Booking requests are temporarily unavailable." }, { status: 500 });
   }
 }

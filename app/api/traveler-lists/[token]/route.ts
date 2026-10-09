@@ -6,6 +6,7 @@ import { sendOwnerTravelerListNotification } from "@/lib/owner-notification";
 import { getTravelerListInvitation } from "@/lib/traveler-list-invitation";
 import { isValidPastDate } from "@/lib/agreement-acceptance-record";
 import { continueAutomatedBookingAfterTravelerList } from "@/lib/booking-automation";
+import { getSafeDatabaseErrorDetails } from "@/lib/safe-error";
 
 const travelerSchema = z.object({
   firstName: z.string().trim().min(1, "Enter each traveler's legal first name.").max(80),
@@ -25,17 +26,6 @@ const travelerSchema = z.object({
 const submissionSchema = z.object({
   travelers: z.array(travelerSchema).min(1).max(15),
 });
-
-function getSafeDatabaseErrorDetails(cause: unknown) {
-  const errorName = cause instanceof Error ? cause.name : "UnknownError";
-  const message = cause instanceof Error ? cause.message : "";
-  const d1ErrorMatch = /D1_ERROR:\s*([^:\r\n]+)/u.exec(message);
-
-  return {
-    errorName,
-    d1ErrorCode: d1ErrorMatch?.[1]?.trim() || null,
-  };
-}
 
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   const { token } = await context.params;
@@ -162,7 +152,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   } catch (error) {
     console.error("Traveler list was saved, but automated agreement delivery could not continue", {
       bookingRequestId,
-      error: error instanceof Error ? error.message : String(error),
+      ...getSafeDatabaseErrorDetails(error),
     });
   }
 

@@ -17,6 +17,10 @@ import {
 import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
 import { automaticTravelerPriceCents } from "@/lib/trip-pricing";
 import {
+  formatSafeDatabaseErrorDetails,
+  getSafeDatabaseErrorDetails,
+} from "@/lib/safe-error";
+import {
   buildPersonalizedTravelerAgreement,
   canonicalizeAgreement,
   currentTravelerAgreement,
@@ -353,9 +357,9 @@ async function setAutomationState(inquiryId: number, status: AutomatedBookingSta
 }
 
 async function recordAutomationFailure(inquiryId: number, error: unknown) {
-  const message = error instanceof Error ? error.message : "The automated booking step failed.";
-  console.error("Automated booking flow failed", { inquiryId, error: message });
-  await setAutomationState(inquiryId, "error", message.slice(0, 500));
+  const details = getSafeDatabaseErrorDetails(error);
+  console.error("Automated booking flow failed", { inquiryId, ...details });
+  await setAutomationState(inquiryId, "error", formatSafeDatabaseErrorDetails(error));
 }
 
 function createInvitationToken() {
