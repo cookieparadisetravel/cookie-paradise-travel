@@ -15,6 +15,7 @@ import { hashInvitationToken } from "@/lib/traveler-agreement";
 
 const STALE_AFTER_MS = 10 * 60_000;
 const INVITATION_LIFETIME_MS = 14 * 86_400_000;
+const AUTHORIZATION_EMAIL_FAILURE = "The optional automatic-installment authorization email could not be sent.";
 
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
   if (!hasValidOrigin(request)) return Response.json({ error: "Invalid request origin" }, { status: 403 });
@@ -33,6 +34,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     or(
       eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
       eq(bookingRequests.installmentAutopayStatus, "activating"),
+      and(
+        eq(bookingRequests.installmentAutopayStatus, "error"),
+        eq(bookingRequests.installmentAutopayError, AUTHORIZATION_EMAIL_FAILURE),
+      ),
     ),
     or(
       isNull(bookingRequests.installmentAutopayClaimedAt),
@@ -49,7 +54,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   });
   if (!booking) return Response.json({ error: "This automatic-installment operation is no longer stale or has already been retried." }, { status: 409 });
 
-  if (booking.status === "authorization_sending") {
+  if (booking.status === "authorization_sending" || booking.status === "error") {
     return retryInvitationEmail(request.url, booking, retryClaimedAt);
   }
 
@@ -141,7 +146,14 @@ async function retryInvitationEmail(
     return Response.json({ status: "authorization_sent", sentAt: delivery.sentAt });
   } catch {
     console.error("Automatic-installment invitation recovery failed", { inquiryId: booking.id });
-    await finishInvitationRetry(booking.id, retryClaimedAt, "error", "The optional automatic-installment authorization email could not be sent.");
+    await getDb().update(bookingRequests).set({
+      installmentAutopayStatus: "authorization_sending",
+      installmentAutopayError: AUTHORIZATION_EMAIL_FAILURE,
+      installmentAutopayClaimedAt: retryClaimedAt,
+    }).where(and(
+      eq(bookingRequests.id, booking.id),
+      eq(bookingRequests.installmentAutopayClaimedAt, retryClaimedAt),
+    ));
     return Response.json({ error: "The authorization email could not be sent. Please try again." }, { status: 502 });
   }
 }

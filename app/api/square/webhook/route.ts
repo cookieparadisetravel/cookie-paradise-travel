@@ -229,6 +229,7 @@ export async function POST(request: Request) {
 
     if (autopayClaim) {
       let invitationId: number | null = null;
+      let invitationEmailSent = false;
       try {
         if (!autopayClaim.squareCustomerId || !autopayClaim.squareOrderId || !autopayClaim.squareInvoiceId) {
           throw new Error("The Square invoice information is incomplete for automatic installments.");
@@ -269,6 +270,7 @@ export async function POST(request: Request) {
             authorizationUrl,
             expiresAt,
           });
+          invitationEmailSent = true;
           await getDb().update(autopayAuthorizationInvitations).set({
             invitationEmailSentAt: delivery.sentAt,
             invitationEmailMessageId: delivery.messageId,
@@ -287,18 +289,18 @@ export async function POST(request: Request) {
           inquiryId: autopayClaim.id,
           error: error instanceof Error ? error.message : String(error),
         });
-        if (invitationId) {
+        if (invitationId && !invitationEmailSent) {
           await getDb().delete(autopayAuthorizationInvitations).where(eq(autopayAuthorizationInvitations.id, invitationId));
         }
         await getDb().update(bookingRequests).set({
-          installmentAutopayStatus: "error",
-          installmentAutopayError: "The optional automatic-installment authorization could not be prepared or sent.",
-          installmentAutopayClaimedAt: null,
+          installmentAutopayStatus: "authorization_sending",
+          installmentAutopayError: "The optional automatic-installment authorization email could not be sent.",
+          installmentAutopayClaimedAt: autopayClaimedAt,
         }).where(and(
           eq(bookingRequests.id, autopayClaim.id),
           eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
         ));
-        installmentAutopayStatus = "error";
+        installmentAutopayStatus = "authorization_sending";
       }
     }
 

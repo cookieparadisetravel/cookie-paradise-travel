@@ -118,7 +118,9 @@ export async function loadInquiryDashboardData() {
         && (!Number.isFinite(claimedAtTime) || claimedAtTime <= staleSquareClaimBefore),
       installmentAutopayClaimIsStale:
         (inquiry.installmentAutopayStatus === "authorization_sending"
-          || inquiry.installmentAutopayStatus === "activating")
+          || inquiry.installmentAutopayStatus === "activating"
+          || (inquiry.installmentAutopayStatus === "error"
+            && inquiry.installmentAutopayError === "The optional automatic-installment authorization email could not be sent."))
         && (!Number.isFinite(autopayClaimedAtTime) || autopayClaimedAtTime <= staleAutopayClaimBefore),
     };
   });
