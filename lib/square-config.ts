@@ -19,8 +19,28 @@ export function getSquareCredentialValues(runtime: SquareRuntime) {
   };
 }
 
-export function getSquareWebhookSignatureKey(runtime: SquareRuntime) {
-  return getSquareEnvironment(runtime) === "production"
+export function getSquareWebhookSignatureKey(
+  runtime: SquareRuntime,
+  environment: SquareEnvironment = getSquareEnvironment(runtime),
+) {
+  return environment === "production"
     ? runtime.SQUARE_PRODUCTION_WEBHOOK_SIGNATURE_KEY
     : runtime.SQUARE_WEBHOOK_SIGNATURE_KEY;
+}
+
+export function getSquareWebhookValues(
+  runtime: SquareRuntime,
+  requestUrl: string,
+) {
+  const environment: SquareEnvironment = new URL(requestUrl).searchParams.get("environment") === "production"
+    ? "production"
+    : "sandbox";
+
+  return {
+    environment,
+    signatureKey: getSquareWebhookSignatureKey(runtime, environment),
+    notificationUrl: environment === "production"
+      ? runtime.SQUARE_PRODUCTION_WEBHOOK_NOTIFICATION_URL
+      : runtime.SQUARE_WEBHOOK_NOTIFICATION_URL,
+  };
 }
