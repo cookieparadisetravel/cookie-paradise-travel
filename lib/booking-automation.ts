@@ -1,4 +1,4 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, isNotNull, isNull, notExists, sql } from "drizzle-orm";
 import {
   agreementAcceptances,
   agreementInvitations,
@@ -180,10 +180,29 @@ async function assignAutomaticTravelerPricing(inquiryId: number, roomPreference:
   const db = getDb();
   const occupancy = roomPreference === "private" ? "private" : "shared";
   const tripPriceCents = automaticTravelerPriceCents(occupancy);
+
+  const emailedAgreement = db.select({ id: agreementInvitations.id })
+    .from(agreementInvitations)
+    .innerJoin(travelers, eq(agreementInvitations.travelerId, travelers.id))
+    .where(and(
+      eq(travelers.bookingRequestId, inquiryId),
+      isNotNull(agreementInvitations.invitationEmailSentAt),
+    ));
+  const existingSquareInvoice = db.select({ id: bookingRequests.id })
+    .from(bookingRequests)
+    .where(and(
+      eq(bookingRequests.id, inquiryId),
+      isNotNull(bookingRequests.squareDepositInvoiceId),
+    ));
+
   await db.update(travelers).set({
-    confirmedTripPriceCents: tripPriceCents,
-    confirmedOccupancy: occupancy,
-  }).where(eq(travelers.bookingRequestId, inquiryId));
+    confirmedTripPriceCents: sql`coalesce(${travelers.confirmedTripPriceCents}, ${tripPriceCents})`,
+    confirmedOccupancy: sql`coalesce(${travelers.confirmedOccupancy}, ${occupancy})`,
+  }).where(and(
+    eq(travelers.bookingRequestId, inquiryId),
+    notExists(emailedAgreement),
+    notExists(existingSquareInvoice),
+  ));
 }
 
 async function createAndSendAgreementInvitations(input: { inquiryId: number; requestUrl: string }) {
@@ -303,7 +322,7 @@ async function createAndSendPaymentChoiceInvitation(input: { inquiryId: number; 
     bookingTotalCents,
     partySize: inquiry.partySize,
     departure: inquiry.departure,
-    acceptanceDate: inquiry.companyAcceptedAt ? todayInIndiana(new Date(inquiry.companyAcceptedAt)) : todayInIndiana(),
+    acceptanceDate: todayInIndiana(),
   });
 
   const now = new Date();
