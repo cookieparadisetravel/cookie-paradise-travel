@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import type { PaymentInstallment } from "@/lib/payment-schedule";
 import type { AutopayScheduleRequest } from "@/lib/square-autopay";
+import { getEarliestInvoiceDueDate } from "@/lib/square-invoice-state";
 
 export { autopayScheduleFingerprint } from "@/lib/square-autopay";
 
@@ -287,7 +288,7 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
       version?: number;
       status?: string;
       public_url?: string;
-      payment_requests?: Array<{ uid?: string; request_type?: string }>;
+      payment_requests?: Array<{ uid?: string; request_type?: string; due_date?: string }>;
     };
   }>(
     `/v2/invoices/${encodeURIComponent(invoiceId)}`,
@@ -308,6 +309,7 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
       ? "deposit" as const
       : "full" as const,
     paymentRequestUids: paymentRequestUids as string[],
+    earliestDueDate: getEarliestInvoiceDueDate(result.invoice.payment_requests ?? []),
   };
 }
 

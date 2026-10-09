@@ -197,8 +197,18 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
           squareDepositInvoiceStatus: "error",
           squareDepositClaimedAt: null,
         }).where(eq(bookingRequests.id, input.inquiryId));
-        const existingLabel = existingInvoice.paymentType === "full" ? "full-payment" : "payment-plan";
-        return failure(409, `Square already has a ${existingLabel} draft for this inquiry. Retry using that same payment preference, or cancel the draft in Square before changing the preference.`);
+        return failure(409, "Square already has an unpublished draft for this inquiry that no longer matches today's payment schedule. Cancel that draft in the Square Dashboard (Invoices → Drafts), then try again.");
+      }
+      if (
+        existingInvoice.status === "draft"
+        && existingInvoice.earliestDueDate
+        && existingInvoice.earliestDueDate < acceptanceDate
+      ) {
+        await db.update(bookingRequests).set({
+          squareDepositInvoiceStatus: "error",
+          squareDepositClaimedAt: null,
+        }).where(eq(bookingRequests.id, input.inquiryId));
+        return failure(409, "Square already has an unpublished draft for this inquiry that no longer matches today's payment schedule. Cancel that draft in the Square Dashboard (Invoices → Drafts), then try again.");
       }
       invoiceVersion = existingInvoice.version;
       published = existingInvoice.status === "draft"
