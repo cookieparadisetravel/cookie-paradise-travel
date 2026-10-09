@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 import type { PaymentInstallment } from "@/lib/payment-schedule";
 import type { AutopayScheduleRequest } from "@/lib/square-autopay";
 import { getEarliestInvoiceDueDate } from "@/lib/square-invoice-state";
+import { getSquareCredentialValues } from "@/lib/square-config";
 
 export { autopayScheduleFingerprint } from "@/lib/square-autopay";
 
@@ -11,9 +12,7 @@ type JsonObject = Record<string, unknown>;
 
 function squareConfig() {
   const runtime = env as unknown as Record<string, string | undefined>;
-  const accessToken = runtime.SQUARE_ACCESS_TOKEN;
-  const locationId = runtime.SQUARE_LOCATION_ID;
-  const environment = runtime.SQUARE_ENV === "production" ? "production" : "sandbox";
+  const { accessToken, environment, locationId } = getSquareCredentialValues(runtime);
 
   if (!accessToken || !locationId) {
     throw new Error("Square is not fully configured.");

@@ -8,6 +8,9 @@ declare namespace Cloudflare {
     SQUARE_LOCATION_ID?: string;
     SQUARE_ACCESS_TOKEN?: string;
     SQUARE_WEBHOOK_SIGNATURE_KEY?: string;
+    SQUARE_PRODUCTION_LOCATION_ID?: string;
+    SQUARE_PRODUCTION_ACCESS_TOKEN?: string;
+    SQUARE_PRODUCTION_WEBHOOK_SIGNATURE_KEY?: string;
     SQUARE_WEBHOOK_NOTIFICATION_URL?: string;
     CF_ACCESS_TEAM_DOMAIN?: string;
     CF_ACCESS_AUD?: string;

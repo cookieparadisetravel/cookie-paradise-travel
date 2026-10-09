@@ -10,6 +10,7 @@ import {
 import { createAutopayAuthorizationToken } from "@/lib/autopay-authorization-invitation";
 import { sendAutopayAuthorizationInvitationEmail, sendTravelInsuranceReferralEmail } from "@/lib/mailersend-transactional";
 import { findAutopayCardAndSchedule } from "@/lib/square";
+import { getSquareWebhookSignatureKey } from "@/lib/square-config";
 import { hashInvitationToken } from "@/lib/traveler-agreement";
 
 type JsonRecord = Record<string, unknown>;
@@ -76,7 +77,8 @@ function getInvoice(payload: unknown) {
 }
 
 export async function POST(request: Request) {
-  const signatureKey = env.SQUARE_WEBHOOK_SIGNATURE_KEY?.trim();
+  const runtime = env as unknown as Record<string, string | undefined>;
+  const signatureKey = getSquareWebhookSignatureKey(runtime)?.trim();
   const notificationUrl = env.SQUARE_WEBHOOK_NOTIFICATION_URL?.trim();
 
   if (!signatureKey || !notificationUrl) {

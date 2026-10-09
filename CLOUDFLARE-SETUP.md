@@ -51,6 +51,16 @@ npx wrangler secret put SQUARE_ACCESS_TOKEN
 npx wrangler secret put SQUARE_WEBHOOK_SIGNATURE_KEY
 ```
 
+Keep `SQUARE_ENV` set to `sandbox` while preparing production. Production uses separate values, which can be loaded without changing the live Sandbox flow:
+
+```powershell
+npx wrangler secret put SQUARE_PRODUCTION_ACCESS_TOKEN
+npx wrangler secret put SQUARE_PRODUCTION_LOCATION_ID
+npx wrangler secret put SQUARE_PRODUCTION_WEBHOOK_SIGNATURE_KEY
+```
+
+Do not change `SQUARE_ENV` to `production` until the production webhook is configured and the complete production-readiness checklist has been approved. The application deliberately does not fall back to Sandbox credentials in Production mode.
+
 Use separate, randomly generated values for `ACCEPTANCE_IP_HASH_KEY`, `ACCEPTANCE_RECORD_SIGNING_KEY` and `AGREEMENT_OTP_HASH_KEY`. Square's sandbox settings and the verified MailerSend sender identity are non-secret values configured in `wrangler.jsonc`.
 
 Before agreement invitations are activated, verify `cookieparadisetravel.com` as a sending domain in MailerSend and create an API token. The site uses MailerSend only for secure agreement links, verification codes and signed PDF copies; MailerLite remains the marketing-email provider.
@@ -60,7 +70,7 @@ Before agreement invitations are activated, verify `cookieparadisetravel.com` as
 In the Square Developer Console, open the application used by this site and add a webhook subscription with:
 
 - Notification URL: `https://cookieparadisetravel.com/api/square/webhook`
-- Events: `invoice.payment_made` and `invoice.updated`
+- Events: `invoice.payment_made`, `invoice.updated` and `invoice.scheduled_charge_failed`
 
 Copy the subscription's signature key into the `SQUARE_WEBHOOK_SIGNATURE_KEY` Wrangler secret above. The notification URL must exactly match `SQUARE_WEBHOOK_NOTIFICATION_URL` in `wrangler.jsonc` for signature verification to succeed.
 
