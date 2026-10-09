@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     title: "Cookie Paradise Travel Company | Hosted Small-Group Journeys",
     description: "Thoughtfully hosted small-group journeys from Cookie Paradise Travel Company, beginning with Vietnam in 2027.",
     images: [{
-      url: "/social-preview.png",
+      url: "/social-preview.png?v=2",
       width: 1200,
       height: 630,
       alt: "Cookie Paradise Travel Company",
@@ -22,7 +22,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Cookie Paradise Travel Company | Hosted Small-Group Journeys",
     description: "Thoughtfully hosted small-group journeys from Cookie Paradise Travel Company, beginning with Vietnam in 2027.",
-    images: ["/social-preview.png"],
+    images: ["/social-preview.png?v=2"],
   },
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png", sizes: "256x256" }],
