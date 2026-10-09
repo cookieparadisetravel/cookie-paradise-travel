@@ -101,6 +101,9 @@ export async function POST(request: Request) {
     if (!validBookingIntents.has(bookingIntent)) {
       return Response.json({ error: "Please tell us whether you are ready to book or would like more information." }, { status: 400 });
     }
+    const automatedBookingEnabled = env.AUTOMATED_BOOKING_ENABLED?.trim().toLowerCase() === "true";
+    const bookingPaused = bookingIntent === "ready_to_book" && !automatedBookingEnabled;
+    const now = new Date().toISOString();
 
     const db = getDb();
     const [saved] = await db.insert(bookingRequests).values({
@@ -116,8 +119,9 @@ export async function POST(request: Request) {
       mailerLiteStatus: marketingConsent ? "pending" : "not_requested",
       ownerNotificationStatus: "pending",
       bookingIntent,
-      automatedBookingStatus: "not_requested",
-      status: bookingIntent === "ready_to_book" ? "booking_in_progress" : "new",
+      automatedBookingStatus: bookingPaused ? "paused" : "not_requested",
+      automatedBookingUpdatedAt: bookingPaused ? now : null,
+      status: bookingIntent === "ready_to_book" && automatedBookingEnabled ? "booking_in_progress" : "new",
     }).returning({ id: bookingRequests.id });
 
     if (partySize === 1) {
@@ -154,11 +158,11 @@ export async function POST(request: Request) {
     } catch (error) {
       console.error("Inquiry saved, but follow-up statuses could not be updated", error);
     }
-    const automationStatus = bookingIntent === "ready_to_book"
+    const automationStatus = bookingIntent === "ready_to_book" && automatedBookingEnabled
       ? await startAutomatedReadyToBookFlow({ inquiryId: saved.id, requestUrl: request.url })
-      : "not_requested";
+      : bookingPaused ? "paused" : "not_requested";
 
-    return Response.json({ ok: true, bookingIntent, automationStatus }, { status: 201 });
+    return Response.json({ ok: true, bookingIntent, automationStatus, bookingPaused }, { status: 201 });
   } catch (error) {
     console.error("Booking request failed", error);
     return Response.json({ error: "Booking requests are temporarily unavailable." }, { status: 500 });

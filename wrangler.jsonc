@@ -21,6 +21,7 @@
     }
   ],
   "vars": {
+    "AUTOMATED_BOOKING_ENABLED": "false",
     "SQUARE_ENV": "sandbox",
     "SQUARE_APPLICATION_ID": "sandbox-sq0idb-LXRKY7_IJOLJU8Ec0rk_SQ",
     "SQUARE_LOCATION_ID": "LF9EW4W95QPA7",
