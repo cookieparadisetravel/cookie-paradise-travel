@@ -31,7 +31,7 @@ export default async function InquiryDetailPage({
   const owner = await requireOwner(`/admin/inquiries/${inquiryId}`);
   if (!owner) notFound();
 
-  const { acceptanceDate, inquiries, squareMode } = await loadInquiryDashboardData();
+  const { acceptanceDate, inquiries, squareMode } = await loadInquiryDashboardData(inquiryId);
   const inquiry = inquiries.find((item) => item.id === inquiryId);
   if (!inquiry) notFound();
 

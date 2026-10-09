@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { desc } from "drizzle-orm";
+import { desc, eq, inArray, sql } from "drizzle-orm";
 import {
   agreementInvitations,
   bookingRequests,
@@ -19,14 +19,34 @@ import type {
   SquareMode,
 } from "./dashboard-types";
 
-export async function loadInquiryDashboardData() {
+export async function loadInquiryDashboardData(inquiryId?: number) {
   const db = getDb();
+  const inquiryFilter = inquiryId === undefined ? undefined : eq(bookingRequests.id, inquiryId);
+  const travelerFilter = inquiryId === undefined ? undefined : eq(travelers.bookingRequestId, inquiryId);
+  const agreementInvitationFilter = inquiryId === undefined ? undefined : inArray(
+    agreementInvitations.travelerId,
+    db.select({ id: travelers.id }).from(travelers).where(eq(travelers.bookingRequestId, inquiryId)),
+  );
   const [inquiryRows, travelerRows, agreementInvitationRows, travelerListRows, paymentChoiceRows] = await Promise.all([
-    db.select().from(bookingRequests).orderBy(desc(bookingRequests.createdAt)),
-    db.select().from(travelers).orderBy(travelers.createdAt),
-    db.select().from(agreementInvitations).orderBy(desc(agreementInvitations.createdAt)),
-    db.select().from(travelerListInvitations).orderBy(desc(travelerListInvitations.createdAt)),
-    db.select().from(paymentPreferenceInvitations).orderBy(desc(paymentPreferenceInvitations.createdAt)),
+    db.select().from(bookingRequests).where(inquiryFilter).orderBy(desc(bookingRequests.createdAt)),
+    db.select().from(travelers).where(travelerFilter).orderBy(travelers.createdAt),
+    // The dashboard only needs delivery metadata, not stored agreement documents or tokens.
+    db.select({
+      travelerId: agreementInvitations.travelerId,
+      agreementVersion: agreementInvitations.agreementVersion,
+      hasAgreementDocument: sql<number>`length(${agreementInvitations.agreementDocumentJson}) > 0`,
+      invitationEmailSentAt: agreementInvitations.invitationEmailSentAt,
+      recipientEmail: agreementInvitations.recipientEmail,
+      expiresAt: agreementInvitations.expiresAt,
+      revokedAt: agreementInvitations.revokedAt,
+      acceptedAt: agreementInvitations.acceptedAt,
+    }).from(agreementInvitations).where(agreementInvitationFilter).orderBy(desc(agreementInvitations.createdAt)),
+    db.select().from(travelerListInvitations)
+      .where(inquiryId === undefined ? undefined : eq(travelerListInvitations.bookingRequestId, inquiryId))
+      .orderBy(desc(travelerListInvitations.createdAt)),
+    db.select().from(paymentPreferenceInvitations)
+      .where(inquiryId === undefined ? undefined : eq(paymentPreferenceInvitations.bookingRequestId, inquiryId))
+      .orderBy(desc(paymentPreferenceInvitations.createdAt)),
   ]);
 
   const travelersByInquiry = new Map<number, DashboardTraveler[]>();
@@ -39,7 +59,7 @@ export async function loadInquiryDashboardData() {
   const latestAgreementInvitationByTraveler = new Map<number, AgreementInvitationDelivery>();
   for (const invitation of agreementInvitationRows) {
     if (latestAgreementInvitationByTraveler.has(invitation.travelerId)) continue;
-    if (invitation.agreementVersion !== currentTravelerAgreement.version || !invitation.agreementDocumentJson) continue;
+    if (invitation.agreementVersion !== currentTravelerAgreement.version || !invitation.hasAgreementDocument) continue;
     if (!invitation.invitationEmailSentAt || !invitation.recipientEmail) continue;
     latestAgreementInvitationByTraveler.set(invitation.travelerId, {
       email: invitation.recipientEmail,
