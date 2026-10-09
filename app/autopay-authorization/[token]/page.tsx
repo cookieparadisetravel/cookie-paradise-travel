@@ -22,6 +22,7 @@ export default async function AutopayAuthorizationPage({ params }: { params: Pro
 
   return (
     <PageShell>
+      {result.status === "environment_mismatch" && <StatusCard icon="alert" title="Automatic-payment setup is unavailable">{result.message}</StatusCard>}
       {(result.status === "invalid" || result.status === "revoked") && <StatusCard icon="alert" title="This authorization link is unavailable">The link is invalid, has been replaced or is no longer available. Your remaining installments are still manual.</StatusCard>}
       {result.status === "expired" && <StatusCard icon="alert" title="This authorization link has expired">Please contact Cookie Paradise Travel Company if you still want automatic installments. Your remaining installments are still manual.</StatusCard>}
       {result.status === "manual" && <StatusCard icon="alert" title="Your installments remain manual">{result.message}</StatusCard>}

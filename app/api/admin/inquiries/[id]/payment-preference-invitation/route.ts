@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { and, eq, isNull } from "drizzle-orm";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import { bookingRequests, paymentPreferenceInvitations, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
@@ -53,6 +55,11 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     .where(eq(bookingRequests.id, bookingRequestId))
     .limit(1);
   if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+  const environmentError = getSquareBookingEnvironmentError(
+    inquiry.squareEnvironment,
+    env as unknown as Record<string, string | undefined>,
+  );
+  if (environmentError) return Response.json({ error: environmentError }, { status: 409 });
   if (inquiry.squareDepositInvoiceId) {
     return Response.json({ error: "A Square invoice already exists, so the payment preference can no longer be changed here." }, { status: 409 });
   }

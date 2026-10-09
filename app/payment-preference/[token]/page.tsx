@@ -33,6 +33,7 @@ export default async function PaymentPreferencePage({ params }: { params: Promis
         </header>
 
         {(result.status === "invalid" || result.status === "revoked") && <StatusCard icon="alert" title="This payment-choice link is unavailable">The link is invalid, has been replaced or was revoked. Please contact Cookie Paradise Travel Company for a new secure link.</StatusCard>}
+        {result.status === "environment_mismatch" && <StatusCard icon="alert" title="Payment setup is unavailable">{result.message}</StatusCard>}
         {result.status === "expired" && <StatusCard icon="alert" title="This payment-choice link has expired">Please contact Cookie Paradise Travel Company to request a new secure link.</StatusCard>}
         {result.status === "completed" && <StatusCard icon="check" title="Payment preference received">
           <span>This secure link has already been used{result.completedAt ? ` on ${new Date(result.completedAt).toLocaleDateString("en-US", { dateStyle: "long" })}` : ""}. Your selection was {result.paymentPreference === "full" ? "pay in full" : result.paymentPreference === "payment_plan" ? "deposit and monthly installments" : "recorded"}.</span>

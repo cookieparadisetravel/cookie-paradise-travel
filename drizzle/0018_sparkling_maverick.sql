@@ -1,0 +1,1 @@
+ALTER TABLE `booking_requests` ADD `square_environment` text DEFAULT 'sandbox' NOT NULL;

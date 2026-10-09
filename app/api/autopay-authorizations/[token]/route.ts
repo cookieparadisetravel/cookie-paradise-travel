@@ -18,6 +18,7 @@ import { activateRecordedAutopayAuthorization } from "@/lib/autopay-authorizatio
 import { hasValidOrigin } from "@/lib/same-origin";
 import { autopayScheduleFingerprint, findAutopayCardAndSchedule } from "@/lib/square";
 import { currentTravelerAgreement } from "@/lib/traveler-agreement";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   if (!hasValidOrigin(request)) return Response.json({ error: "Invalid request origin" }, { status: 403 });
@@ -29,6 +30,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     console.error("Automatic-installment authorization schedule lookup failed");
     return Response.json({ error: "The Square schedule is temporarily unavailable. Please try again in a few minutes." }, { status: 502 });
   }
+  if (invitation.status === "environment_mismatch") return Response.json({ error: invitation.message }, { status: 409 });
   if (invitation.status === "completed") return Response.json({ error: "This automatic-payment authorization has already been submitted." }, { status: 409 });
   if (invitation.status !== "ready") {
     return Response.json({ error: "This automatic-payment authorization link is invalid, expired or unavailable." }, { status: invitation.status === "expired" ? 410 : 404 });
@@ -63,6 +65,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   const db = getDb();
   const [bookingSnapshot] = await db.select({
     id: bookingRequests.id,
+    squareEnvironment: bookingRequests.squareEnvironment,
     partySize: bookingRequests.partySize,
     paymentPreference: bookingRequests.paymentPreference,
     squareCustomerId: bookingRequests.squareCustomerId,
@@ -72,6 +75,8 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   if (!bookingSnapshot || bookingSnapshot.paymentPreference !== "payment_plan") {
     return Response.json({ error: "This booking is not eligible for automatic installments." }, { status: 409 });
   }
+  const environmentError = getSquareBookingEnvironmentError(bookingSnapshot.squareEnvironment, runtime);
+  if (environmentError) return Response.json({ error: environmentError }, { status: 409 });
 
   const agreementReadiness = await getAgreementReadiness(bookingSnapshot.id, bookingSnapshot.partySize);
   if (!autopayAvailable(agreementReadiness)) {

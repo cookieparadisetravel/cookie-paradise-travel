@@ -7,6 +7,7 @@ import { env } from "cloudflare:workers";
 import { z } from "zod";
 import { startAutomatedReadyToBookFlow } from "@/lib/booking-automation";
 import { getSafeDatabaseErrorDetails } from "@/lib/safe-error";
+import { getSquareEnvironment } from "@/lib/square-config";
 
 const validDepartures = new Set(["2027-06-01"]);
 const validRooms = new Set(["shared", "private"]);
@@ -108,6 +109,7 @@ export async function POST(request: Request) {
 
     const db = getDb();
     const [saved] = await db.insert(bookingRequests).values({
+      squareEnvironment: getSquareEnvironment(env as unknown as Record<string, string | undefined>),
       tripSlug: "vietnam-southern-charms-central-heritage",
       fullName, email, phone, departure,
       roomPreference: room, partySize, notes,

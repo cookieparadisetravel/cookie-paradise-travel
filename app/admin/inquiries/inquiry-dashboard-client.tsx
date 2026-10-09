@@ -116,7 +116,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
     travelerLists: generatedLinks.travelerLists,
     paymentChoices: Object.fromEntries(Object.entries(generatedLinks.paymentChoices).filter(([rawInquiryId, draft]) => {
       const inquiry = inquiries.find((item) => item.id === Number(rawInquiryId));
-      return inquiry ? isPaymentPreferenceDraftUsable(draft, inquiry.latestPaymentChoiceInvitation) : false;
+      return inquiry && !inquiry.paymentEnvironmentError ? isPaymentPreferenceDraftUsable(draft, inquiry.latestPaymentChoiceInvitation) : false;
     })),
   }), [generatedLinks, inquiries]);
 
@@ -337,7 +337,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
             </div>
           )}
 
-          <InquiryList inquiries={visibleInquiries} onOpen={openInquiry} squareMode={squareMode} />
+          <InquiryList inquiries={visibleInquiries} onOpen={openInquiry} />
         </section>
       </div>
       )}
@@ -365,7 +365,7 @@ function FilterSelect({ children, icon: Icon, label, onChange, value }: { childr
   );
 }
 
-function InquiryList({ inquiries, onOpen, squareMode }: { inquiries: DashboardInquiry[]; onOpen: (inquiry: DashboardInquiry, section?: DetailSection) => void; squareMode: SquareMode }) {
+function InquiryList({ inquiries, onOpen }: { inquiries: DashboardInquiry[]; onOpen: (inquiry: DashboardInquiry, section?: DetailSection) => void }) {
   if (inquiries.length === 0) {
     return <div className="p-10 text-center"><ClipboardList className="mx-auto h-9 w-9 text-[var(--muted-ink)]" /><h3 className="mt-3 font-serif text-2xl font-bold">No matching inquiries</h3><p className="mt-1 text-sm text-[var(--muted-ink)]">Try a different tab or clear a filter.</p></div>;
   }
@@ -395,7 +395,7 @@ function InquiryList({ inquiries, onOpen, squareMode }: { inquiries: DashboardIn
                 <MobileLabel>Progress</MobileLabel>
                 <div className="space-y-1.5 text-xs font-semibold"><ProgressLine state={inquiry.travelers.length === inquiry.partySize ? "complete" : inquiry.travelers.length > inquiry.partySize ? "error" : "pending"} label={`Travelers ${inquiry.travelers.length}/${inquiry.partySize}`} /><ProgressLine state={acceptedCount === inquiry.partySize && inquiry.agreementActive && inquiry.travelers.length === inquiry.partySize ? "complete" : acceptedCount > inquiry.partySize ? "error" : "pending"} label={`Agreements ${acceptedCount}/${inquiry.partySize}`} /></div>
               </div>
-              <div className="grid grid-cols-2 items-center gap-3 xl:block"><MobileLabel>Payment</MobileLabel><PaymentBadge inquiry={inquiry} squareMode={squareMode} /></div>
+              <div className="grid grid-cols-2 items-center gap-3 xl:block"><MobileLabel>Payment</MobileLabel><PaymentBadge inquiry={inquiry} /></div>
               <div className="grid grid-cols-2 items-center gap-3 xl:flex xl:items-center xl:justify-between">
                 <MobileLabel>Next step</MobileLabel>
                 <span><span className={`inline-flex rounded-lg px-3 py-2 text-xs font-extrabold ${workflow.blocked ? "bg-amber-100 text-amber-950" : "bg-[var(--gold)] text-[var(--ink)]"}`}>{workflow.label}</span>{workflow.blocked && <span className="mt-1 block text-[0.68rem] text-[var(--muted-ink)]">Blocked</span>}</span>
@@ -455,7 +455,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
       </section>
 
         <div aria-labelledby={`inquiry-tab-${section}`} className="mt-5" id={`inquiry-panel-${section}`} role="tabpanel" tabIndex={0}>
-          {section === "overview" && <OverviewSection inquiry={inquiry} squareMode={squareMode} />}
+          {section === "overview" && <OverviewSection inquiry={inquiry} />}
           {section === "travelers" && (
             <div className="space-y-4">
               <SectionHeading description={`${inquiry.travelers.length} of ${inquiry.partySize} traveler records · ${acceptedCount} current agreements accepted`} title="Travelers & agreements" />
@@ -471,12 +471,20 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
           )}
           {section === "payments" && (
             <div className="space-y-4">
-              <SectionHeading description={`Square ${squareMode === "sandbox" ? "Sandbox testing" : "production"}. A saved preference is not a payment.`} title="Payments" />
+              <SectionHeading description={`This inquiry belongs to Square ${inquiry.squareEnvironment === "sandbox" ? "Sandbox testing" : "Production"}. Site payment mode: ${squareMode === "sandbox" ? "Sandbox" : "Production"}. A saved preference is not a payment.`} title="Payments" />
+              {inquiry.paymentEnvironmentError ? (
+                <div role="alert" className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950">
+                  <p>{inquiry.paymentEnvironmentError}</p>
+                  <p className="mt-2">This inquiry is read-only for payment actions. Keep its records intact; use a new inquiry in the correct environment for a new booking.</p>
+                  {inquiry.squareDepositInvoiceUrl && <a className="mt-3 inline-flex underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" href={inquiry.squareDepositInvoiceUrl} target="_blank" rel="noreferrer">View existing {inquiry.squareEnvironment === "sandbox" ? "Sandbox" : "Production"} invoice</a>}
+                </div>
+              ) : <>
               <PaymentPreferenceInvitationAction inquiryId={inquiry.id} initialBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} initialSelectedAt={inquiry.paymentPreferenceSelectedAt} invoiceExists={Boolean(inquiry.squareDepositInvoiceId)} partySize={inquiry.partySize} roomPreference={inquiry.roomPreference} agreementReady={inquiry.agreementReady} agreementReadinessMessage={inquiry.agreementReadinessMessage} initialGeneratedDraft={paymentChoiceDraft} onGeneratedDraftChange={onPaymentChoiceDraftChange} />
-              <DepositInvoiceAction key={`invoice-${inquiry.id}-${inquiry.squareDepositInvoiceStatus}-${inquiry.squareDepositInvoiceUrl ?? "none"}`} id={inquiry.id} partySize={inquiry.partySize} departure={inquiry.departure} acceptanceDate={inquiry.companyAcceptanceDate || acceptanceDate} email={inquiry.email} initialStatus={inquiry.squareDepositInvoiceStatus} initialUrl={inquiry.squareDepositInvoiceUrl} agreementReady={inquiry.agreementReady} agreementReadinessMessage={inquiry.agreementReadinessMessage} confirmedBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} paymentPreferenceSelectedAt={inquiry.paymentPreferenceSelectedAt} creatingClaimIsStale={inquiry.squareDepositClaimIsStale} squareMode={squareMode} />
+              <DepositInvoiceAction key={`invoice-${inquiry.id}-${inquiry.squareDepositInvoiceStatus}-${inquiry.squareDepositInvoiceUrl ?? "none"}`} id={inquiry.id} partySize={inquiry.partySize} departure={inquiry.departure} acceptanceDate={inquiry.companyAcceptanceDate || acceptanceDate} email={inquiry.email} initialStatus={inquiry.squareDepositInvoiceStatus} initialUrl={inquiry.squareDepositInvoiceUrl} agreementReady={inquiry.agreementReady} agreementReadinessMessage={inquiry.agreementReadinessMessage} confirmedBookingTotalCents={inquiry.confirmedBookingTotalCents} initialPaymentPreference={inquiry.paymentPreference} paymentPreferenceSelectedAt={inquiry.paymentPreferenceSelectedAt} creatingClaimIsStale={inquiry.squareDepositClaimIsStale} squareMode={inquiry.squareEnvironment} />
+              </>}
             </div>
           )}
-          {section === "activity" && <ActivitySection inquiry={inquiry} squareMode={squareMode} />}
+          {section === "activity" && <ActivitySection inquiry={inquiry} />}
         </div>
     </div>
   );
@@ -529,7 +537,7 @@ function InquiryProgressChecklist({ inquiry, onSectionChange }: { inquiry: Dashb
   );
 }
 
-function OverviewSection({ inquiry, squareMode }: { inquiry: DashboardInquiry; squareMode: SquareMode }) {
+function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
   return (
     <div className="space-y-5">
       {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
@@ -546,7 +554,7 @@ function OverviewSection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
           <InfoItem label="Automated booking">{automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>
           <InfoItem label="Trip contact consent">{inquiry.contactConsent ? "Recorded" : "Not recorded"}</InfoItem>
           <InfoItem label="Marketing consent">{inquiry.marketingConsent ? "Recorded" : "Not given"}</InfoItem>
-          <InfoItem label="Payment environment">Square {squareMode === "sandbox" ? "Sandbox" : "Production"}</InfoItem>
+          <InfoItem label="Payment environment">Square {inquiry.squareEnvironment === "sandbox" ? "Sandbox" : "Production"}</InfoItem>
         </dl>
         {inquiry.notes && <div className="mt-5 rounded-xl bg-[var(--cream)] p-4"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Customer notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{inquiry.notes}</p></div>}
       </section>
@@ -554,7 +562,7 @@ function OverviewSection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
   );
 }
 
-function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; squareMode: SquareMode }) {
+function ActivitySection({ inquiry }: { inquiry: DashboardInquiry }) {
   const agreementDeliveries = Object.values(inquiry.agreementInvitationDeliveries).sort((a, b) => b.sentAt.localeCompare(a.sentAt));
   return (
     <div className="space-y-5">
@@ -575,15 +583,16 @@ function ActivitySection({ inquiry, squareMode }: { inquiry: DashboardInquiry; s
           <InfoItem label="Authorized cardholder">{inquiry.installmentAutopayPayerName ?? "Not recorded"}</InfoItem>
           <InfoItem label="Saved payment card">{inquiry.installmentAutopayCardLast4 ? `${readableValue(inquiry.installmentAutopayCardBrand ?? "card")} ending in ${inquiry.installmentAutopayCardLast4}` : "Not confirmed"}</InfoItem>
           <InfoItem label="Square invoice created">{formatTimestamp(inquiry.squareDepositCreatedAt)}</InfoItem>
-          <InfoItem label="Square environment">{squareMode === "sandbox" ? "Sandbox testing" : "Production"}</InfoItem>
+          <InfoItem label="Square environment">{inquiry.squareEnvironment === "sandbox" ? "Sandbox testing" : "Production"}</InfoItem>
           <InfoItem label="Company accepted booking">{formatTimestamp(inquiry.companyAcceptedAt)}</InfoItem>
           <InfoItem label="Accepted by">{inquiry.companyAcceptedBy ?? "Not recorded"}</InfoItem>
           <InfoItem label="Automation updated">{formatTimestamp(inquiry.automatedBookingUpdatedAt)}</InfoItem>
         </dl>
       </section>
       {inquiry.installmentAutopayError && <p className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950"><strong>Automatic installment notice:</strong> {inquiry.installmentAutopayError}</p>}
-      {inquiry.installmentAutopayClaimIsStale && <AutopayRetryAction inquiryId={inquiry.id} />}
-      {inquiry.installmentAutopayAuthorized && (inquiry.installmentAutopayStatus === "active" || inquiry.installmentAutopayStatus === "charge_failed") && <AutopayStopAction inquiryId={inquiry.id} />}
+      {inquiry.paymentEnvironmentError && <p role="alert" className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm font-semibold leading-6 text-amber-950">{inquiry.paymentEnvironmentError}</p>}
+      {!inquiry.paymentEnvironmentError && inquiry.installmentAutopayClaimIsStale && <AutopayRetryAction inquiryId={inquiry.id} />}
+      {!inquiry.paymentEnvironmentError && inquiry.installmentAutopayAuthorized && (inquiry.installmentAutopayStatus === "active" || inquiry.installmentAutopayStatus === "charge_failed") && <AutopayStopAction inquiryId={inquiry.id} />}
       <details className="rounded-2xl border border-[var(--line)] bg-white p-4">
         <summary className="cursor-pointer font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35">Recorded agreement email deliveries ({agreementDeliveries.length})</summary>
         {agreementDeliveries.length === 0 ? <p className="mt-3 text-sm text-[var(--muted-ink)]">No persisted agreement-email delivery timestamp is available.</p> : <ul className="mt-3 space-y-2 text-sm">{agreementDeliveries.map((delivery) => <li key={`${delivery.email}-${delivery.sentAt}`} className="rounded-xl bg-[var(--cream)] p-3"><strong>{delivery.email}</strong><br /><span className="text-[var(--muted-ink)]">Sent {formatTimestamp(delivery.sentAt)}{delivery.acceptedAt ? ` · accepted ${formatTimestamp(delivery.acceptedAt)}` : ""}</span></li>)}</ul>}
@@ -643,7 +652,7 @@ function ProgressLine({ label, state }: { label: string; state: "complete" | "pe
   return <span className={`flex items-center gap-1.5 ${classes}`}>{state === "complete" ? <CheckCircle2 className="h-3.5 w-3.5" /> : state === "error" ? <AlertCircle className="h-3.5 w-3.5" /> : <span className="h-3.5 w-3.5 rounded-full border-2 border-current" />}{label}</span>;
 }
 
-function PaymentBadge({ inquiry, squareMode }: { inquiry: DashboardInquiry; squareMode: SquareMode }) {
+function PaymentBadge({ inquiry }: { inquiry: DashboardInquiry }) {
   const presentation = getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus);
   const preferenceOnly = inquiry.squareDepositInvoiceStatus === "not_created" && Boolean(inquiry.paymentPreference);
   const label = preferenceOnly ? "Preference saved · not paid" : presentation.label;
@@ -656,7 +665,7 @@ function PaymentBadge({ inquiry, squareMode }: { inquiry: DashboardInquiry; squa
         : presentation.tone === "danger"
           ? "bg-red-100 text-red-800"
           : "bg-slate-100 text-slate-700";
-  return <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-extrabold ${classes}`}>{label}{squareMode === "sandbox" ? " · Test" : ""}</span>;
+  return <span className={`inline-flex w-fit rounded-full px-2.5 py-1 text-xs font-extrabold ${classes}`}>{label}{inquiry.squareEnvironment === "sandbox" ? " · Test" : ""}</span>;
 }
 
 function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
@@ -701,7 +710,7 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
 
   let paymentItem: ChecklistItem;
   if (invoiceStatus === "paid") {
-    paymentItem = { label: "Payment", detail: "Square reports the invoice paid in full.", state: "complete", section: "payments" };
+    paymentItem = { label: "Payment", detail: inquiry.squareEnvironment === "sandbox" ? "Square Sandbox reports this test invoice paid; no real payment is recorded." : "Square reports the invoice paid in full.", state: "complete", section: "payments" };
   } else if (["error", "failed", "canceled", "refunded", "partially_refunded"].includes(invoiceStatus) || (!invoicePresentation.invoiceExists && invoicePresentation.tone === "danger")) {
     paymentItem = { label: "Payment", detail: invoicePresentation.description, state: "error", section: "payments" };
   } else if (["partially_paid", "payment_pending"].includes(invoiceStatus)) {
@@ -729,6 +738,7 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
 }
 
 function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string; actionLabel: string; section: DetailSection; blocked: boolean } {
+  if (inquiry.paymentEnvironmentError) return { label: "Review payment environment", detail: inquiry.paymentEnvironmentError, actionLabel: "Review payments", section: "payments", blocked: true };
   if (inquiry.travelers.length > inquiry.partySize) return { label: "Resolve traveler-count mismatch", detail: `${inquiry.travelers.length} traveler records exist for a party of ${inquiry.partySize}. Agreement and payment steps remain blocked until the extra record is resolved.`, actionLabel: "Review travelers", section: "travelers", blocked: true };
   if (inquiry.sellerOfTravelStateResident) return { label: "Review residency screening", detail: `Review seller-of-travel requirements for ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the customer's state"} before proceeding with a sale.`, actionLabel: "Review overview", section: "overview", blocked: true };
   if (inquiry.bookingIntent === "needs_information") return { label: "Follow up with customer", detail: "The customer asked for more information instead of starting the booking flow.", actionLabel: "Review overview", section: "overview", blocked: false };

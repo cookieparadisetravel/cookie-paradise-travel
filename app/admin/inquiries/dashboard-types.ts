@@ -75,6 +75,8 @@ export type DashboardInquiry = {
   installmentAutopayCardLast4: string | null;
   installmentAutopayError: string | null;
   squareDepositInvoiceId: string | null;
+  squareEnvironment: SquareMode;
+  paymentEnvironmentError: string | null;
   squareDepositInvoiceStatus: string;
   squareDepositInvoiceUrl: string | null;
   squareDepositCreatedAt: string | null;

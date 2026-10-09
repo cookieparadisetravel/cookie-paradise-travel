@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import { bookingRequests, paymentPreferenceInvitations } from "@/db/schema";
 import { getDb } from "@/db";
 import { createPaymentPlan, todayInIndiana, type PaymentPreference } from "@/lib/payment-schedule";
@@ -6,6 +8,7 @@ import { hashInvitationToken, isValidInvitationToken } from "@/lib/traveler-agre
 
 export type PaymentPreferenceInvitationResult =
   | { status: "invalid" | "expired" | "revoked" }
+  | { status: "environment_mismatch"; message: string }
   | {
       status: "completed";
       completedAt: string | null;
@@ -38,6 +41,7 @@ export async function getPaymentPreferenceInvitation(token: string): Promise<Pay
   const [record] = await db.select({
     invitationId: paymentPreferenceInvitations.id,
     bookingRequestId: bookingRequests.id,
+    squareEnvironment: bookingRequests.squareEnvironment,
     primaryContactName: bookingRequests.fullName,
     departure: bookingRequests.departure,
     partySize: bookingRequests.partySize,
@@ -57,6 +61,11 @@ export async function getPaymentPreferenceInvitation(token: string): Promise<Pay
 
   if (!record) return { status: "invalid" };
   if (record.revokedAt) return { status: "revoked" };
+  const environmentError = getSquareBookingEnvironmentError(
+    record.squareEnvironment,
+    env as unknown as Record<string, string | undefined>,
+  );
+  if (environmentError) return { status: "environment_mismatch", message: environmentError };
   if (record.completedAt) {
     return {
       status: "completed",

@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
+import { getSquareBookingEnvironmentError, getSquareEnvironment } from "@/lib/square-config";
 import {
   autopayAuthorizationInvitations,
   autopayAuthorizations,
@@ -27,10 +29,17 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   if (!Number.isInteger(inquiryId) || inquiryId < 1) return Response.json({ error: "Invalid inquiry" }, { status: 400 });
 
   const db = getDb();
+  const runtime = env as unknown as Record<string, string | undefined>;
+  const [inquiry] = await db.select({ squareEnvironment: bookingRequests.squareEnvironment })
+    .from(bookingRequests).where(eq(bookingRequests.id, inquiryId)).limit(1);
+  if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+  const environmentError = getSquareBookingEnvironmentError(inquiry.squareEnvironment, runtime);
+  if (environmentError) return Response.json({ error: environmentError }, { status: 409 });
   const staleBefore = new Date(Date.now() - STALE_AFTER_MS).toISOString();
   const retryClaimedAt = new Date().toISOString();
   const [booking] = await db.update(bookingRequests).set({ installmentAutopayClaimedAt: retryClaimedAt }).where(and(
     eq(bookingRequests.id, inquiryId),
+    eq(bookingRequests.squareEnvironment, getSquareEnvironment(runtime)),
     or(
       eq(bookingRequests.installmentAutopayStatus, "authorization_sending"),
       eq(bookingRequests.installmentAutopayStatus, "activating"),

@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { and, eq, inArray, isNull, lt, or } from "drizzle-orm";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
@@ -41,6 +43,12 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
   const db = getDb();
   const [inquiry] = await db.select().from(bookingRequests).where(eq(bookingRequests.id, input.inquiryId)).limit(1);
   if (!inquiry) return failure(404, "Inquiry not found");
+
+  const environmentError = getSquareBookingEnvironmentError(
+    inquiry.squareEnvironment,
+    env as unknown as Record<string, string | undefined>,
+  );
+  if (environmentError) return failure(409, environmentError);
 
   const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize);
   if (!agreementReadiness.readyForInvoice) {
@@ -110,6 +118,7 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
     squareDepositClaimedAt: claimTimestamp,
   }).where(and(
     eq(bookingRequests.id, input.inquiryId),
+    eq(bookingRequests.squareEnvironment, inquiry.squareEnvironment),
     or(
       inArray(bookingRequests.squareDepositInvoiceStatus, ["not_created", "error", "draft"]),
       and(
@@ -248,7 +257,7 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
     }).where(eq(bookingRequests.id, input.inquiryId));
     const errorMessage = error instanceof Error ? error.message : "";
     const message = errorMessage === "Square is not fully configured."
-      ? "Square is not fully configured yet. Add the Sandbox access token and try again."
+      ? "Square is not fully configured for this booking's payment environment yet. Please contact Cookie Paradise Travel Company."
       : /subscription|INSTALLMENT/iu.test(errorMessage)
         ? `Square rejected the installment invoice.${errorMessage ? ` Square said: ${errorMessage}` : ""}`
         : `Square could not create the invoice. No second invoice will be created on retry.${errorMessage ? ` ${errorMessage}` : ""}`;

@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { eq } from "drizzle-orm";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import { getDb } from "@/db";
 import { autopayAuthorizations, autopayEvents, bookingRequests } from "@/db/schema";
 import { formatCardBrand } from "@/lib/autopay-authorization";
@@ -9,7 +11,7 @@ import type { AutopayScheduleRequest } from "@/lib/square-autopay";
 
 export type AutopayActivationResult =
   | { ok: true; completedAt: string; status: "active" }
-  | { ok: false; completedAt: string; status: "square_failed"; error: string };
+  | { ok: false; completedAt: string; status: "square_failed" | "environment_mismatch"; error: string };
 
 export async function activateRecordedAutopayAuthorization(
   authorizationId: number,
@@ -19,6 +21,7 @@ export async function activateRecordedAutopayAuthorization(
     authorizationId: autopayAuthorizations.id,
     authorizationStatus: autopayAuthorizations.status,
     bookingRequestId: autopayAuthorizations.bookingRequestId,
+    squareEnvironment: bookingRequests.squareEnvironment,
     cardholderName: autopayAuthorizations.cardholderName,
     cardholderEmail: autopayAuthorizations.cardholderEmail,
     consentedAt: autopayAuthorizations.consentedAt,
@@ -41,6 +44,13 @@ export async function activateRecordedAutopayAuthorization(
     .limit(1);
 
   if (!record) throw new Error("The automatic-payment authorization record was not found.");
+  const environmentError = getSquareBookingEnvironmentError(
+    record.squareEnvironment,
+    env as unknown as Record<string, string | undefined>,
+  );
+  if (environmentError) {
+    return { ok: false, completedAt: record.consentedAt, status: "environment_mismatch", error: environmentError };
+  }
   if (record.authorizationStatus === "active") {
     return { ok: true, completedAt: record.consentedAt, status: "active" };
   }

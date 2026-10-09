@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { and, eq, isNotNull, isNull, notExists, sql } from "drizzle-orm";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import {
   agreementAcceptances,
   agreementInvitations,
@@ -47,11 +49,13 @@ export async function startAutomatedReadyToBookFlow(input: {
   inquiryId: number;
   requestUrl: string;
 }) {
+  if (env.AUTOMATED_BOOKING_ENABLED?.trim().toLowerCase() !== "true") return "not_requested" as const;
   const db = getDb();
   const [inquiry] = await db.select().from(bookingRequests)
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
   if (!inquiry || inquiry.bookingIntent !== "ready_to_book") return "not_requested" as const;
+  if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return "not_requested" as const;
 
   try {
     if (inquiry.sellerOfTravelStateResident) {
@@ -77,11 +81,13 @@ export async function continueAutomatedBookingAfterTravelerList(input: {
   inquiryId: number;
   requestUrl: string;
 }) {
+  if (env.AUTOMATED_BOOKING_ENABLED?.trim().toLowerCase() !== "true") return;
   const db = getDb();
   const [inquiry] = await db.select().from(bookingRequests)
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
   if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || inquiry.sellerOfTravelStateResident) return;
+  if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return;
 
   try {
     await assignAutomaticTravelerPricing(inquiry.id, inquiry.roomPreference);
@@ -95,11 +101,13 @@ export async function continueAutomatedBookingAfterAgreement(input: {
   inquiryId: number;
   requestUrl: string;
 }) {
+  if (env.AUTOMATED_BOOKING_ENABLED?.trim().toLowerCase() !== "true") return;
   const db = getDb();
   const [inquiry] = await db.select().from(bookingRequests)
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
   if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || inquiry.sellerOfTravelStateResident) return;
+  if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return;
 
   const readiness = await getAgreementReadiness(inquiry.id, inquiry.partySize);
   if (!readiness.readyForInvoice) return;
@@ -310,6 +318,11 @@ async function createAndSendPaymentChoiceInvitation(input: { inquiryId: number; 
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
   if (!inquiry) throw new Error("Inquiry not found.");
+  const environmentError = getSquareBookingEnvironmentError(
+    inquiry.squareEnvironment,
+    env as unknown as Record<string, string | undefined>,
+  );
+  if (environmentError) throw new Error(environmentError);
 
   const bookingTravelers = await db.select({ tripPriceCents: travelers.confirmedTripPriceCents })
     .from(travelers)

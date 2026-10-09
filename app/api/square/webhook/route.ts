@@ -10,7 +10,7 @@ import {
 import { createAutopayAuthorizationToken } from "@/lib/autopay-authorization-invitation";
 import { sendAutopayAuthorizationInvitationEmail, sendTravelInsuranceReferralEmail } from "@/lib/mailersend-transactional";
 import { findAutopayCardAndSchedule } from "@/lib/square";
-import { getSquareWebhookValues } from "@/lib/square-config";
+import { getSquareEnvironment, getSquareWebhookValues } from "@/lib/square-config";
 import { hashInvitationToken } from "@/lib/traveler-agreement";
 
 type JsonRecord = Record<string, unknown>;
@@ -139,6 +139,12 @@ export async function POST(request: Request) {
     squareDepositInvoiceVersion: invoice.version,
   };
 
+  // Verify signatures and payloads first, but never use the active API credentials
+  // for an event from the other Square environment.
+  if (webhook.environment !== getSquareEnvironment(runtime)) {
+    return Response.json({ ok: true, ignored: true, reason: "inactive_environment" });
+  }
+
   if (typeof invoice.public_url === "string" && invoice.public_url.length > 0) {
     changes.squareDepositInvoiceUrl = invoice.public_url;
   }
@@ -148,6 +154,7 @@ export async function POST(request: Request) {
     .set(changes)
     .where(and(
       eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+      eq(bookingRequests.squareEnvironment, webhook.environment),
       or(
         isNull(bookingRequests.squareDepositInvoiceVersion),
         lt(bookingRequests.squareDepositInvoiceVersion, invoice.version),
@@ -165,6 +172,7 @@ export async function POST(request: Request) {
       stoppedAt,
     }).where(and(
       eq(autopayAuthorizations.squareInvoiceId, invoice.id),
+      eq(autopayAuthorizations.bookingRequestId, updated.id),
       eq(autopayAuthorizations.status, "active"),
     )).returning({ id: autopayAuthorizations.id });
     for (const authorization of stoppedAuthorizations) {
@@ -180,7 +188,7 @@ export async function POST(request: Request) {
         installmentAutopayStatus: "stopped_by_square",
         installmentAutopayError: "Square could not collect a scheduled installment automatically. Automatic payments are no longer active; the customer must pay from the invoice page or update the saved card.",
         installmentAutopayClaimedAt: null,
-      }).where(eq(bookingRequests.squareDepositInvoiceId, invoice.id));
+      }).where(eq(bookingRequests.id, updated.id));
       installmentAutopayStatus = "stopped_by_square";
     }
   }
@@ -191,6 +199,7 @@ export async function POST(request: Request) {
       status: "completed",
     }).where(and(
       eq(autopayAuthorizations.squareInvoiceId, invoice.id),
+      eq(autopayAuthorizations.bookingRequestId, updated.id),
       eq(autopayAuthorizations.status, "active"),
     )).returning({ id: autopayAuthorizations.id });
     for (const authorization of completedAuthorizations) {
@@ -206,7 +215,7 @@ export async function POST(request: Request) {
         installmentAutopayStatus: "completed",
         installmentAutopayError: null,
         installmentAutopayClaimedAt: null,
-      }).where(eq(bookingRequests.squareDepositInvoiceId, invoice.id));
+      }).where(eq(bookingRequests.id, updated.id));
       installmentAutopayStatus = "completed";
     }
   }
@@ -219,6 +228,7 @@ export async function POST(request: Request) {
       installmentAutopayClaimedAt: autopayClaimedAt,
     }).where(and(
       eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+      eq(bookingRequests.squareEnvironment, webhook.environment),
       eq(bookingRequests.paymentPreference, "payment_plan"),
       eq(bookingRequests.installmentAutopayStatus, "awaiting_deposit"),
     )).returning({
@@ -314,6 +324,7 @@ export async function POST(request: Request) {
       .set({ travelInsuranceReferralClaimedAt: claimTimestamp })
       .where(and(
         eq(bookingRequests.squareDepositInvoiceId, invoice.id),
+        eq(bookingRequests.squareEnvironment, webhook.environment),
         isNull(bookingRequests.travelInsuranceReferralSentAt),
         or(
           isNull(bookingRequests.travelInsuranceReferralClaimedAt),

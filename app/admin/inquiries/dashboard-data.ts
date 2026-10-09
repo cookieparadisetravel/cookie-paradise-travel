@@ -11,6 +11,7 @@ import { getDb } from "@/db";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { todayInIndiana } from "@/lib/payment-schedule";
 import { currentTravelerAgreement } from "@/lib/traveler-agreement";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import type {
   AgreementInvitationDelivery,
   DashboardInquiry,
@@ -91,6 +92,10 @@ export async function loadInquiryDashboardData() {
 
     return {
       ...inquiry,
+      paymentEnvironmentError: getSquareBookingEnvironmentError(
+        inquiry.squareEnvironment,
+        env as unknown as Record<string, string | undefined>,
+      ),
       companyAcceptanceDate: inquiry.companyAcceptedAt
         ? todayInIndiana(new Date(inquiry.companyAcceptedAt))
         : todayInIndiana(),
@@ -110,7 +115,8 @@ export async function loadInquiryDashboardData() {
         expiresAt: paymentChoiceInvitation.expiresAt,
         completedAt: paymentChoiceInvitation.completedAt,
         revokedAt: paymentChoiceInvitation.revokedAt,
-        usable: !paymentChoiceInvitation.completedAt
+        usable: !getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)
+          && !paymentChoiceInvitation.completedAt
           && !paymentChoiceInvitation.revokedAt
           && Date.parse(paymentChoiceInvitation.expiresAt) > requestTime,
       } : null,

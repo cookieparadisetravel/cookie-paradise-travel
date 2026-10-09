@@ -1,4 +1,6 @@
+import { env } from "cloudflare:workers";
 import { and, desc, eq, isNull, lt, or } from "drizzle-orm";
+import { getSquareBookingEnvironmentError } from "@/lib/square-config";
 import { autopayAuthorizations, autopayEvents, bookingRequests } from "@/db/schema";
 import { getDb } from "@/db";
 import { sendAutopayStoppedEmail } from "@/lib/mailersend-transactional";
@@ -35,6 +37,14 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   }
 
   const db = getDb();
+  const [inquiry] = await db.select({ squareEnvironment: bookingRequests.squareEnvironment })
+    .from(bookingRequests).where(eq(bookingRequests.id, inquiryId)).limit(1);
+  if (!inquiry) return Response.json({ error: "Inquiry not found" }, { status: 404 });
+  const environmentError = getSquareBookingEnvironmentError(
+    inquiry.squareEnvironment,
+    env as unknown as Record<string, string | undefined>,
+  );
+  if (environmentError) return Response.json({ error: environmentError }, { status: 409 });
   const [record] = await db.select({
     authorizationId: autopayAuthorizations.id,
     authorizationStatus: autopayAuthorizations.status,

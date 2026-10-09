@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   getSquareCredentialValues,
+  getSquareBookingEnvironmentError,
   getSquareWebhookSignatureKey,
   getSquareWebhookValues,
 } from "./square-config.ts";
@@ -16,6 +17,22 @@ const runtime = {
   SQUARE_WEBHOOK_NOTIFICATION_URL: "https://example.com/api/square/webhook",
   SQUARE_PRODUCTION_WEBHOOK_NOTIFICATION_URL: "https://example.com/api/square/webhook?environment=production",
 };
+
+test("bookings can only use their persisted Square environment", () => {
+  for (const mode of ["sandbox", "production"] as const) {
+    assert.equal(getSquareBookingEnvironmentError(mode, { SQUARE_ENV: mode }), null);
+    const other = mode === "sandbox" ? "production" : "sandbox";
+    assert.match(getSquareBookingEnvironmentError(other, { SQUARE_ENV: mode })!, /No payment changes were made/u);
+  }
+});
+
+test("missing or invalid booking ownership fails closed instead of guessing", () => {
+  for (const value of [undefined, null, "", "Sandbox", "unknown", 0]) {
+    for (const mode of ["sandbox", "production"]) {
+      assert.match(getSquareBookingEnvironmentError(value, { SQUARE_ENV: mode })!, /could not be verified/u);
+    }
+  }
+});
 
 test("Sandbox uses only Sandbox Square credentials", () => {
   assert.deepEqual(getSquareCredentialValues({ ...runtime, SQUARE_ENV: "sandbox" }), {

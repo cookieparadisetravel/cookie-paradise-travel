@@ -10,6 +10,9 @@ import { markAutomatedInvoiceCreated } from "@/lib/booking-automation";
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
   const { token } = await context.params;
   const invitation = await getPaymentPreferenceInvitation(token);
+  if (invitation.status === "environment_mismatch") {
+    return Response.json({ error: invitation.message }, { status: 409 });
+  }
   if (invitation.status === "completed") {
     return Response.json({ error: "This payment preference has already been submitted." }, { status: 409 });
   }

@@ -35,6 +35,9 @@ export const bookingRequests = sqliteTable("booking_requests", {
   installmentAutopayError: text("installment_autopay_error"),
   installmentAutopayClaimedAt: text("installment_autopay_claimed_at"),
   squareCustomerId: text("square_customer_id"),
+  // Existing inquiries were created while the site used Square Sandbox.
+  // Save the active environment explicitly on every new inquiry; never switch an existing booking.
+  squareEnvironment: text("square_environment", { enum: ["sandbox", "production"] }).notNull().default("sandbox"),
   squareDepositOrderId: text("square_deposit_order_id"),
   squareDepositInvoiceId: text("square_deposit_invoice_id"),
   squareDepositInvoiceStatus: text("square_deposit_invoice_status").notNull().default("not_created"),
