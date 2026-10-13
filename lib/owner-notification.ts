@@ -9,6 +9,7 @@ type InquiryNotification = {
   room: string;
   partySize: number;
   notes: string;
+  referralPartner: string | null;
   contactConsent: boolean;
   sellerOfTravelStateResident: boolean;
   residenceState: string | null;

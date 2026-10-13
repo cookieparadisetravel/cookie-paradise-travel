@@ -49,6 +49,7 @@ export type DashboardInquiry = {
   roomPreference: string;
   partySize: number;
   notes: string;
+  referralPartner?: string | null;
   status: string;
   createdAt: string;
   contactConsent: boolean;

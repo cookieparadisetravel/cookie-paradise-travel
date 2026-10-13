@@ -44,8 +44,9 @@ function fixture(mode: "sandbox" | "production", bookingEnvironment: "sandbox" |
   const sqlite = new DatabaseSync(":memory:");
   const directory = new URL("../drizzle/", import.meta.url);
   const migrations = readdirSync(directory).filter((name) => name.endsWith(".sql")).sort();
-  const latest = migrations.at(-1)!;
-  for (const migration of migrations.slice(0, -1)) sqlite.exec(readFileSync(new URL(migration, directory), "utf8"));
+  const environmentIndex = migrations.findIndex((name) => readFileSync(new URL(name, directory), "utf8").includes("ADD `square_environment`"));
+  assert.ok(environmentIndex >= 0);
+  for (const migration of migrations.slice(0, environmentIndex)) sqlite.exec(readFileSync(new URL(migration, directory), "utf8"));
   sqlite.exec(`INSERT INTO booking_requests
     (id, trip_slug, full_name, email, departure, room_preference, party_size,
      square_customer_id, square_deposit_order_id, square_deposit_invoice_id,
@@ -53,7 +54,7 @@ function fixture(mode: "sandbox" | "production", bookingEnvironment: "sandbox" |
     VALUES (1, 'test-trip', 'Test Traveler', 'test@example.com', '2027-06-01', 'shared', 1,
      'test-customer', 'test-order', 'test-invoice', 287500, 'payment_plan', 'authorization_sending');`);
   const before = sqlite.prepare("SELECT * FROM booking_requests WHERE id = 1").get()!;
-  sqlite.exec(readFileSync(new URL(latest, directory), "utf8"));
+  for (const migration of migrations.slice(environmentIndex)) sqlite.exec(readFileSync(new URL(migration, directory), "utf8"));
   sqlite.prepare("UPDATE booking_requests SET square_environment = ? WHERE id = 1").run(bookingEnvironment);
   sqlite.exec(`INSERT INTO payment_preference_invitations
     (id, booking_request_id, token_hash, expires_at) VALUES (1, 1, 'test-token-hash', '2099-01-01T00:00:00.000Z');
@@ -123,7 +124,8 @@ test("the generated additive migration labels old records Sandbox without changi
   try {
     const after = rowSnapshot(sqlite)!;
     assert.equal(after.square_environment, "sandbox");
-    const { square_environment: environment, ...unchanged } = after;
+    const { square_environment: environment, referral_partner: referralPartner, ...unchanged } = after;
+    assert.equal(referralPartner, null);
     assert.equal(environment, "sandbox");
     assert.deepEqual(unchanged, { ...before });
     sqlite.exec(`INSERT INTO booking_requests

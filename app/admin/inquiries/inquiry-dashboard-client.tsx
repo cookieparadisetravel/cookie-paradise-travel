@@ -1,5 +1,7 @@
 "use client";
 
+import { getReferralPartner } from "@/lib/referral-partners";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -549,6 +551,7 @@ function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
           <InfoItem label="Phone"><a className="font-semibold underline" href={`tel:${inquiry.phone}`}>{inquiry.phone || "Not recorded"}</a></InfoItem>
           <InfoItem label="Departure">{departureLabel(inquiry.departure)}</InfoItem>
           <InfoItem label="Party size">{inquiry.partySize}</InfoItem>
+          <InfoItem label="Referral source">{getReferralPartner(inquiry.referralPartner)?.name ?? "Direct / unattributed"}</InfoItem>
           <InfoItem label="Room preference">{readableValue(inquiry.roomPreference)}</InfoItem>
           <InfoItem label="Customer intent">{bookingIntentLabel(inquiry.bookingIntent)}</InfoItem>
           <InfoItem label="Automated booking">{automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>

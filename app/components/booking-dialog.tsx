@@ -10,7 +10,9 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
-type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
+import { getReferralPartner, type ReferralPartnerId } from "@/lib/referral-partners";
+
+type Props = { referralPartner?: ReferralPartnerId; referralPreview?: boolean; triggerLabel: string; compact?: boolean; inverse?: boolean };
 
 const consultationBookingUrl = "https://calendar.app.google/ofheU1DcPXWaR1Yr9";
 
@@ -76,7 +78,7 @@ function loadTurnstileScript() {
   return turnstileScriptPromise;
 }
 
-export function BookingDialog({ triggerLabel, compact = false, inverse = false }: Props) {
+export function BookingDialog({ triggerLabel, compact = false, inverse = false, referralPartner, referralPreview = false }: Props) {
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
@@ -115,7 +117,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   }, []);
 
   useEffect(() => {
-    if (!open || !turnstileSiteKey || !turnstileContainer) return;
+    if (referralPreview || !open || !turnstileSiteKey || !turnstileContainer) return;
 
     let cancelled = false;
 
@@ -147,10 +149,15 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       }
       turnstileWidgetIdRef.current = null;
     };
-  }, [clearFieldError, open, turnstileContainer, turnstileSiteKey]);
+  }, [referralPreview, clearFieldError, open, turnstileContainer, turnstileSiteKey]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (referralPreview) {
+      setStatus("error");
+      setErrorMessage(`Preview only: referral source ${getReferralPartner(referralPartner)?.name ?? "none"}. Nothing was submitted or saved.`);
+      return;
+    }
     const formElement = event.currentTarget;
     const form = new FormData(formElement);
     const firstName = String(form.get("firstName") ?? "").trim();
@@ -185,6 +192,8 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
     setStatus("saving");
     setErrorMessage("");
     const payload = {
+      referralPartner,
+      referralPreview,
       firstName,
       lastName,
       email,
@@ -288,6 +297,10 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 Tell us which departure works for you. No payment is collected and this form does not confirm a reservation.
               </DialogDescription>
             </DialogHeader>
+            {referralPartner && <p className="bg-white px-6 py-3 text-sm sm:px-8" role="note">
+              {referralPreview ? "Preview referral source" : "Referral source"}: <strong>{getReferralPartner(referralPartner)?.name}</strong>.
+              {referralPreview ? " Use fictitious details to explore the form. Submission is disabled." : " Stored with your inquiry; no extra personal information is needed."}
+            </p>}
             <form onSubmit={submit} noValidate className="grid gap-4 p-6 sm:grid-cols-2 sm:gap-5 sm:p-8">
               <label className="absolute -left-[10000px] top-auto h-px w-px overflow-hidden" aria-hidden="true">
                 Website
@@ -475,7 +488,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 )}
               </div>
               <div className={`sm:col-span-2 ${fieldErrors.turnstile ? "rounded-2xl border border-red-500 bg-red-50/40 p-3 ring-2 ring-red-100" : ""}`}>
-                {turnstileSiteKey ? (
+                {referralPreview ? <p className="text-sm text-[var(--muted-ink)]">Human verification is skipped in this submission-blocked preview.</p> : turnstileSiteKey ? (
                   <div ref={setTurnstileContainer} className="min-h-[65px] w-full" aria-label="Human verification" data-field="turnstile" tabIndex={-1} />
                 ) : (
                   <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700">Human verification is not configured. Please try again later.</p>
@@ -489,10 +502,10 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{errorMessage}</p>
               )}
               <p id="contact-consent-notice" className="rounded-2xl border border-[var(--orange)]/35 bg-[var(--gold)]/15 p-4 text-sm leading-6 text-[var(--ink)] sm:col-span-2">
-                By clicking <strong>“Send my request,”</strong> I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.
+                {referralPreview ? "Preview only. No contact consent is recorded and no information is sent." : <>By clicking <strong>“Send my request,”</strong> I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.</>}
               </p>
               <button aria-describedby="contact-consent-notice" disabled={status === "saving"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
-                {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>Send my request <ArrowRight className="h-4 w-4" /></>}
+                {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>{referralPreview ? "Check preview attribution" : "Send my request"} <ArrowRight className="h-4 w-4" /></>}
               </button>
               <p className="text-center text-xs leading-5 text-[var(--muted-ink)] sm:col-span-2">Please do not enter passport numbers, medical information or payment details here. See our <a className="font-semibold underline" href="/privacy" target="_blank">Privacy Policy</a>.</p>
             </form>

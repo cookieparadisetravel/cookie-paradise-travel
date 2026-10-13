@@ -1,0 +1,1 @@
+ALTER TABLE `booking_requests` ADD `referral_partner` text;

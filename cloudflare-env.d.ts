@@ -3,6 +3,7 @@ declare namespace Cloudflare {
     DB?: D1Database;
     BUCKET?: R2Bucket;
     AUTOMATED_BOOKING_ENABLED?: string;
+    REFERRAL_ACTIVE_PARTNERS?: string;
     SQUARE_ENV?: string;
     SQUARE_APPLICATION_ID?: string;
     SQUARE_LOCATION_ID?: string;

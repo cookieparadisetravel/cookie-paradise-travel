@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import { BookingDialog } from "./booking-dialog";
 
-export function MobileBookBar() {
+import type { ReferralPartnerId } from "@/lib/referral-partners";
+
+export function MobileBookBar({ referralPartner, referralPreview = false }: { referralPartner?: ReferralPartnerId; referralPreview?: boolean }) {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -28,7 +30,7 @@ export function MobileBookBar() {
           <p className="whitespace-nowrap text-sm font-bold leading-tight text-[var(--gold)]">From $2,875</p>
           <p className="mt-1 whitespace-nowrap text-[0.7rem] leading-tight text-white/70">per person · 8 days · 2027</p>
         </div>
-        <BookingDialog triggerLabel="Request a spot" />
+        <BookingDialog referralPartner={referralPartner} referralPreview={referralPreview} triggerLabel="Request a spot" />
       </div>
     </div>
   );

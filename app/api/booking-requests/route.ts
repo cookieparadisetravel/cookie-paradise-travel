@@ -1,3 +1,4 @@
+import { validateReferralSubmission, getReferralPartner } from "@/lib/referral-partners";
 import { bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { eq } from "drizzle-orm";
@@ -51,6 +52,9 @@ export async function POST(request: Request) {
       return Response.json({ error: "Request body must be a JSON object." }, { status: 400 });
     }
     const payload = parsedPayload as Record<string, unknown>;
+    const referralError = validateReferralSubmission(payload, (env as unknown as Record<string, string | undefined>).REFERRAL_ACTIVE_PARTNERS);
+    if (referralError) return Response.json({ error: referralError }, { status: 400 });
+    const referralPartner = getReferralPartner(payload.referralPartner)?.id ?? null;
     const website = String(payload.website ?? "").trim();
     if (website) return Response.json({ ok: true }, { status: 201 });
 
@@ -112,7 +116,7 @@ export async function POST(request: Request) {
       squareEnvironment: getSquareEnvironment(env as unknown as Record<string, string | undefined>),
       tripSlug: "vietnam-southern-charms-central-heritage",
       fullName, email, phone, departure,
-      roomPreference: room, partySize, notes,
+      roomPreference: room, partySize, notes, referralPartner,
       contactConsent: true,
       contactConsentedAt: new Date().toISOString(),
       sellerOfTravelStateResident,
@@ -150,7 +154,7 @@ export async function POST(request: Request) {
     }
 
     const ownerNotificationStatus = await sendOwnerInquiryNotification({
-      id: saved.id, fullName, email, phone, departure, room, partySize, notes,
+      id: saved.id, fullName, email, phone, departure, room, partySize, notes, referralPartner,
       contactConsent: true, sellerOfTravelStateResident,
       residenceState: sellerOfTravelStateResident ? residenceState : null,
       bookingIntent: bookingIntent as "ready_to_book" | "needs_information",

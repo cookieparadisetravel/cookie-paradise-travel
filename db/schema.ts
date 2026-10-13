@@ -3,6 +3,7 @@ import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqli
 
 export const bookingRequests = sqliteTable("booking_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  referralPartner: text("referral_partner"),
   tripSlug: text("trip_slug").notNull(),
   fullName: text("full_name").notNull(),
   email: text("email").notNull(),
