@@ -1,5 +1,7 @@
 "use client";
 
+import { getSalonPartner } from "@/lib/salon-referrals";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -255,6 +257,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
             <span className={`hidden rounded-full px-3 py-1 text-xs font-extrabold sm:inline-flex ${squareMode === "sandbox" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"}`}>
               Square {squareMode === "sandbox" ? "Sandbox" : "Production"}
             </span>
+            <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/referrals">Referrals</a>
             <button aria-label="Refresh inquiries" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--line)] px-3 text-sm font-bold hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={refresh} type="button">
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Refresh</span>
             </button>
@@ -384,6 +387,7 @@ function InquiryList({ inquiries, onOpen }: { inquiries: DashboardInquiry[]; onO
               <div className="min-w-0">
                 <div className="flex items-center gap-2"><span className="truncate font-bold text-[var(--ink)]">{inquiry.fullName}</span><span className="text-xs font-semibold text-[var(--muted-ink)]">#{inquiry.id}</span></div>
                 <p className="truncate text-sm text-[var(--muted-ink)]">{inquiry.email}</p>
+                {inquiry.referralCode && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Referred by {getSalonPartner(inquiry.referralCode)?.name ?? inquiry.referralCode}</p>}
                 {inquiry.sellerOfTravelStateResident && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[0.68rem] font-extrabold text-red-800"><ShieldAlert className="h-3 w-3" /> Review {inquiry.residenceState ?? "state"} residency</p>}
               </div>
               <div className="grid grid-cols-2 gap-3 xl:block">
@@ -550,6 +554,7 @@ function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
           <InfoItem label="Departure">{departureLabel(inquiry.departure)}</InfoItem>
           <InfoItem label="Party size">{inquiry.partySize}</InfoItem>
           <InfoItem label="Room preference">{readableValue(inquiry.roomPreference)}</InfoItem>
+          <InfoItem label="Referral salon">{getSalonPartner(inquiry.referralCode)?.name ?? "Direct inquiry"}</InfoItem>
           <InfoItem label="Customer intent">{bookingIntentLabel(inquiry.bookingIntent)}</InfoItem>
           <InfoItem label="Automated booking">{automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>
           <InfoItem label="Trip contact consent">{inquiry.contactConsent ? "Recorded" : "Not recorded"}</InfoItem>

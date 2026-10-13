@@ -10,6 +10,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 
+import { ReferralBrand } from "./referral-brand";
+
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
 
 const consultationBookingUrl = "https://calendar.app.google/ofheU1DcPXWaR1Yr9";
@@ -293,6 +295,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 Website
                 <input name="website" type="text" tabIndex={-1} autoComplete="off" />
               </label>
+              <ReferralBrand />
               <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--orange)] sm:col-span-2">Your trip</p>
               <div className="field-label">Preferred departure
                 <Select value={departure} onValueChange={(value) => {

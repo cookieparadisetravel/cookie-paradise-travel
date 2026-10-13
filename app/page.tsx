@@ -4,6 +4,11 @@ import {
 } from "lucide-react";
 import { BookingDialog } from "./components/booking-dialog";
 import { MobileBookBar } from "./components/mobile-book-bar";
+import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
+import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
+import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
+export const dynamic = "force-dynamic";
 
 const itinerary = [
   ["01", "Arrive in Ho Chi Minh City", "A private airport welcome, hotel transfer and an easy first evening to settle in."],
@@ -89,11 +94,16 @@ const detailedItinerary = [
   },
 ];
 
-export default function Home() {
+export default async function Home({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {
+  const linkedPartner = getSalonPartner((await searchParams).ref);
+  if (linkedPartner) redirect(`/r/${linkedPartner.code}`);
+  const partner = getSalonPartner((await cookies()).get(REFERRAL_COOKIE)?.value);
   return (
+    <ReferralProvider partner={partner}>
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
       <header className="absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white">
-        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-3 sm:px-8">
+        <div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-8">
+          <div className="flex items-center gap-3">
           <a href="#top" className="group flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
             <img
               src="/cookie-paradise-logo.png"
@@ -104,7 +114,9 @@ export default function Home() {
               Travel<br />Company
             </span>
           </a>
-          <nav className="hidden items-center gap-8 text-sm font-semibold md:flex" aria-label="Main navigation">
+          <ReferralBrand header />
+          </div>
+          <nav className="hidden items-center gap-8 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#journey">Journey</a>
             <a className="hover:text-[var(--gold)]" href="#about">About Trung</a>
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
@@ -124,7 +136,7 @@ export default function Home() {
           fetchPriority="high"
         />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.96)_0%,rgba(45,29,16,.76)_50%,rgba(45,29,16,.22)_100%)]" />
-        <div className="mx-auto flex min-h-[760px] max-w-7xl items-end px-5 pb-16 pt-36 sm:px-8 sm:pb-24">
+        <div className="mx-auto flex min-h-[760px] max-w-7xl items-end px-5 pb-16 pt-44 sm:px-8 sm:pb-24">
           <div className="max-w-3xl">
             <p className="mb-5 flex items-center gap-2 whitespace-nowrap text-[0.68rem] font-bold uppercase tracking-[0.16em] text-[var(--gold)] sm:gap-3 sm:text-sm sm:tracking-[0.28em]">
               <span className="h-px w-10 bg-[var(--gold)]" /> Small-group Vietnam • 2027
@@ -332,5 +344,6 @@ export default function Home() {
       </footer>
       <MobileBookBar />
     </main>
+    </ReferralProvider>
   );
 }

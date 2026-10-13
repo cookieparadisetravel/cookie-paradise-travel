@@ -2,6 +2,7 @@ import { env } from "cloudflare:workers";
 
 type InquiryNotification = {
   id: number;
+  referralCode?: string | null;
   fullName: string;
   email: string;
   phone: string;
