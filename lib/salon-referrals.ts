@@ -1,8 +1,8 @@
 export const REFERRAL_COOKIE = "cp_travel_referral";
 export const REFERRAL_COOKIE_SECONDS = 90 * 24 * 60 * 60;
 export const salonPartners = [
-  { code: "gossip-nails", name: "Gossip Nails", logo: "/referrals/gossip-nails-logo.png", website: "https://gossipnailscolumbus.com/", darkSurface: false },
-  { code: "nails-station", name: "Nails Station & Spa", logo: "/referrals/nails-station-logo.png", website: "https://nailsstationandspa.com/", darkSurface: true },
+  { code: "gossip-nails", name: "Gossip Nails", logo: "/referrals/gossip-nails-logo.png", website: "https://gossipnailscolumbus.com/", creamSurface: false },
+  { code: "nails-station", name: "Nails Station & Spa", logo: "/referrals/nails-station-logo.png", website: "https://nailsstationandspa.com/", creamSurface: true },
 ] as const;
 export type SalonPartner = typeof salonPartners[number];
 export function getSalonPartner(code: unknown): SalonPartner | null {
