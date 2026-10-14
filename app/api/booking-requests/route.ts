@@ -9,6 +9,8 @@ import { startAutomatedReadyToBookFlow } from "@/lib/booking-automation";
 import { getSafeDatabaseErrorDetails } from "@/lib/safe-error";
 import { getSquareEnvironment } from "@/lib/square-config";
 
+import { referralFromCookie } from "@/lib/salon-referrals";
+
 const validDepartures = new Set(["2027-06-01"]);
 const validRooms = new Set(["shared", "private"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
@@ -111,6 +113,7 @@ export async function POST(request: Request) {
     const [saved] = await db.insert(bookingRequests).values({
       squareEnvironment: getSquareEnvironment(env as unknown as Record<string, string | undefined>),
       tripSlug: "vietnam-southern-charms-central-heritage",
+      referralCode: referralFromCookie(request.headers.get("cookie"))?.code ?? null,
       fullName, email, phone, departure,
       roomPreference: room, partySize, notes,
       contactConsent: true,
@@ -154,6 +157,7 @@ export async function POST(request: Request) {
       contactConsent: true, sellerOfTravelStateResident,
       residenceState: sellerOfTravelStateResident ? residenceState : null,
       bookingIntent: bookingIntent as "ready_to_book" | "needs_information",
+      referralCode: referralFromCookie(request.headers.get("cookie"))?.code ?? null,
     });
 
     try {

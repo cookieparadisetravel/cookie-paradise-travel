@@ -4,6 +4,7 @@ import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqli
 export const bookingRequests = sqliteTable("booking_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   tripSlug: text("trip_slug").notNull(),
+  referralCode: text("referral_code"),
   fullName: text("full_name").notNull(),
   email: text("email").notNull(),
   phone: text("phone").notNull().default(""),
@@ -246,3 +247,19 @@ export const agreementAcceptances = sqliteTable("agreement_acceptances", {
   uniqueIndex("agreement_acceptances_invitation_unique").on(table.invitationId),
   index("agreement_acceptances_traveler_idx").on(table.travelerId),
 ]);
+
+// Partner windows are started by the owner when promotional materials are delivered.
+export const salonReferralPilots = sqliteTable("salon_referral_pilots", {
+  code: text("code").primaryKey(),
+  materialsReceivedOn: text("materials_received_on").notNull(),
+  updatedBy: text("updated_by").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+// One record per actual traveler; inquiries and party-size estimates never earn commissions.
+export const salonReferralCompletions = sqliteTable("salon_referral_completions", {
+  travelerId: integer("traveler_id").primaryKey().references(() => travelers.id, { onDelete: "restrict" }),
+  qualifiedOn: text("qualified_on").notNull(),
+  successful: integer("successful", { mode: "boolean" }).notNull().default(false),
+  reviewedBy: text("reviewed_by").notNull(),
+  reviewedAt: text("reviewed_at").notNull(),
+});

@@ -44,8 +44,10 @@ function fixture(mode: "sandbox" | "production", bookingEnvironment: "sandbox" |
   const sqlite = new DatabaseSync(":memory:");
   const directory = new URL("../drizzle/", import.meta.url);
   const migrations = readdirSync(directory).filter((name) => name.endsWith(".sql")).sort();
-  const latest = migrations.at(-1)!;
-  for (const migration of migrations.slice(0, -1)) sqlite.exec(readFileSync(new URL(migration, directory), "utf8"));
+  // Target the environment migration, even after later unrelated additive migrations exist.
+  const latest = migrations.find((name) => readFileSync(new URL(name, directory), "utf8").includes("ADD `square_environment`"))!;
+  assert.ok(latest);
+  for (const migration of migrations.filter((name) => name !== latest)) sqlite.exec(readFileSync(new URL(migration, directory), "utf8"));
   sqlite.exec(`INSERT INTO booking_requests
     (id, trip_slug, full_name, email, departure, room_preference, party_size,
      square_customer_id, square_deposit_order_id, square_deposit_invoice_id,
