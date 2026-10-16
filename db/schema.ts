@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { index, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
+import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 export const bookingRequests = sqliteTable("booking_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
@@ -276,4 +276,20 @@ export const salonReferralCompletions = sqliteTable("salon_referral_completions"
   successful: integer("successful", { mode: "boolean" }).notNull().default(false),
   reviewedBy: text("reviewed_by").notNull(),
   reviewedAt: text("reviewed_at").notNull(),
+});
+
+export const inquiryReminders = sqliteTable("inquiry_reminders", {
+  email: text("email").notNull(),
+  reminderDay: integer("reminder_day").notNull(),
+  inquiryId: integer("inquiry_id").notNull().references(() => bookingRequests.id, { onDelete: "cascade" }),
+  claimedAt: text("claimed_at").notNull(),
+  status: text("status", { enum: ["sending", "sent", "failed", "skipped"] }).notNull(),
+  sentAt: text("sent_at"),
+  messageId: text("message_id"),
+  error: text("error"),
+}, (table) => [primaryKey({ columns: [table.email, table.reminderDay] })]);
+
+export const consultationBookings = sqliteTable("consultation_bookings", {
+  email: text("email").primaryKey(),
+  observedAt: text("observed_at").notNull(),
 });

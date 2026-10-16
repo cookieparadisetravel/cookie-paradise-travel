@@ -6,6 +6,7 @@ import ts from "typescript";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import * as builders from "drizzle-orm";
 import * as schema from "../db/schema.ts";
+import { consultationBookingUrl } from "./consultation.ts";
 import { buildPersonalizedTravelerAgreement, canonicalizeAgreement, currentTravelerAgreement, hashAgreementDocument, hashInvitationToken } from "./traveler-agreement.ts";
 
 type Stubs = Record<string, Record<string, unknown>>;
@@ -171,7 +172,7 @@ test("missing email configuration leaves travelers eligible for a later run", as
 });
 
 test("reminder email includes a signing link, expiration, and no-payment explanation", async () => {
-  const emailModule = await load("./mailersend-transactional.ts", { "cloudflare:workers": { env: { MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test" } } });
+  const emailModule = await load("./mailersend-transactional.ts", { "cloudflare:workers": { env: { MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test" } }, "./consultation": { consultationBookingUrl } });
   const originalFetch = globalThis.fetch;
   let payload: Record<string, string> | undefined;
   globalThis.fetch = async (_url, options) => {

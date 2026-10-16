@@ -11,10 +11,10 @@ import {
 } from "@/components/ui/select";
 
 import { ReferralBrand } from "./referral-brand";
+import { consultationBookingUrl } from "@/lib/consultation";
 
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
 
-const consultationBookingUrl = "https://calendar.app.google/ofheU1DcPXWaR1Yr9";
 
 type RequiredField =
   | "firstName"

@@ -4,6 +4,9 @@ declare namespace Cloudflare {
     BUCKET?: R2Bucket;
     AUTOMATED_BOOKING_ENABLED?: string;
     AGREEMENT_REMINDERS_ENABLED?: string;
+    INQUIRY_REMINDERS_ENABLED?: string;
+    CONSULTATION_CALENDAR_ID?: string;
+    GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON?: string;
     MAILERSEND_API_TOKEN?: string;
     MAILERSEND_FROM_EMAIL?: string;
     SQUARE_ENV?: string;

@@ -23,6 +23,8 @@
   ],
   "vars": {
     "AGREEMENT_REMINDERS_ENABLED": "true",
+    "INQUIRY_REMINDERS_ENABLED": "true",
+    "CONSULTATION_CALENDAR_ID": "trung@cookieparadise.co",
     "AUTOMATED_BOOKING_ENABLED": "true",
     "SQUARE_ENV": "production",
     "SQUARE_APPLICATION_ID": "sandbox-sq0idb-LXRKY7_IJOLJU8Ec0rk_SQ",

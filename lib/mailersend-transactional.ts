@@ -1,4 +1,18 @@
 import { env } from "cloudflare:workers";
+import { consultationBookingUrl } from "./consultation";
+
+export async function sendInquiryReminderEmail(input: { toEmail: string; toName: string; reminderDay: 3 | 7 }) {
+  const message = input.reminderDay === 3
+    ? "Thank you for your interest in our Discover Southern Vietnam trip. If you have questions about the itinerary, accommodations, or what to expect, I would be happy to help."
+    : "I wanted to follow up on your interest in our Discover Southern Vietnam trip. If you are still exploring your options or have any questions, I would be happy to talk them through with you.";
+  const invitation = "You can book a 30-minute consultation with me on Google Meet at a time that works for you. There is no need to be ready to book the trip.";
+  return sendEmail({
+    toEmail: input.toEmail, toName: input.toName,
+    subject: input.reminderDay === 3 ? "Questions about Vietnam? Let's talk" : "Still exploring Vietnam? Book a 30-minute consultation",
+    text: [`Hello ${input.toName},`, "", message, "", invitation, "", `Book your 30-minute consultation: ${consultationBookingUrl}`, "", "You can also reply to this email with your questions.", "", "Trung", "Cookie Paradise Travel Company"].join("\n"),
+    html: `<p>Hello ${escapeHtml(input.toName)},</p><p>${escapeHtml(message)}</p><p>${escapeHtml(invitation)}</p><p><a href="${consultationBookingUrl}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Book a 30-minute consultation</a></p><p>You can also reply to this email with your questions.</p><p>Trung<br>Cookie Paradise Travel Company</p>`,
+  });
+}
 
 type MailerSendAttachment = {
   content: string;
