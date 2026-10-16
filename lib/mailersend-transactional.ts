@@ -123,6 +123,39 @@ export async function sendAgreementInvitationEmail(input: {
   });
 }
 
+export async function sendAgreementReminderEmail(input: {
+  toEmail: string;
+  toName: string;
+  travelerName: string;
+  invitationUrl: string;
+  expiresAt: string;
+}) {
+  const expires = formatDateTime(input.expiresAt);
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: input.toName,
+    subject: `Reminder: please sign the Traveler Agreement for ${input.travelerName}`,
+    text: [
+      `Hello ${input.toName},`, "",
+      `We're following up on the Traveler Agreement for ${input.travelerName}. Our records show it has not yet been signed.`, "",
+      "Please review and sign the agreement when you are ready so we can continue your booking.", "",
+      `Review and sign: ${input.invitationUrl}`,
+      `This secure link expires ${expires}.`, "",
+      "Opening this link does not collect a payment. You will be asked to verify your email before signing if you have not already done so.", "",
+      "If you have questions or no longer wish to proceed, reply to this email or contact trung@cookieparadise.co.",
+    ].join("\n"),
+    html: `
+      <p>Hello ${escapeHtml(input.toName)},</p>
+      <p>We're following up on the Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>. Our records show it has not yet been signed.</p>
+      <p>Please review and sign the agreement when you are ready so we can continue your booking.</p>
+      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review and sign agreement</a></p>
+      <p>This secure link expires ${escapeHtml(expires)}.</p>
+      <p>Opening this link does not collect a payment. You will be asked to verify your email before signing if you have not already done so.</p>
+      <p>If you have questions or no longer wish to proceed, reply to this email or contact <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>.</p>
+    `,
+  });
+}
+
 export async function sendAgreementVerificationCodeEmail(input: {
   toEmail: string;
   toName: string;

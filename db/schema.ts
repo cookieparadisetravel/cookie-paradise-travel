@@ -255,6 +255,20 @@ export const salonReferralPilots = sqliteTable("salon_referral_pilots", {
   updatedBy: text("updated_by").notNull(),
   updatedAt: text("updated_at").notNull(),
 });
+
+// A traveler receives at most one seven-day reminder, even after replacement invitations.
+// The reminder token points to the same invitation, so both email links share one acceptance.
+export const agreementReminders = sqliteTable("agreement_reminders", {
+  travelerId: integer("traveler_id").primaryKey().references(() => travelers.id, { onDelete: "cascade" }),
+  invitationId: integer("invitation_id").notNull().references(() => agreementInvitations.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(),
+  firstEmailSentAt: text("first_email_sent_at").notNull(),
+  claimedAt: text("claimed_at").notNull(),
+  status: text("status", { enum: ["sending", "sent", "failed", "skipped"] }).notNull(),
+  sentAt: text("sent_at"),
+  messageId: text("message_id"),
+  error: text("error"),
+}, (table) => [uniqueIndex("agreement_reminders_token_hash_unique").on(table.tokenHash)]);
 // One record per actual traveler; inquiries and party-size estimates never earn commissions.
 export const salonReferralCompletions = sqliteTable("salon_referral_completions", {
   travelerId: integer("traveler_id").primaryKey().references(() => travelers.id, { onDelete: "restrict" }),

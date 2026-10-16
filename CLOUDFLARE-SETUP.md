@@ -117,3 +117,21 @@ After deployment:
 ## 9. Activate and test traveler agreements
 
 Do not activate the agreement until the final version has been approved for use. Follow [TRAVELER-AGREEMENT-ACTIVATION.md](./TRAVELER-AGREEMENT-ACTIVATION.md) to version the approved text, test one adult and one minor acceptance, confirm the invoice lock, and create a Square Sandbox invoice.
+
+## 10. Unsigned agreement reminders
+
+The custom `worker.ts` entry delegates web requests to vinext and handles an hourly Cron Trigger (`0 * * * *`). With `AGREEMENT_REMINDERS_ENABLED=true` and `SQUARE_ENV=production`, it sends one reminder per traveler on the first hourly run at least seven full days after the earliest successfully sent agreement email. Sending a replacement invitation does not restart this clock. Existing eligible unsigned agreements are included; expired/revoked links, signed travelers, inactive or waitlisted bookings, past departures, screened bookings and Sandbox records are excluded.
+
+The first agreement lookup or enabled reminder run initializes the new reminder table and unique index through the existing D1 binding. Initialization uses idempotent statements in a D1 batch, is cached per isolate, and is retried if setup fails. It does not alter existing tables or bookings. No separate Cloudflare login or new credential is needed for deployment.
+
+The same additive migration can also be applied through the normal migration workflow:
+
+```bash
+npx wrangler d1 migrations apply cookie-paradise-travel-db --remote --config wrangler.jsonc
+```
+
+`0020_agreement_reminders.sql` is idempotent, so applying it after automatic initialization is also safe. The normal build/deploy flow preserves the Cron Trigger in `dist/server/wrangler.json`. No additional email credentials are required beyond the existing MailerSend configuration. Set `AGREEMENT_REMINDERS_ENABLED=false` to pause reminders.
+
+Reminder links point to the same stored invitation as the first email. Original links remain valid, and both links share expiration, verification, revocation and acceptance. Signing either link prevents further signing through the other.
+
+The `agreement_reminders` table records the original email date, invitation, claim, delivery status and provider message ID. A unique traveler key prevents overlapping scheduled runs from sending a second reminder. If a provider response is lost or sending fails, the record is retained as `failed` (or `sending` if execution stopped); it is not automatically retried because the provider might already have accepted the email. Check MailerSend delivery logs before manually recovering such a record. Missing email configuration fails the job before claiming any traveler. No full signing tokens or email contents are written to logs.

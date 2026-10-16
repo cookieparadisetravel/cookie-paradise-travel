@@ -3,6 +3,9 @@ declare namespace Cloudflare {
     DB?: D1Database;
     BUCKET?: R2Bucket;
     AUTOMATED_BOOKING_ENABLED?: string;
+    AGREEMENT_REMINDERS_ENABLED?: string;
+    MAILERSEND_API_TOKEN?: string;
+    MAILERSEND_FROM_EMAIL?: string;
     SQUARE_ENV?: string;
     SQUARE_APPLICATION_ID?: string;
     SQUARE_LOCATION_ID?: string;

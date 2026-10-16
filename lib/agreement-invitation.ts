@@ -1,6 +1,7 @@
-import { and, eq, isNull } from "drizzle-orm";
-import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
+import { and, eq, inArray, isNull, or } from "drizzle-orm";
+import { agreementAcceptances, agreementInvitations, agreementReminders, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
+import { ensureAgreementReminderStorage } from "@/lib/agreement-reminder-storage";
 import {
   currentTravelerAgreement,
   hashAgreementDocument,
@@ -51,6 +52,7 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
   if (!isValidInvitationToken(token)) return { status: "invalid" };
 
   const tokenHash = await hashInvitationToken(token);
+  await ensureAgreementReminderStorage();
   const db = getDb();
   const [record] = await db
     .select({
@@ -82,7 +84,10 @@ export async function getAgreementInvitation(token: string): Promise<AgreementIn
     .from(agreementInvitations)
     .innerJoin(travelers, eq(agreementInvitations.travelerId, travelers.id))
     .innerJoin(bookingRequests, eq(travelers.bookingRequestId, bookingRequests.id))
-    .where(eq(agreementInvitations.tokenHash, tokenHash))
+    .where(or(
+      eq(agreementInvitations.tokenHash, tokenHash),
+      inArray(agreementInvitations.id, db.select({ id: agreementReminders.invitationId }).from(agreementReminders).where(eq(agreementReminders.tokenHash, tokenHash))),
+    ))
     .limit(1);
 
   if (!record) return { status: "invalid" };
