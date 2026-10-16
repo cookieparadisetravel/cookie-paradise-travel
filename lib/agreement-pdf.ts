@@ -54,7 +54,17 @@ export function agreementPdfFilename(travelerName: string, signed: boolean) {
   return `${signed ? "signed" : "unsigned"}-traveler-agreement-${safeName}.pdf`;
 }
 
-function renderAgreementHtml(agreement: AgreementDocument, snapshot?: AgreementAcceptanceSnapshot) {
+export function renderAgreementHtml(agreement: AgreementDocument, snapshot?: AgreementAcceptanceSnapshot) {
+  const summary = agreement.executiveSummary;
+  const frontSheet = summary ? `
+    <section class="executive-summary" aria-label="Executive summary">
+      <p class="summary-brand">COOKIE PARADISE TRAVEL COMPANY</p>
+      <h1>${escapeHtml(summary.title)}</h1>
+      <p class="meta summary-subtitle">${escapeHtml(summary.subtitle)}</p>
+      <ul>${summary.items.map((item) => `<li><strong>${escapeHtml(item.label)}.</strong> ${escapeHtml(item.text)}</li>`).join("")}</ul>
+      <p class="summary-notice">${escapeHtml(summary.notice)}</p>
+    </section>
+  ` : "";
   const sections = agreement.sections.map((section) => `
     <section>
       <h${section.level === 1 ? "2" : "3"}>${escapeHtml(section.heading)}</h${section.level === 1 ? "2" : "3"}>
@@ -122,7 +132,9 @@ function renderAgreementHtml(agreement: AgreementDocument, snapshot?: AgreementA
     *{box-sizing:border-box} body{font-family:Arial,"Noto Sans",sans-serif;color:#2f2117;font-size:11px;line-height:1.55;margin:0}
     header{border-bottom:3px solid #f7b658;padding-bottom:16px;margin-bottom:22px} h1{color:#593412;font-size:25px;margin:0 0 6px} h2{color:#593412;font-size:16px;margin:22px 0 8px;page-break-after:avoid} h3{color:#593412;font-size:13px;margin:16px 0 6px} p{margin:0 0 9px;white-space:pre-wrap} .meta{color:#6b5a4c;font-weight:700}.signature{margin-top:28px;border:2px solid #593412;border-radius:10px;padding:18px;page-break-inside:avoid}.signature dl{display:grid;grid-template-columns:145px 1fr;gap:5px 12px;margin:0}.signature dt{font-weight:700}.signature dd{margin:0}.hash{font-family:monospace;font-size:8px;overflow-wrap:anywhere}.notice{margin-top:14px;background:#fff4df;border-left:4px solid #f7b658;padding:10px} ul{padding-left:20px} li{margin-bottom:5px}
     table{width:100%;border-collapse:collapse;margin:10px 0 16px;page-break-inside:avoid} th,td{border:1px solid #cdbda9;padding:7px;text-align:left;vertical-align:top} th{background:#f7efdf;color:#593412;font-weight:700}
+    .executive-summary{break-after:page;page-break-after:always;font-size:12.4px;line-height:1.28;border-top:3px solid #f7b658;padding-top:16px}.summary-brand{font-size:13px;font-weight:700;color:#593412;margin-bottom:20px}.executive-summary h1{font-size:30px;line-height:1.15;margin-bottom:8px}.summary-subtitle{font-weight:400;margin-bottom:20px}.executive-summary ul{padding-left:17px;margin:0}.executive-summary li{margin-bottom:7px;break-inside:avoid;page-break-inside:avoid}.summary-notice{font-size:11.5px;line-height:1.35;color:#6b5a4c;margin-top:14px;white-space:normal}
   </style></head><body>
+    ${frontSheet}
     <header><h1>${escapeHtml(agreement.title)}</h1><div class="meta">Cookie Paradise Travel Company · Version ${escapeHtml(agreement.version)} · Effective ${escapeHtml(agreement.effectiveDate)}</div></header>
     ${sections}${signing}
   </body></html>`;

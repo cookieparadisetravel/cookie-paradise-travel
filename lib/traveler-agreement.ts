@@ -1,4 +1,5 @@
 import agreementV1 from "./traveler-agreement-v1.json" with { type: "json" };
+import executiveSummary from "./traveler-agreement-summary.json" with { type: "json" };
 
 export type AgreementSegment = {
   text: string;
@@ -20,13 +21,19 @@ export type AgreementDocument = {
   effectiveDate: string;
   title: string;
   sections: AgreementSection[];
+  executiveSummary?: {
+    title: string;
+    subtitle: string;
+    items: { label: string; text: string }[];
+    notice: string;
+  };
 };
 
 const approvedAgreementV1 = agreementV1 as AgreementDocument;
 
 // Agreement 1.0 was approved for interim operational use on October 6, 2026.
 // Each invitation stores the complete personalized document and its SHA-256 hash.
-export const currentTravelerAgreement: AgreementDocument = approvedAgreementV1;
+export const currentTravelerAgreement: AgreementDocument = { ...approvedAgreementV1, executiveSummary };
 
 export function buildPersonalizedTravelerAgreement(input: {
   travelerName: string;
@@ -57,7 +64,7 @@ export function buildPersonalizedTravelerAgreement(input: {
   };
 
   return {
-    ...approvedAgreementV1,
+    ...currentTravelerAgreement,
     sections: [summary, ...approvedAgreementV1.sections, acceptance],
   } satisfies AgreementDocument;
 }

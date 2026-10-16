@@ -297,6 +297,17 @@ export function AgreementAcceptanceForm({ token, agreement, traveler }: Props) {
         )}
       </section>
 
+      {agreement.executiveSummary && (
+        <section aria-labelledby="executive-summary-title" className="mt-6 rounded-3xl border border-[var(--gold)] bg-white p-6 shadow-sm sm:p-9">
+          <p className="text-sm font-bold uppercase tracking-[0.12em] text-[var(--orange)]">{agreement.executiveSummary.subtitle}</p>
+          <h2 id="executive-summary-title" className="mt-2 font-serif text-3xl text-[var(--ink)]">{agreement.executiveSummary.title}</h2>
+          <ul className="mt-6 list-disc space-y-4 pl-5 text-sm leading-6 text-[var(--ink)] sm:text-base sm:leading-7">
+            {agreement.executiveSummary.items.map((item) => <li key={item.label}><strong>{item.label}.</strong> {item.text}</li>)}
+          </ul>
+          <p className="mt-6 border-t border-[var(--line)] pt-4 text-sm leading-6 text-[var(--muted-ink)]">{agreement.executiveSummary.notice}</p>
+        </section>
+      )}
+
       <article className="mt-6 rounded-3xl border border-[var(--line)] bg-white p-6 shadow-sm sm:p-9">
         <div className="border-b border-[var(--line)] pb-6">
           <p className="text-sm font-bold uppercase tracking-[0.16em] text-[var(--orange)]">Version {agreement.version} · Effective {agreement.effectiveDate}</p>
