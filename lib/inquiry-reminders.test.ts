@@ -5,6 +5,7 @@ import test from "node:test";
 import ts from "typescript";
 import * as jose from "jose";
 import * as consultation from "./consultation.ts";
+import { hasValidOrigin } from "./same-origin.ts";
 
 async function load<T>(file: string, stubs: Record<string, Record<string, unknown>>): Promise<T> {
   let code = ts.transpileModule(readFileSync(new URL(file, import.meta.url), "utf8"), {
@@ -31,7 +32,7 @@ async function load<T>(file: string, stubs: Record<string, Record<string, unknow
 const FIRST = "2026-10-16 17:00:00";
 const DAY3 = new Date("2026-10-19T17:00:00Z");
 const DAY7 = new Date("2026-10-23T17:00:00Z");
-type Email = { toEmail: string; toName: string; reminderDay: 3 | 7 };
+type Email = { toEmail: string; toName: string; reminderDay: 3 | 7; testPreview?: boolean };
 
 async function fixture() {
   const sqlite = new DatabaseSync(":memory:");
@@ -219,7 +220,101 @@ test("templates use the real consultation URL in HTML and text with safe custome
       assert.ok(p.text.includes("30-minute consultation"));
     }
     assert.notEqual(payloads[0].subject, payloads[1].subject);
+    assert.ok(payloads.every((p) => !p.subject.includes("[TEST") && !p.html.includes("TEST PREVIEW")));
+    for (const reminderDay of [3, 7] as const) await m.sendInquiryReminderEmail({ toEmail: "owner@example.test", toName: "Test Traveler", reminderDay, testPreview: true });
+    for (const p of payloads.slice(2)) {
+      assert.match(p.subject, /^\[TEST: Day (3|7)\]/u);
+      assert.ok(p.text.includes("TEST PREVIEW")); assert.ok(p.html.includes("TEST PREVIEW"));
+      assert.ok(p.text.includes(consultation.consultationBookingUrl));
+    }
   } finally { globalThis.fetch = originalFetch; }
+});
+
+async function adminTestFixture() {
+  const emails: Email[] = [];
+  const lookups: string[] = [];
+  let authorized = true, booked = false, calendarFails = false;
+  let failedDay: 3 | 7 | undefined;
+  const route = await load<{ POST(request: Request): Promise<Response> }>("../app/api/admin/reminder-tests/route.ts", {
+    "@/lib/owner-auth": { requireOwner: async () => authorized ? { email: "owner@example.test" } : null },
+    "@/lib/same-origin": { hasValidOrigin },
+    "@/lib/consultation-calendar": { hasBookedConsultation: async (email: string) => {
+      lookups.push(email);
+      if (calendarFails) throw new Error("Private key and provider response must never appear here");
+      return booked;
+    } },
+    "@/lib/mailersend-transactional": { sendInquiryReminderEmail: async (email: Email) => {
+      emails.push(email);
+      if (failedDay === email.reminderDay) throw new Error("Provider response uncertain");
+      return { sentAt: "2026-10-16T20:00:00Z", messageId: "test" };
+    } },
+  });
+  return { emails, lookups,
+    run: (payload: unknown, origin: string | null = "https://example.test") => route.POST(new Request("https://example.test/api/admin/reminder-tests", {
+      method: "POST", headers: { "Content-Type": "application/json", ...(origin ? { Origin: origin } : {}) }, body: JSON.stringify(payload),
+    })),
+    raw: (body: string) => route.POST(new Request("https://example.test/api/admin/reminder-tests", { method: "POST", headers: { Origin: "https://example.test" }, body })),
+    deny: () => { authorized = false; }, setBooked: () => { booked = true; }, failCalendar: () => { calendarFails = true; },
+    failDay: (day: 3 | 7) => { failedDay = day; },
+  };
+}
+
+test("private reminder tests reject unauthorized, cross-origin and missing-origin requests before any service calls", async () => {
+  const f = await adminTestFixture();
+  assert.equal((await f.run({ action: "send_previews" }, "https://attacker.test")).status, 403);
+  assert.equal((await f.run({ action: "check_calendar", email: "test@example.test" }, null)).status, 403);
+  f.deny();
+  assert.equal((await f.run({ action: "send_previews" })).status, 403);
+  assert.equal((await f.run({ action: "check_calendar", email: "test@example.test" })).status, 403);
+  assert.deepEqual(f.emails, []); assert.deepEqual(f.lookups, []);
+});
+
+test("private reminder tests reject invalid bodies and attempts to select a preview recipient", async () => {
+  const f = await adminTestFixture();
+  for (const payload of [null, [], { action: "send_previews", toEmail: "customer@example.test" }, { action: "send_previews", email: "customer@example.test" }, { action: "check_calendar", email: "invalid" }, { action: "check_calendar", email: "test@example.test", toEmail: "other@example.test" }, { action: "unknown" }]) {
+    assert.equal((await f.run(payload)).status, 400);
+  }
+  assert.equal((await f.raw("not-json")).status, 400);
+  assert.deepEqual(f.emails, []); assert.deepEqual(f.lookups, []);
+});
+
+test("private calendar test checks the normalized address without sending or changing reminder data", async () => {
+  const f = await adminTestFixture();
+  const response = await f.run({ action: "check_calendar", email: " Customer@Example.Test " });
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Cache-Control"), "no-store");
+  assert.deepEqual(await response.json(), { calendarConnected: true, consultationBooked: false, email: "customer@example.test" });
+  f.setBooked();
+  const booked = await f.run({ action: "check_calendar", email: "customer@example.test" });
+  assert.equal((await booked.json() as { consultationBooked: boolean }).consultationBooked, true);
+  assert.deepEqual(f.lookups, ["customer@example.test", "customer@example.test"]);
+  assert.deepEqual(f.emails, []);
+});
+
+test("private calendar failures report unavailable connection without exposing credentials", async () => {
+  const f = await adminTestFixture(); f.failCalendar();
+  const response = await f.run({ action: "check_calendar", email: "customer@example.test" });
+  assert.equal(response.status, 502);
+  const result = await response.json() as { calendarConnected: boolean; error: string };
+  assert.equal(result.calendarConnected, false);
+  assert.doesNotMatch(result.error, /Private key|provider response/u);
+  assert.deepEqual(f.emails, []);
+});
+
+test("both production-template previews go only to the verified owner and bypass calendar suppression", async () => {
+  const f = await adminTestFixture(); f.setBooked();
+  const response = await f.run({ action: "send_previews" });
+  assert.equal(response.status, 200);
+  assert.deepEqual(f.emails, [3, 7].map((reminderDay) => ({ toEmail: "owner@example.test", toName: "Test Traveler", reminderDay, testPreview: true })));
+  assert.deepEqual(f.lookups, []);
+  assert.deepEqual(await response.json(), { toEmail: "owner@example.test", deliveries: [{ reminderDay: 3, status: "accepted" }, { reminderDay: 7, status: "accepted" }] });
+});
+
+test("a partial preview failure reports each result and never retries an uncertain send", async () => {
+  const f = await adminTestFixture(); f.failDay(3);
+  const response = await f.run({ action: "send_previews" });
+  assert.deepEqual((await response.json() as { deliveries: unknown[] }).deliveries, [{ reminderDay: 3, status: "unconfirmed" }, { reminderDay: 7, status: "accepted" }]);
+  assert.equal(f.emails.length, 2);
 });
 
 test("runtime storage and migration are both idempotent with equivalent tables", async () => {

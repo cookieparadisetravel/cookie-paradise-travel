@@ -253,11 +253,12 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
               <h1 className="font-serif text-2xl font-bold sm:text-3xl">{selectedInquiry ? "Inquiry details" : "Inquiries"}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <span className={`hidden rounded-full px-3 py-1 text-xs font-extrabold sm:inline-flex ${squareMode === "sandbox" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"}`}>
               Square {squareMode === "sandbox" ? "Sandbox" : "Production"}
             </span>
             <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/referrals">Referrals</a>
+            <a className="min-h-10 rounded-full bg-[var(--gold)] px-3 py-2 text-sm font-bold text-[var(--ink)]" href="/admin/reminder-tests">Test reminders</a>
             <button aria-label="Refresh inquiries" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--line)] px-3 text-sm font-bold hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={refresh} type="button">
               <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Refresh</span>
             </button>
