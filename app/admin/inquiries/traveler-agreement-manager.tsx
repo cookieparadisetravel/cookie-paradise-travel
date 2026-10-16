@@ -226,7 +226,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                   {!invitationDeliveries[traveler.id] ? (
                     <button
                       disabled={!agreementActive || !pricingComplete || creatingInvitationFor === traveler.id}
-                      className="inline-flex items-center gap-2 rounded-full border border-[var(--gold)] bg-[var(--gold)] px-3 py-2 text-xs font-bold text-[var(--ink)] transition hover:brightness-95 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/35 disabled:cursor-not-allowed disabled:opacity-45"
+                      className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d99a3b] bg-[var(--gold)] px-3 py-2 text-xs font-extrabold text-[var(--ink)] shadow-sm enabled:hover:bg-[#ffc56c] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/50 disabled:cursor-not-allowed"
                       type="button"
                       onClick={() => createInvitation(traveler.id)}
                     >
