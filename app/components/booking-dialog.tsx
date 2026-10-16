@@ -324,12 +324,13 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
               </div>
               <div className="field-label sm:col-span-2">Room preference
                 <Select value={room} onValueChange={(value) => setRoom(value ?? "shared")}>
-                  <SelectTrigger className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
+                  <SelectTrigger aria-describedby="room-preference-help" className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="shared">Shared double/twin room</SelectItem>
                     <SelectItem value="private">Private room (+$399 per traveler)</SelectItem>
                   </SelectContent>
                 </Select>
+                <p id="room-preference-help" className="mt-2 text-sm font-normal leading-6 text-[var(--muted-ink)]">The $399 private-room supplement applies only to single travelers who want a room to themselves. Couples can share a room with a queen bed or separate beds, depending on their preference. Couples sharing a room should select “Shared double/twin room.”</p>
               </div>
               <fieldset
                 className={`rounded-2xl border p-4 sm:col-span-2 ${fieldErrors.bookingIntent ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : "border-[var(--line)] bg-white/60"}`}
