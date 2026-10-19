@@ -3,6 +3,8 @@ export const REFERRAL_COOKIE_SECONDS = 90 * 24 * 60 * 60;
 export const salonPartners = [
   { code: "gossip-nails", name: "Gossip Nails", logo: "/referrals/gossip-nails-logo.png", website: "https://gossipnailscolumbus.com/", creamSurface: false },
   { code: "nails-station", name: "Nails Station & Spa", logo: "/referrals/nails-station-logo.png", website: "https://nailsstationandspa.com/", creamSurface: true },
+  { code: "cisco-barbershop", name: "Cisco Barbershop", logo: "/referrals/cisco-barbershop-logo.png", website: "https://www.ciscos.site/", creamSurface: false },
+  { code: "columbus-uppercuts", name: "Columbus Uppercuts", logo: "/referrals/columbus-uppercuts-logo.svg", website: "https://www.columbusuppercuts.com/", creamSurface: false },
 ] as const;
 export type SalonPartner = typeof salonPartners[number];
 export function getSalonPartner(code: unknown): SalonPartner | null {

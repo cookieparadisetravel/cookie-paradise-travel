@@ -55,7 +55,7 @@ export async function PATCH(request: Request) {
     if (!validReferralDate(qualifiedOn) || qualifiedOn > today || qualifiedOn < inquiryDate
       || !dateInPilot(pilot?.materialsReceivedOn ?? null, qualifiedOn)
       || !dateInPilot(pilot?.materialsReceivedOn ?? null, inquiryDate)) {
-      return Response.json({ error: "The inquiry, signed agreement and cleared deposit must qualify within this salon’s 90-day pilot. Enter the date the last requirement was met." }, { status: 400 });
+      return Response.json({ error: "The inquiry, signed agreement and cleared deposit must qualify within this partner’s 90-day pilot. Enter the date the last requirement was met." }, { status: 400 });
     }
     const tripEnds = new Date(`${row.inquiry.departure}T00:00:00Z`);
     tripEnds.setUTCDate(tripEnds.getUTCDate() + 7);
@@ -72,7 +72,7 @@ export async function PATCH(request: Request) {
       .onConflictDoUpdate({ target: salonReferralCompletions.travelerId, set: { qualifiedOn, successful: true, reviewedBy: owner.email, reviewedAt: now } });
     return Response.json({ ok: true });
   } catch (error) {
-    console.error("Salon referral update failed", getSafeDatabaseErrorDetails(error));
+    console.error("Partner referral update failed", getSafeDatabaseErrorDetails(error));
     return Response.json({ error: "The referral update could not be saved. Please try again." }, { status: 500 });
   }
 }

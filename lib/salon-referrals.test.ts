@@ -56,9 +56,11 @@ async function fixture() {
 const body = { action: "completion", travelerId: 1, successful: true, qualifiedOn: "2026-10-20", tripCompletedAndNotRefunded: true };
 function request(payload: unknown) { return new Request("https://example.com/api/admin/referrals", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }); }
 
-test("referral cookies accept only the two fixed partners and do not trust arbitrary names", () => {
+test("referral cookies accept only the configured partners and do not trust arbitrary names", () => {
   assert.equal(referrals.referralFromCookie("other=x; cp_travel_referral=gossip-nails")?.name, "Gossip Nails");
   assert.equal(referrals.referralFromCookie("cp_travel_referral=nails-station")?.name, "Nails Station & Spa");
+  assert.equal(referrals.referralFromCookie("cp_travel_referral=cisco-barbershop")?.name, "Cisco Barbershop");
+  assert.equal(referrals.referralFromCookie("cp_travel_referral=columbus-uppercuts")?.name, "Columbus Uppercuts");
   for (const cookie of [null, "cp_travel_referral=<script>", "fake_cp_travel_referral=gossip-nails", "cp_travel_referral=missing"]) assert.equal(referrals.referralFromCookie(cookie), null);
 });
 test("ninety-day pilot includes its first and last day, including leap years", () => {
@@ -67,6 +69,21 @@ test("ninety-day pilot includes its first and last day, including leap years", (
   for (const [date, allowed] of [["2026-10-12", false], ["2026-10-13", true], ["2027-01-10", true], ["2027-01-11", false]] as const) assert.equal(referrals.dateInPilot("2026-10-13", date), allowed);
   assert.equal(referrals.dateInPilot(null, "2026-10-13"), false);
   assert.equal(referrals.validReferralDate("2026-02-31"), false);
+});
+test("barbershop pilots save independently and use the same commission qualification", async () => {
+  const { sqlite, stubs } = await fixture();
+  try {
+    const route = await loadModule("app/api/admin/referrals/route.ts", stubs);
+    for (const code of ["cisco-barbershop", "columbus-uppercuts"]) {
+      assert.equal((await route.PATCH(request({ action: "pilot", code, materialsReceivedOn: "2026-10-13" }) as never)).status, 200);
+      sqlite.prepare("UPDATE booking_requests SET referral_code=? WHERE id=1").run(code);
+      assert.equal((await route.PATCH(request(body) as never)).status, 200);
+      sqlite.exec("DELETE FROM salon_referral_completions");
+    }
+    assert.deepEqual(sqlite.prepare("SELECT code, materials_received_on FROM salon_referral_pilots ORDER BY code").all().map((row) => [row.code, row.materials_received_on]), [
+      ["cisco-barbershop", "2026-10-13"], ["columbus-uppercuts", "2026-10-13"], ["gossip-nails", "2026-10-13"],
+    ]);
+  } finally { sqlite.close(); }
 });
 test("bonuses accumulate independently without rounding incomplete groups or imposing a cap", () => {
   for (const [count, total] of [[0,0],[1,100],[4,400],[5,600],[6,700],[10,1200],[15,1800],[20,2400],[25,3000],[30,3600],[31,3700]]) assert.equal(referrals.referralEarnings(count).totalCents, total * 100);
@@ -133,7 +150,7 @@ test("owner authentication and origin checks run before any referral data change
 });
 
 test("the public booking API persists the allowlisted cookie and ignores a forged payload referral", async () => {
-  for (const [cookie, expected] of [["cp_travel_referral=gossip-nails", "gossip-nails"], ["cp_travel_referral=nails-station", "nails-station"], ["cp_travel_referral=unknown", null], ["", null]] as const) {
+  for (const [cookie, expected] of [...referrals.salonPartners.map(({ code }) => [`cp_travel_referral=${code}`, code] as const), ["cp_travel_referral=unknown", null], ["", null]] as const) {
     const { sqlite, stubs } = await fixture();
     const oldFetch = globalThis.fetch;
     let notifiedCode: string | null | undefined;

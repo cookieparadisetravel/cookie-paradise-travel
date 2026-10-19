@@ -555,7 +555,7 @@ function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
           <InfoItem label="Departure">{departureLabel(inquiry.departure)}</InfoItem>
           <InfoItem label="Party size">{inquiry.partySize}</InfoItem>
           <InfoItem label="Room preference">{readableValue(inquiry.roomPreference)}</InfoItem>
-          <InfoItem label="Referral salon">{getSalonPartner(inquiry.referralCode)?.name ?? "Direct inquiry"}</InfoItem>
+          <InfoItem label="Referral partner">{getSalonPartner(inquiry.referralCode)?.name ?? "Direct inquiry"}</InfoItem>
           <InfoItem label="Customer intent">{bookingIntentLabel(inquiry.bookingIntent)}</InfoItem>
           <InfoItem label="Automated booking">{automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>
           <InfoItem label="Trip contact consent">{inquiry.contactConsent ? "Recorded" : "Not recorded"}</InfoItem>
