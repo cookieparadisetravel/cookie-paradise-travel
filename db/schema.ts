@@ -278,6 +278,14 @@ export const salonReferralCompletions = sqliteTable("salon_referral_completions"
   reviewedAt: text("reviewed_at").notNull(),
 });
 
+// Owner-confirmed individual payee; partner links alone identify only the shop.
+export const referralRecipients = sqliteTable("referral_recipients", {
+  travelerId: integer("traveler_id").primaryKey().references(() => travelers.id, { onDelete: "cascade" }),
+  referrerName: text("referrer_name").notNull(),
+  updatedBy: text("updated_by").notNull(),
+  updatedAt: text("updated_at").notNull(),
+});
+
 export const inquiryReminders = sqliteTable("inquiry_reminders", {
   email: text("email").notNull(),
   reminderDay: integer("reminder_day").notNull(),

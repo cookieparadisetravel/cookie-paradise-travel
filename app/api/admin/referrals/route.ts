@@ -1,9 +1,10 @@
 import { eq } from "drizzle-orm";
 import { getDb } from "@/db";
-import { bookingRequests, salonReferralCompletions, salonReferralPilots, travelers } from "@/db/schema";
+import { bookingRequests, referralRecipients, salonReferralCompletions, salonReferralPilots, travelers } from "@/db/schema";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
-import { dateInPilot, getSalonPartner, validReferralDate } from "@/lib/salon-referrals";
+import { dateInPilot, getSalonPartner, normalizeReferrerName, validReferralDate } from "@/lib/salon-referrals";
+import { ensureReferralRecipientStorage } from "@/lib/referral-recipient-storage";
 import { todayInIndiana } from "@/lib/payment-schedule";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { getSafeDatabaseErrorDetails } from "@/lib/safe-error";
@@ -22,6 +23,7 @@ export async function PATCH(request: Request) {
   const now = new Date().toISOString();
   const today = todayInIndiana();
   try {
+    await ensureReferralRecipientStorage();
     if (payload.action === "pilot") {
       const partner = getSalonPartner(payload.code);
       const startDate = payload.materialsReceivedOn;
@@ -37,16 +39,25 @@ export async function PATCH(request: Request) {
         .onConflictDoUpdate({ target: salonReferralPilots.code, set: { materialsReceivedOn: startDate, updatedAt: now, updatedBy: owner.email } });
       return Response.json({ ok: true });
     }
-    if (payload.action !== "completion" || !Number.isSafeInteger(payload.travelerId) || Number(payload.travelerId) < 1 || typeof payload.successful !== "boolean") {
+    if (!["completion", "recipient"].includes(String(payload.action)) || !Number.isSafeInteger(payload.travelerId) || Number(payload.travelerId) < 1
+      || (payload.action === "completion" && typeof payload.successful !== "boolean")) {
       return Response.json({ error: "Invalid referral review." }, { status: 400 });
     }
     const travelerId = Number(payload.travelerId);
     const [row] = await db.select({ traveler: travelers, inquiry: bookingRequests }).from(travelers)
       .innerJoin(bookingRequests, eq(bookingRequests.id, travelers.bookingRequestId)).where(eq(travelers.id, travelerId));
     if (!row || !getSalonPartner(row.inquiry.referralCode)) return Response.json({ error: "Attributed traveler not found." }, { status: 404 });
-    if (!payload.successful) {
+    if (payload.action === "completion" && !payload.successful) {
       await db.update(salonReferralCompletions).set({ successful: false, reviewedBy: owner.email, reviewedAt: now })
         .where(eq(salonReferralCompletions.travelerId, travelerId));
+      return Response.json({ ok: true });
+    }
+    const referrerName = normalizeReferrerName(payload.referrerName);
+    if (!referrerName) return Response.json({ error: "Enter the referring person’s name or unique identifier (2–120 characters)." }, { status: 400 });
+    const saveRecipient = () => db.insert(referralRecipients).values({ travelerId, referrerName, updatedBy: owner.email, updatedAt: now })
+      .onConflictDoUpdate({ target: referralRecipients.travelerId, set: { referrerName, updatedBy: owner.email, updatedAt: now } });
+    if (payload.action === "recipient") {
+      await saveRecipient();
       return Response.json({ ok: true });
     }
     const qualifiedOn = payload.qualifiedOn;
@@ -68,6 +79,7 @@ export async function PATCH(request: Request) {
     if (!readiness.acceptedTravelerIds.includes(travelerId)) {
       return Response.json({ error: "This traveler’s signed agreement has not been recorded." }, { status: 409 });
     }
+    await saveRecipient();
     await db.insert(salonReferralCompletions).values({ travelerId, qualifiedOn, successful: true, reviewedBy: owner.email, reviewedAt: now })
       .onConflictDoUpdate({ target: salonReferralCompletions.travelerId, set: { qualifiedOn, successful: true, reviewedBy: owner.email, reviewedAt: now } });
     return Response.json({ ok: true });

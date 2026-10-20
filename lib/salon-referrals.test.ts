@@ -50,10 +50,11 @@ async function fixture() {
     "@/lib/payment-schedule": { todayInIndiana: (date?: Date) => date ? date.toISOString().slice(0, 10) : "2027-06-09" },
     "@/lib/agreement-readiness": { getAgreementReadiness: async () => ({ acceptedTravelerIds: [1] }) },
     "@/lib/safe-error": { getSafeDatabaseErrorDetails },
+    "@/lib/referral-recipient-storage": { ensureReferralRecipientStorage: async () => {} },
   };
   return { sqlite, stubs };
 }
-const body = { action: "completion", travelerId: 1, successful: true, qualifiedOn: "2026-10-20", tripCompletedAndNotRefunded: true };
+const body = { action: "completion", travelerId: 1, successful: true, qualifiedOn: "2026-10-20", referrerName: "Test Tech", tripCompletedAndNotRefunded: true };
 function request(payload: unknown) { return new Request("https://example.com/api/admin/referrals", { method: "PATCH", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) }); }
 
 test("referral cookies accept only the configured partners and do not trust arbitrary names", () => {
@@ -85,10 +86,43 @@ test("barbershop pilots save independently and use the same commission qualifica
     ]);
   } finally { sqlite.close(); }
 });
-test("bonuses accumulate independently without rounding incomplete groups or imposing a cap", () => {
-  for (const [count, total] of [[0,0],[1,100],[4,400],[5,600],[6,700],[10,1200],[15,1800],[20,2400],[25,3000],[30,3600],[31,3700]]) assert.equal(referrals.referralEarnings(count).totalCents, total * 100);
-  assert.throws(() => referrals.referralEarnings(-1));
-  assert.throws(() => referrals.referralEarnings(1.5));
+test("each partner applies its exact commission split and bonus rules without a cap", () => {
+  for (const partner of referrals.salonPartners) {
+    for (const count of [0, 1, 4, 5, 6, 10, 15, 31]) {
+      const earnings = referrals.referralEarnings(partner, Array<string>(count).fill("Test Person"));
+      const nails = ["gossip-nails", "nails-station"].includes(partner.code);
+      assert.equal(earnings.referrerBaseCents, count * (nails ? 10000 : 20000));
+      assert.equal(earnings.shopOwnerCents, nails ? count * 10000 : 0);
+      assert.equal(earnings.bonusCents, nails ? Math.floor(count / 5) * 10000 : 0);
+      assert.equal(earnings.totalCents, count * 20000 + (nails ? Math.floor(count / 5) * 10000 : 0));
+      assert.equal(earnings.referrers[0]?.totalCents ?? 0, earnings.referrerBaseCents + earnings.bonusCents);
+    }
+  }
+});
+test("nail-tech bonuses belong to each individual and recalculate after reassignment or removal", () => {
+  const partner = referrals.getSalonPartner("gossip-nails")!;
+  const split = referrals.referralEarnings(partner, ["Alex", "Alex", "Alex", "Alex", "Taylor"]);
+  assert.equal(split.bonusCents, 0);
+  assert.equal(split.shopOwnerCents, 50000);
+  assert.deepEqual(split.referrers.map((p) => [p.name, p.totalCents]), [["Alex", 40000], ["Taylor", 10000]]);
+  const together = referrals.referralEarnings(partner, ["Alex", "Alex", "Alex", "Alex", "  ALEX  "]);
+  assert.equal(together.bonusCents, 10000);
+  assert.equal(together.referrers[0].totalCents, 60000);
+  assert.equal(together.shopOwnerCents, 50000);
+  assert.equal(together.totalCents, 110000);
+  assert.equal(referrals.referralEarnings(partner, ["Alex", "Alex", "Alex", "Alex"]).bonusCents, 0);
+  assert.equal(referrals.referralEarnings(partner, [...Array<string>(10).fill("Alex"), ...Array<string>(5).fill("Taylor")]).bonusCents, 30000);
+});
+test("unassigned legacy referrals keep base commissions but never earn a pooled bonus", () => {
+  for (const partner of referrals.salonPartners) {
+    const earnings = referrals.referralEarnings(partner, Array<null>(5).fill(null));
+    assert.equal(earnings.totalCents, 100000);
+    assert.equal(earnings.unassignedCount, 5);
+    assert.equal(earnings.bonusCents, 0);
+    assert.deepEqual(earnings.referrers, []);
+  }
+  assert.equal(referrals.normalizeReferrerName("  Alex   Smith  "), "Alex Smith");
+  for (const invalid of [null, "", "A", "a".repeat(121), "Alex\nSmith"]) assert.equal(referrals.normalizeReferrerName(invalid), null);
 });
 test("QR landing redirects to the booking site with a private, secure, ninety-day cookie", async () => {
   const route = await loadModule("app/r/[code]/route.ts", { "@/lib/salon-referrals": referrals });
@@ -113,6 +147,28 @@ test("successful traveler is counted once, can be removed, and can be restored",
     assert.equal((await route.PATCH(request(body) as never)).status, 200);
     const locked = await route.PATCH(request({ action: "pilot", code: "gossip-nails", materialsReceivedOn: "2026-10-14" }) as never);
     assert.equal(locked.status,409);
+  } finally { sqlite.close(); }
+});
+test("individual recipients are required, normalized, stored and correctable without changing qualification", async () => {
+  const { sqlite, stubs } = await fixture();
+  try {
+    const route = await loadModule("app/api/admin/referrals/route.ts", stubs);
+    for (const referrerName of [null, "", "a", "a".repeat(121), "Alex\nSmith"]) {
+      assert.equal((await route.PATCH(request({ ...body, referrerName }) as never)).status, 400);
+    }
+    assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM salon_referral_completions").get()!.count, 0);
+    sqlite.exec("UPDATE booking_requests SET square_deposit_invoice_status='unpaid'");
+    assert.equal((await route.PATCH(request({ action: "recipient", travelerId: 1, referrerName: "Early Referrer" }) as never)).status, 200);
+    assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM salon_referral_completions").get()!.count, 0);
+    sqlite.exec("UPDATE booking_requests SET square_deposit_invoice_status='paid'");
+    assert.equal((await route.PATCH(request({ ...body, referrerName: "  Alex   Smith  " }) as never)).status, 200);
+    assert.equal(sqlite.prepare("SELECT referrer_name FROM referral_recipients WHERE traveler_id=1").get()!.referrer_name, "Alex Smith");
+    assert.equal((await route.PATCH(request({ action: "recipient", travelerId: 1, referrerName: "Taylor Jones" }) as never)).status, 200);
+    assert.equal(sqlite.prepare("SELECT referrer_name FROM referral_recipients WHERE traveler_id=1").get()!.referrer_name, "Taylor Jones");
+    assert.equal(sqlite.prepare("SELECT successful FROM salon_referral_completions WHERE traveler_id=1").get()!.successful, 1);
+    assert.equal((await route.PATCH(request({ action: "recipient", travelerId: 999, referrerName: "Unknown" }) as never)).status, 404);
+    sqlite.exec("UPDATE booking_requests SET referral_code=NULL");
+    assert.equal((await route.PATCH(request({ action: "recipient", travelerId: 1, referrerName: "Direct inquiry" }) as never)).status, 404);
   } finally { sqlite.close(); }
 });
 test("Sandbox, unpaid, unfinished and unsigned travelers cannot earn commissions", async () => {
@@ -144,9 +200,29 @@ test("owner authentication and origin checks run before any referral data change
       if (check === "owner") stubs["@/lib/owner-auth"].requireOwner = async () => null;
       else stubs["@/lib/same-origin"].hasValidOrigin = () => false;
       const route = await loadModule("app/api/admin/referrals/route.ts", stubs);
-      assert.equal((await route.PATCH(request(body) as never)).status,403);
+      for (const payload of [body, { action: "recipient", travelerId: 1, referrerName: "Unauthorized" }]) {
+        assert.equal((await route.PATCH(request(payload) as never)).status,403);
+      }
+      assert.equal(sqlite.prepare("SELECT COUNT(*) AS count FROM referral_recipients").get()!.count, 0);
     } finally { sqlite.close(); }
   }
+});
+
+test("recipient runtime storage and migration are equivalent and idempotent", async () => {
+  const sqlite = new DatabaseSync(":memory:");
+  try {
+    const storage = await loadModule("lib/referral-recipient-storage.ts", {
+      "cloudflare:workers": { env: { DB: {
+        prepare: (statement: string) => statement,
+        batch: async (statements: string[]) => { for (const statement of statements) sqlite.exec(statement); },
+      } } },
+    });
+    await storage.ensureReferralRecipientStorage();
+    const migration = readFileSync(new URL("../drizzle/0022_referral_recipients.sql", import.meta.url), "utf8");
+    sqlite.exec(migration); sqlite.exec(migration);
+    assert.deepEqual(sqlite.prepare("PRAGMA table_info(referral_recipients)").all().map((row) => row.name), ["traveler_id", "referrer_name", "updated_by", "updated_at"]);
+    assert.equal(sqlite.prepare("PRAGMA foreign_key_list(referral_recipients)").get()!.table, "travelers");
+  } finally { sqlite.close(); }
 });
 
 test("the public booking API persists the allowlisted cookie and ignores a forged payload referral", async () => {
