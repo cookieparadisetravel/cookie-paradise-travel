@@ -8,6 +8,9 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
 import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
+import { getPublicTripAvailability } from "@/lib/public-trip-availability";
+import { vietnamDeparture } from "@/lib/trip-availability";
+import { TripAvailability } from "./components/trip-availability";
 export const dynamic = "force-dynamic";
 
 const itinerary = [
@@ -98,6 +101,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
   const linkedPartner = getSalonPartner((await searchParams).ref);
   if (linkedPartner) redirect(`/r/${linkedPartner.code}`);
   const partner = getSalonPartner((await cookies()).get(REFERRAL_COOKIE)?.value);
+  const availability = await getPublicTripAvailability(vietnamDeparture.tripSlug, vietnamDeparture.departure, vietnamDeparture.capacity);
   return (
     <ReferralProvider partner={partner}>
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
@@ -147,6 +151,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
               Eight thoughtfully paced days from the energy of Saigon through Mekong waterways and imperial Huế to lantern-lit Hội An—created by Trung Le and hosted by Trung or a trusted Cookie Paradise Travel Company host.
             </p>
+            <TripAvailability availability={availability} label={vietnamDeparture.label} />
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <BookingDialog triggerLabel="Request your spot" />
               <a href="#journey" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/35 px-6 text-sm font-bold transition hover:bg-white/10">
@@ -342,7 +347,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
         </div>
       </footer>
-      <MobileBookBar />
+      <MobileBookBar availability={availability} />
     </main>
     </ReferralProvider>
   );
