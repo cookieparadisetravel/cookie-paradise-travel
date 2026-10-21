@@ -27,6 +27,7 @@
     "CONSULTATION_CALENDAR_ID": "trung@cookieparadise.co",
     "AUTOMATED_BOOKING_ENABLED": "true",
     "SQUARE_ENV": "production",
+    // The following application and location IDs are Sandbox-only; Production uses separate secrets.
     "SQUARE_APPLICATION_ID": "sandbox-sq0idb-LXRKY7_IJOLJU8Ec0rk_SQ",
     "SQUARE_LOCATION_ID": "LF9EW4W95QPA7",
     "SQUARE_WEBHOOK_NOTIFICATION_URL": "https://cookieparadisetravel.com/api/square/webhook",
