@@ -79,7 +79,9 @@ function loadTurnstileScript() {
 }
 
 export function BookingDialog({ triggerLabel, compact = false, inverse = false }: Props) {
-  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? "";
+  // This is the public widget identifier, not the private Siteverify secret.
+  // Keep the production default in source so a fresh checkout can build a working form.
+  const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || "0x4AAAAAAFFgsW7CiOEkimz7";
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
