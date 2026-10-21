@@ -6,6 +6,7 @@ import ts from "typescript";
 import { drizzle } from "drizzle-orm/sqlite-proxy";
 import * as schema from "../db/schema.ts";
 import * as squareConfig from "./square-config.ts";
+import { autopayScheduleFingerprint } from "./square-autopay.ts";
 
 // Load the actual Worker modules with isolated Cloudflare/provider dependencies.
 // No network requests, customer emails, or real databases are used in these tests.
@@ -225,6 +226,72 @@ test("recorded autopay recovery refuses a different environment without changing
     assert.deepEqual(sqlite.prepare("SELECT * FROM autopay_authorizations WHERE id = 1").get(), authorizationBefore);
   } finally { sqlite.close(); }
 });
+
+for (const mode of ["sandbox", "production"] as const) {
+  for (const scenario of ["unpaid_requests", "empty_requests", "empty_recovery"] as const) {
+    test(`${mode} autopay ${scenario} never updates the paid deposit`, async () => {
+      const { sqlite, stubs } = fixture(mode, mode);
+      try {
+        const schedule = [
+          { uid: "unpaid-installment", dueDate: "2027-02-01", amountCents: 100000 },
+          { uid: "unpaid-balance", dueDate: "2027-03-01", amountCents: 137500 },
+        ];
+        sqlite.exec(`INSERT INTO autopay_authorizations (
+          id, booking_request_id, invitation_id, status, cardholder_name, cardholder_email,
+          consented_at, consented_at_local, ip_hash, user_agent, agreement_version,
+          authorization_version, authorization_text, square_customer_id, square_card_id,
+          card_brand, card_last_4, square_invoice_id, schedule_snapshot, total_cents,
+          final_due_date, confirmation_email_sent_at
+        ) VALUES (
+          1, 1, 1, 'saving', 'Test Traveler', 'test@example.com',
+          '2026-10-01T00:00:00.000Z', 'Test timestamp', 'test-hash', 'test-agent', '1.0',
+          'test-version', 'Test consent', 'test-customer', 'test-card',
+          'VISA', '1111', 'test-invoice', '[]', 237500,
+          '2027-03-01', '2026-10-01T00:00:00.000Z'
+        )`);
+        sqlite.prepare("UPDATE autopay_authorizations SET schedule_snapshot = ? WHERE id = 1")
+          .run(JSON.stringify(schedule));
+        const updates: { requestUids: string[] }[] = [];
+        stubs["@/lib/square"] = {
+          autopayScheduleFingerprint,
+          findAutopayCardAndSchedule: async () => ({
+            status: "ready", cardId: "test-card", cardBrand: "VISA", cardLast4: "1111",
+            invoiceVersion: 2, invoiceStatus: "PARTIALLY_PAID",
+            requestUids: ["paid-deposit", ...schedule.map((request) => request.uid)],
+            requests: scenario === "unpaid_requests" ? schedule : [],
+            autopayAlreadyEnabled: scenario === "empty_recovery",
+          }),
+          setInvoiceAutopay: async (input: { requestUids: string[] }) => {
+            updates.push(input);
+            return { version: 3, status: "PARTIALLY_PAID" };
+          },
+        };
+        stubs["@/lib/owner-notification"] = { sendOwnerAutopayAuthorizationNotification: async () => {} };
+        const worker = await loadWorkerModule("lib/autopay-authorization-service.ts", addSqlBuilders(stubs));
+        const result = await worker.activateRecordedAutopayAuthorization(1 as never) as { ok: boolean; status: string };
+        const booking = rowSnapshot(sqlite)!;
+        const authorization = sqlite.prepare("SELECT status FROM autopay_authorizations WHERE id = 1").get()!;
+        if (scenario === "unpaid_requests") {
+          assert.equal(result.ok, true);
+          assert.equal(result.status, "active");
+          assert.equal(updates.length, 1);
+          assert.deepEqual(updates[0].requestUids, ["unpaid-installment", "unpaid-balance"]);
+          assert.equal(authorization.status, "active");
+          assert.equal(booking.installment_autopay_authorized, 1);
+        } else {
+          assert.equal(result.ok, false);
+          assert.equal(result.status, "square_failed");
+          assert.equal(updates.length, 0);
+          assert.equal(authorization.status, "square_failed");
+          assert.equal(booking.installment_autopay_authorized, 0);
+          assert.equal(booking.installment_autopay_status, "square_failed");
+          const event = sqlite.prepare("SELECT detail FROM autopay_events WHERE event_type = 'enable_failed'").get()!;
+          assert.deepEqual(JSON.parse(String(event.detail)), { code: "square_update_failed" });
+        }
+      } finally { sqlite.close(); }
+    });
+  }
+}
 
 for (const file of ["autopay-retry", "autopay-stop", "payment-preference-invitation"]) {
   test(`owner ${file} rejects the wrong environment without changing state`, async () => {

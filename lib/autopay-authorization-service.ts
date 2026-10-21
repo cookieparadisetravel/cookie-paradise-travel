@@ -78,6 +78,11 @@ export async function activateRecordedAutopayAuthorization(
     return markActivationFailed(record, schedule, readiness.status);
   }
 
+  const requestUids = readiness.requests.map((request) => request.uid);
+  if (requestUids.length === 0) {
+    return markActivationFailed(record, schedule, "square_update_failed");
+  }
+
   const [storedFingerprint, currentFingerprint] = await Promise.all([
     autopayScheduleFingerprint(record.squareCardId, schedule),
     autopayScheduleFingerprint(readiness.cardId, readiness.requests),
@@ -95,7 +100,7 @@ export async function activateRecordedAutopayAuthorization(
       invoiceResult = await setInvoiceAutopay({
         invoiceId: record.squareInvoiceId,
         version: readiness.invoiceVersion,
-        requestUids: readiness.requestUids,
+        requestUids,
         cardId: readiness.cardId,
         idempotencyKey: `cpt-ap-${record.authorizationId}-${readiness.invoiceVersion}-${storedFingerprint.slice(0, 12)}`,
       });
