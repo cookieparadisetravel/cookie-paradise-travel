@@ -91,8 +91,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
   const [partySize, setPartySize] = useState("1");
   const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">("");
   const [submittedIntent, setSubmittedIntent] = useState<"" | "ready_to_book" | "needs_information">("");
-  const [submittedPartySize, setSubmittedPartySize] = useState(1);
-  const [submittedBookingPaused, setSubmittedBookingPaused] = useState(false);
+  const [submittedAutomationStatus, setSubmittedAutomationStatus] = useState<string | null>(null);
   const [sellerOfTravelStateResident, setSellerOfTravelStateResident] = useState(false);
   const [residenceState, setResidenceState] = useState("");
   const [turnstileToken, setTurnstileToken] = useState("");
@@ -211,15 +210,14 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await response.json().catch(() => null) as { error?: unknown; bookingPaused?: unknown } | null;
+      const result = await response.json().catch(() => null) as { error?: unknown; automationStatus?: unknown } | null;
       if (!response.ok) {
         resetTurnstile();
         const serverMessage = typeof result?.error === "string" ? result.error.trim() : "";
         throw new Error(serverMessage || "We couldn’t save your request. Please try again in a moment.");
       }
       setSubmittedIntent(bookingIntent);
-      setSubmittedPartySize(Number(partySize));
-      setSubmittedBookingPaused(result?.bookingPaused === true);
+      setSubmittedAutomationStatus(typeof result?.automationStatus === "string" ? result.automationStatus : null);
       setStatus("success");
     } catch (error) {
       setErrorMessage(error instanceof Error && error.message
@@ -256,13 +254,11 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
             <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--orange)]" />
             <DialogTitle className="mt-5 font-serif text-3xl">Your request is in.</DialogTitle>
             <DialogDescription className="mx-auto mt-3 max-w-md text-base leading-7 text-[var(--muted-ink)]">
-              {submittedIntent === "ready_to_book"
-                ? submittedBookingPaused
-                  ? "Thanks—your request has been received. Trung will contact you with the next steps. No payment was collected, and your reservation is not yet confirmed."
-                  : submittedPartySize === 1
+              {submittedAutomationStatus === "traveler_list_sent"
+                ? "Check your email for a secure traveler-details link. After the traveler agreements are signed, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
+                : submittedAutomationStatus === "agreements_sent"
                   ? "Check your email for your secure Traveler Agreement. After you sign, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
-                  : "Check your email for a secure traveler-details link. After the traveler agreements are signed, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
-                : "Thanks—your inquiry has been saved. Use the button below to book a 30-minute Google Meet with Trung. No payment was collected and this is not a confirmed reservation."}
+                  : "Thanks—your request has been received. Trung will contact you with the next steps. No payment was collected, and your reservation is not yet confirmed."}
             </DialogDescription>
             {submittedIntent === "needs_information" ? (
               <div className="mt-7 flex flex-col items-center gap-3">
@@ -353,7 +349,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                       className="mt-1 h-4 w-4 accent-[var(--orange)]"
                       required
                     />
-                    <span className="text-sm leading-6"><strong>Yes, I am ready to book.</strong><br /><span className="text-xs text-[var(--muted-ink)]">We’ll save your request, and Trung will contact you with the next steps.</span></span>
+                    <span className="text-sm leading-6"><strong>Yes, I am ready to book.</strong><br /><span className="text-xs text-[var(--muted-ink)]">We&apos;ll email your next secure step. Some requests are reviewed by Trung first.</span></span>
                   </label>
                   <label className="flex cursor-pointer items-start gap-3 rounded-xl p-2 transition hover:bg-[var(--gold)]/15">
                     <input
