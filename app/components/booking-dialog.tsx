@@ -254,11 +254,13 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
             <CheckCircle2 className="mx-auto h-12 w-12 text-[var(--orange)]" />
             <DialogTitle className="mt-5 font-serif text-3xl">Your request is in.</DialogTitle>
             <DialogDescription className="mx-auto mt-3 max-w-md text-base leading-7 text-[var(--muted-ink)]">
-              {submittedAutomationStatus === "traveler_list_sent"
-                ? "Check your email for a secure traveler-details link. After the traveler agreements are signed, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
-                : submittedAutomationStatus === "agreements_sent"
-                  ? "Check your email for your secure Traveler Agreement. After you sign, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
-                  : "Thanks—your request has been received. Trung will contact you with the next steps. No payment was collected, and your reservation is not yet confirmed."}
+              {submittedIntent === "needs_information"
+                ? "Thanks—your inquiry has been saved. Use the button below to book a 30-minute Google Meet with Trung. No payment was collected and this is not a confirmed reservation."
+                : submittedAutomationStatus === "traveler_list_sent"
+                  ? "Check your email for a secure traveler-details link. After the traveler agreements are signed, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
+                  : submittedAutomationStatus === "agreements_sent"
+                    ? "Check your email for your secure Traveler Agreement. After you sign, we’ll email your payment-choice link; Square will then send your invoice. No payment was collected by this form."
+                    : "Thanks—your request has been received. Trung will contact you with the next steps. No payment was collected, and your reservation is not yet confirmed."}
             </DialogDescription>
             {submittedIntent === "needs_information" ? (
               <div className="mt-7 flex flex-col items-center gap-3">
