@@ -325,6 +325,57 @@ test("disabled automation prevents continuations from querying or sending agreem
   await worker.continueAutomatedBookingAfterAgreement({ inquiryId: 1, requestUrl: "https://example.com" } as never);
 });
 
+test("traveler-list continuation only prices, accepts and emails the traveler_list_sent inquiry", async () => {
+  for (const status of [
+    "not_requested", "paused", "blocked", "error", "agreements_sent",
+    "payment_choice_sending", "payment_choice_sent", "invoice_created", "traveler_list_sent",
+  ]) {
+    const { sqlite, stubs, runtime } = fixture("production", "production");
+    try {
+      runtime.AUTOMATED_BOOKING_ENABLED = "true";
+      sqlite.prepare(`UPDATE booking_requests SET booking_intent = 'ready_to_book',
+        automated_booking_status = ?, square_deposit_invoice_id = NULL WHERE id = 1`).run(status);
+      sqlite.exec(`INSERT INTO travelers (id, booking_request_id, first_name, last_name, email)
+        VALUES (1, 1, 'Test', 'Traveler', 'test@example.com')`);
+      const before = rowSnapshot(sqlite);
+      const travelerBefore = sqlite.prepare("SELECT * FROM travelers WHERE id = 1").get();
+      const emails: unknown[] = [];
+      stubs["@/lib/trip-pricing"] = { automaticTravelerPriceCents: () => 287500 };
+      stubs["@/lib/traveler-agreement"] = {
+        ...stubs["@/lib/traveler-agreement"],
+        currentTravelerAgreement: { version: "test-version" },
+        buildPersonalizedTravelerAgreement: () => ({ version: "test-version" }),
+        canonicalizeAgreement: JSON.stringify,
+        hashAgreementDocument: async () => "test-agreement-hash",
+      };
+      stubs["@/lib/mailersend-transactional"].sendAgreementInvitationEmail = async (input: unknown) => {
+        emails.push(input);
+        return { sentAt: new Date().toISOString(), messageId: "test-message" };
+      };
+      const worker = await loadWorkerModule("lib/booking-automation.ts", addSqlBuilders(stubs));
+      await worker.continueAutomatedBookingAfterTravelerList({ inquiryId: 1, requestUrl: "https://example.com" } as never);
+      const after = rowSnapshot(sqlite)!;
+      const travelerAfter = sqlite.prepare("SELECT * FROM travelers WHERE id = 1").get()!;
+      const invitations = sqlite.prepare("SELECT * FROM agreement_invitations").all();
+      if (status === "traveler_list_sent") {
+        assert.equal(travelerAfter.confirmed_trip_price_cents, 287500);
+        assert.equal(travelerAfter.confirmed_occupancy, "shared");
+        assert.ok(after.company_accepted_at);
+        assert.equal(after.company_accepted_by, "Cookie Paradise Travel Company automated booking flow");
+        assert.equal(after.automated_booking_status, "agreements_sent");
+        assert.equal(emails.length, 1);
+        assert.equal(invitations.length, 1);
+        assert.ok(invitations[0].invitation_email_sent_at);
+      } else {
+        assert.deepEqual(after, before, status);
+        assert.deepEqual(travelerAfter, travelerBefore, status);
+        assert.equal(emails.length, 0, status);
+        assert.equal(invitations.length, 0, status);
+      }
+    } finally { sqlite.close(); }
+  }
+});
+
 test("enabled Production automation cannot advance an existing Sandbox booking", async () => {
   const { sqlite, stubs, runtime } = fixture("production");
   try {

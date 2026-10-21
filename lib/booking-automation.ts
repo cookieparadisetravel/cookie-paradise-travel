@@ -87,6 +87,7 @@ export async function continueAutomatedBookingAfterTravelerList(input: {
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
   if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || inquiry.sellerOfTravelStateResident) return;
+  if (inquiry.automatedBookingStatus !== "traveler_list_sent") return;
   if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return;
 
   try {
