@@ -14,7 +14,6 @@ export function TripAvailability({ availability, label }: { availability: TripAv
         <div role="progressbar" aria-label="Bookings toward the next group pricing tier" aria-valuemin={0} aria-valuemax={availability.tierTarget} aria-valuenow={Math.min(availability.booked, availability.tierTarget)} className="mt-3 h-2 overflow-hidden rounded-full bg-white/20">
           <div className="h-full rounded-full bg-[var(--gold)]" style={{ width: `${Math.min(100, availability.booked / availability.tierTarget * 100)}%` }} />
         </div>
-        <p className="mt-3 text-xs leading-5 text-white/65">The booking target advances with each group pricing tier: 8, 10, 12 and 15 travelers.</p>
       </> : <p className="mt-2 text-sm text-white/80">Contact us for current availability.</p>}
     </div>
   );
