@@ -8,6 +8,7 @@ import { drizzle } from "drizzle-orm/sqlite-proxy";
 import * as sqlBuilders from "drizzle-orm";
 import * as schema from "../db/schema.ts";
 import * as referrals from "./salon-referrals.ts";
+import * as clickReference from "./openai-click-reference.ts";
 import { getSafeDatabaseErrorDetails } from "./safe-error.ts";
 
 type Stubs = Record<string, Record<string, unknown>>;
@@ -125,7 +126,10 @@ test("unassigned legacy referrals keep base commissions but never earn a pooled 
   for (const invalid of [null, "", "A", "a".repeat(121), "Alex\nSmith"]) assert.equal(referrals.normalizeReferrerName(invalid), null);
 });
 test("QR landing redirects to the booking site with a private, secure, ninety-day cookie", async () => {
-  const route = await loadModule("app/r/[code]/route.ts", { "@/lib/salon-referrals": referrals });
+  const route = await loadModule("app/r/[code]/route.ts", {
+    "@/lib/salon-referrals": referrals,
+    "@/lib/openai-click-reference": clickReference,
+  });
   for (const partner of referrals.salonPartners) {
     const response = await route.GET(new Request(`https://example.com/r/${partner.code}`) as never, { params: Promise.resolve({ code: partner.code }) } as never);
     assert.equal(response.status, 303); assert.equal(response.headers.get("location"), "https://example.com/");
