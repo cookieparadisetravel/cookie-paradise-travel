@@ -12,6 +12,7 @@ import {
 
 import { ReferralBrand } from "./referral-brand";
 import { consultationBookingUrl } from "@/lib/consultation";
+import { trackLeadCreated } from "./openai-pixel";
 
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
 
@@ -210,7 +211,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
         headers: { "content-type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const result = await response.json().catch(() => null) as { error?: unknown; automationStatus?: unknown } | null;
+      const result = await response.json().catch(() => null) as { error?: unknown; automationStatus?: unknown; bookingIntent?: unknown } | null;
       if (!response.ok) {
         resetTurnstile();
         const serverMessage = typeof result?.error === "string" ? result.error.trim() : "";
@@ -219,6 +220,9 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       setSubmittedIntent(bookingIntent);
       setSubmittedAutomationStatus(typeof result?.automationStatus === "string" ? result.automationStatus : null);
       setStatus("success");
+      // Only record the lead if the server confirms it created a real inquiry.
+      // In particular, an intentionally ignored honeypot request is not a lead.
+      if (result?.bookingIntent === bookingIntent) trackLeadCreated();
     } catch (error) {
       setErrorMessage(error instanceof Error && error.message
         ? error.message
