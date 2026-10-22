@@ -3,6 +3,7 @@ import {
   ShieldCheck, Sparkles, Tag, Users, Utensils,
 } from "lucide-react";
 import { BookingDialog } from "./components/booking-dialog";
+import { MeasurementConsentBanner } from "./components/openai-pixel";
 import { MobileBookBar } from "./components/mobile-book-bar";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -97,14 +98,22 @@ const detailedItinerary = [
   },
 ];
 
-export default async function Home({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {
-  const linkedPartner = getSalonPartner((await searchParams).ref);
-  if (linkedPartner) redirect(`/r/${linkedPartner.code}`);
+export default async function Home({ searchParams }: { searchParams: Promise<{ ref?: string; oppref?: string }> }) {
+  const params = await searchParams;
+  const linkedPartner = getSalonPartner(params.ref);
+  if (linkedPartner) {
+    // Keep the ad click reference intact while applying a salon referral cookie.
+    const clickRef = typeof params.oppref === "string" && params.oppref.length <= 2048
+      ? `?oppref=${encodeURIComponent(params.oppref)}`
+      : "";
+    redirect(`/r/${linkedPartner.code}${clickRef}`);
+  }
   const partner = getSalonPartner((await cookies()).get(REFERRAL_COOKIE)?.value);
   const availability = await getPublicTripAvailability(vietnamDeparture.tripSlug, vietnamDeparture.departure, vietnamDeparture.capacity);
   return (
     <ReferralProvider partner={partner}>
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
+      <MeasurementConsentBanner />
       <header className="absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white">
         <div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-3 py-3 sm:px-8">
           <div className="flex items-center gap-3">
