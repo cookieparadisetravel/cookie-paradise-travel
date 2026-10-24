@@ -19,6 +19,10 @@ export const salonPartners = [
   { code: "nails-station", name: "Nails Station & Spa", logo: "/referrals/nails-station-logo.png", website: "https://nailsstationandspa.com/", creamSurface: true, commissionPlan: "nailTechSplit" },
   { code: "cisco-barbershop", name: "Cisco Barbershop", logo: "/referrals/cisco-barbershop-logo.png", website: "https://www.ciscos.site/", creamSurface: false, commissionPlan: "directReferrer" },
   { code: "columbus-uppercuts", name: "Columbus Uppercuts", logo: "/referrals/columbus-uppercuts-logo.png", website: "https://www.columbusuppercuts.com/", creamSurface: false, commissionPlan: "directReferrer" },
+  { code: "dorothys-playhouse", name: "Dorothy’s Playhouse", logo: "/referrals/dorothys-playhouse-logo.png", website: "https://www.dorothysplayhouse.com/", creamSurface: false, commissionPlan: "directReferrer" },
+  { code: "taqueria-ramirez", name: "Taqueria Ramirez", logo: "/referrals/taqueria-ramirez-name.svg", website: "https://www.facebook.com/TaqueriaRamirezFoodTruck/", creamSurface: false, commissionPlan: "directReferrer" },
+  { code: "bon-gout", name: "Bon Gout", logo: "/referrals/bon-gout-logo.png", website: "", creamSurface: true, commissionPlan: "directReferrer" },
+  { code: "jason-anderson", name: "Jason Anderson", logo: "/referrals/jason-anderson-name.svg", website: "", creamSurface: false, commissionPlan: "directReferrer" },
 ] as const;
 export type SalonPartner = typeof salonPartners[number];
 export function getSalonPartner(code: unknown): SalonPartner | null {
