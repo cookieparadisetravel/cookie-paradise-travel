@@ -257,7 +257,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
                 Born in 1989 in the mountains of Northern Vietnam’s Hoàng Liên Sơn range, Trung came to French Lick, Indiana, as an exchange student in 2006. He attended Franklin College the following year, then moved to Columbus and worked for Cummins from 2011 to 2017.
               </p>
               <p>
-                In 2017, Trung returned to Vietnam and spent seven years living in Ho Chi Minh City before relocating his family back to Columbus. He loves both Vietnam and the United States and remains deeply connected to each. These journeys are his way of sharing the Vietnam he knows—not simply as a destination, but as a place of family, flavor, resilience and welcome.
+                In 2017, Trung returned to Vietnam and spent seven years living in Ho Chi Minh City before relocating his family back to Columbus. He loves both Vietnam and the United States and remains deeply connected to each country. These journeys are his way of sharing the Vietnam he knows—not simply as a destination, but as a place of family, flavor, resilience and welcome.
               </p>
             </div>
             <div className="mt-8 flex flex-wrap gap-3" aria-label="Trung's connections to Vietnam and Indiana">
