@@ -11,6 +11,7 @@ import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
 import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "./components/trip-availability";
+import { HeroVideo } from "./components/hero-video";
 export const dynamic = "force-dynamic";
 
 const itinerary = [
@@ -131,14 +132,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       </header>
 
       <section id="top" className="relative isolate min-h-[760px] overflow-hidden bg-[var(--navy)] text-white">
-        <img
-          className="absolute inset-0 -z-20 h-full w-full object-cover opacity-50"
-          src="/hoi-an-hero.webp"
-          alt="Historic yellow buildings and lanterns in Hội An Ancient Town"
-          width={1536}
-          height={1024}
-          fetchPriority="high"
-        />
+        <HeroVideo />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.96)_0%,rgba(45,29,16,.76)_50%,rgba(45,29,16,.22)_100%)]" />
         <div className="mx-auto flex min-h-[760px] max-w-7xl items-end px-5 pb-16 pt-44 sm:px-8 sm:pb-24">
           <div className="max-w-3xl">
