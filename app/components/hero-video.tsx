@@ -4,14 +4,15 @@ import { useRef, useState, useSyncExternalStore } from "react";
 import { Pause, Play } from "lucide-react";
 
 type Connection = EventTarget & { saveData?: boolean };
+type PlaybackPreference = "pending" | "autoplay" | "reduced-motion" | "save-data";
 
 function connection() {
   return (navigator as Navigator & { connection?: Connection }).connection;
 }
 
-function shouldAutoplay() {
-  return !window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    && !connection()?.saveData;
+function playbackPreference(): PlaybackPreference {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return "reduced-motion";
+  return connection()?.saveData ? "save-data" : "autoplay";
 }
 
 function subscribeToPreferences(onChange: () => void) {
@@ -44,10 +45,10 @@ function HeroPlayback() {
     }
   }
 
-  if (failed) return <HeroPoster />;
+  if (failed) return <HeroPoster state="playback-error" />;
 
   return <>
-    <HeroPoster hidden={hasFrame} />
+    <HeroPoster hidden={hasFrame} state={hasFrame ? "playing" : "loading-video"} />
     <video
       ref={video}
       id="hero-background-video"
@@ -80,8 +81,9 @@ function HeroPlayback() {
   </>;
 }
 
-function HeroPoster({ hidden = false }: { hidden?: boolean }) {
+function HeroPoster({ hidden = false, state }: { hidden?: boolean; state: string }) {
   return <img
+      data-hero-video-state={state}
       className={`pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover ${hidden ? "invisible" : "opacity-50"}`}
       aria-hidden={hidden || undefined}
       src="/vietnam-hero-poster.webp"
@@ -94,6 +96,6 @@ function HeroPoster({ hidden = false }: { hidden?: boolean }) {
 
 export function HeroVideo() {
   // No video element or media request until the browser confirms motion/data preferences.
-  const autoplay = useSyncExternalStore(subscribeToPreferences, shouldAutoplay, () => false);
-  return autoplay ? <HeroPlayback /> : <HeroPoster />;
+  const preference = useSyncExternalStore<PlaybackPreference>(subscribeToPreferences, playbackPreference, () => "pending");
+  return preference === "autoplay" ? <HeroPlayback /> : <HeroPoster state={preference} />;
 }
