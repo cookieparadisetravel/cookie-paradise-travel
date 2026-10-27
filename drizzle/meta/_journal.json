@@ -162,6 +162,13 @@
       "when": 1792518304529,
       "tag": "0022_referral_recipients",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "6",
+      "when": 1793124656329,
+      "tag": "0023_steady_masque",
+      "breakpoints": true
     }
   ]
 }

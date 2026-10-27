@@ -56,6 +56,16 @@ export const bookingRequests = sqliteTable("booking_requests", {
   createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
 });
 
+// Private owner updates, separate from the customer's original inquiry message.
+export const inquiryOwnerNotes = sqliteTable("inquiry_owner_notes", {
+  id: text("id").primaryKey(),
+  bookingRequestId: integer("booking_request_id").notNull()
+    .references(() => bookingRequests.id, { onDelete: "cascade" }),
+  body: text("body").notNull(),
+  createdBy: text("created_by").notNull(),
+  createdAt: text("created_at").notNull(),
+}, (table) => [index("inquiry_owner_notes_booking_created_idx").on(table.bookingRequestId, table.createdAt)]);
+
 export const travelers = sqliteTable("travelers", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   bookingRequestId: integer("booking_request_id")

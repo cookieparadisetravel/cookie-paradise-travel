@@ -26,6 +26,7 @@ import { AutopayRetryAction } from "./autopay-retry-action";
 import { AutopayStopAction } from "./autopay-stop-action";
 import { PaymentPreferenceInvitationAction } from "./payment-preference-invitation-action";
 import { StatusSelect } from "./status-select";
+import { InquiryNotes } from "./inquiry-notes";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
 import { TravelerListInvitationAction } from "./traveler-list-invitation-action";
 import type { DashboardInquiry, GeneratedInvitationDraft, PaymentPreferenceGeneratedDraft, SquareMode } from "./dashboard-types";
@@ -549,7 +550,9 @@ function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
       {inquiry.automatedBookingError && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><AlertCircle className="h-5 w-5" /> Automated booking needs attention</p><p className="mt-1 text-sm leading-6">{inquiry.automatedBookingError}</p></div>}
       <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
         <SectionHeading description="Information submitted with the inquiry." title="Overview" />
-        <dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2">
+        <div className="mt-4 grid gap-6 lg:grid-cols-3">
+        <div className="min-w-0 lg:col-span-2">
+        <dl className="grid gap-4 text-sm sm:grid-cols-2 [&>div]:min-w-0 [&>div]:break-words">
           <InfoItem label="Email"><a className="font-semibold underline" href={`mailto:${inquiry.email}`}>{inquiry.email}</a></InfoItem>
           <InfoItem label="Phone"><a className="font-semibold underline" href={`tel:${inquiry.phone}`}>{inquiry.phone || "Not recorded"}</a></InfoItem>
           <InfoItem label="Departure">{departureLabel(inquiry.departure)}</InfoItem>
@@ -563,6 +566,9 @@ function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
           <InfoItem label="Payment environment">Square {inquiry.squareEnvironment === "sandbox" ? "Sandbox" : "Production"}</InfoItem>
         </dl>
         {inquiry.notes && <div className="mt-5 rounded-xl bg-[var(--cream)] p-4"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Customer notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{inquiry.notes}</p></div>}
+        </div>
+        <InquiryNotes inquiryId={inquiry.id} key={inquiry.id} />
+        </div>
       </section>
     </div>
   );
