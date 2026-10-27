@@ -48,11 +48,11 @@ function HeroPlayback() {
 
   async function togglePlayback() {
     if (!video.current) return;
-    if (video.current.paused) {
+    if (!playing) {
       try {
         await video.current.play();
       } catch {
-        setFailure(0);
+        setPlaying(false);
       }
     } else {
       video.current.pause();
@@ -79,6 +79,7 @@ function HeroPlayback() {
       playsInline
       preload="none"
       poster="/vietnam-hero-poster.webp"
+      onPlay={() => setPlaying(true)}
       onPlaying={() => { setHasFrame(true); setPlaying(true); }}
       onPause={() => setPlaying(false)}
       onError={(event) => setFailure(event.currentTarget.error?.code ?? 0)}
