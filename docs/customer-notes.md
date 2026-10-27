@@ -4,15 +4,9 @@ The inquiry Overview uses two information columns and a third, right-hand Notes 
 
 ## Required additive migration
 
-Following the owner's workflow, `db/schema.ts` defines the new `inquiry_owner_notes` table; the owner generates the migration. Generate it before deploying, inspect it, and commit the generated SQL and metadata with this change:
+The generated migration `drizzle/0023_steady_masque.sql` and its Drizzle metadata are included. Its SQL matches the owner's reviewed migration: it only creates `inquiry_owner_notes` and the `inquiry_owner_notes_booking_created_idx` index. It does not change existing customer data. There is no need to generate another migration for this change.
 
-```bash
-npm run db:generate
-```
-
-The migration must only create `inquiry_owner_notes` and its `inquiry_owner_notes_booking_created_idx` index. Stop if the generated migration proposes changing or deleting anything else. No existing customer data should be changed.
-
-Run the requested checks and commit/push the complete change, including the generated migration:
+Run the requested checks:
 
 ```bash
 npm test
@@ -27,6 +21,8 @@ Before deploying, apply the migration to the production D1 database:
 npx wrangler d1 migrations apply cookie-paradise-travel-db --remote
 npm run deploy
 ```
+
+Confirm that the pending migration is `0023_steady_masque.sql`; inspect any other pending migrations before proceeding. Endpoint tests use this actual migration in an isolated SQLite database.
 
 Open one inquiry's Overview, save a note, reload, and verify it persists with a date/time stamp. Open another inquiry and verify the note does not appear there. Check the original customer-submitted notes are unchanged. Notes do not alter inquiry status, booking automation, agreements, reminders, or payments.
 

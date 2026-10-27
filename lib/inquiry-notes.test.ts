@@ -41,12 +41,6 @@ async function fixture() {
   sqlite.exec("PRAGMA foreign_keys=ON");
   const directory = new URL("../drizzle/", import.meta.url);
   for (const file of readdirSync(directory).filter((name) => name.endsWith(".sql")).sort()) sqlite.exec(readFileSync(new URL(file, directory), "utf8"));
-  // The owner generates the new additive migration from db/schema.ts before deployment.
-  sqlite.exec(`CREATE TABLE IF NOT EXISTS inquiry_owner_notes (
-    id text PRIMARY KEY NOT NULL,
-    booking_request_id integer NOT NULL REFERENCES booking_requests(id) ON DELETE CASCADE,
-    body text NOT NULL, created_by text NOT NULL, created_at text NOT NULL
-  ); CREATE INDEX IF NOT EXISTS inquiry_owner_notes_booking_created_idx ON inquiry_owner_notes(booking_request_id, created_at);`);
   const db = drizzle(async (query, params, method) => {
     const statement = sqlite.prepare(query);
     if (method === "run") { statement.run(...params); return { rows: [] }; }
