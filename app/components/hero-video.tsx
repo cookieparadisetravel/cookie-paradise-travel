@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pause, Play } from "lucide-react";
 
 type Connection = EventTarget & { saveData?: boolean };
@@ -26,6 +26,18 @@ function subscribeToPreferences(onChange: () => void) {
   };
 }
 
+function PlaybackButton({ playing, onClick }: { playing: boolean; onClick: () => void }) {
+  return <button
+    type="button"
+    onClick={onClick}
+    aria-label={playing ? "Pause background video" : "Play background video"}
+    className="absolute right-5 bottom-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/35 bg-black/40 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:right-8 sm:bottom-6"
+  >
+    {playing ? <Pause aria-hidden="true" size={14} /> : <Play aria-hidden="true" size={14} />}
+    {playing ? "Pause video" : "Play video"}
+  </button>;
+}
+
 function HeroPlayback() {
   const video = useRef<HTMLVideoElement>(null);
   const [hasFrame, setHasFrame] = useState(false);
@@ -45,7 +57,10 @@ function HeroPlayback() {
     }
   }
 
-  if (failed) return <HeroPoster state="playback-error" />;
+  if (failed) return <>
+    <HeroPoster state="playback-error" />
+    <PlaybackButton playing={false} onClick={() => { setHasFrame(false); setPlaying(false); setFailed(false); }} />
+  </>;
 
   return <>
     <HeroPoster hidden={hasFrame} state={hasFrame ? "playing" : "loading-video"} />
@@ -68,16 +83,7 @@ function HeroPlayback() {
       <source src="/vietnam-hero-mobile.mp4" type="video/mp4" media="(max-width: 767px)" />
       <source src="/vietnam-hero.mp4" type="video/mp4" />
     </video>
-    <button
-      type="button"
-      onClick={() => { void togglePlayback(); }}
-      aria-controls="hero-background-video"
-      aria-label={playing ? "Pause background video" : "Play background video"}
-      className="absolute right-5 bottom-4 z-10 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/35 bg-black/40 px-4 py-2 text-xs font-semibold text-white backdrop-blur-sm hover:bg-black/60 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white sm:right-8 sm:bottom-6"
-    >
-      {playing ? <Pause aria-hidden="true" size={14} /> : <Play aria-hidden="true" size={14} />}
-      {playing ? "Pause video" : "Play video"}
-    </button>
+    <PlaybackButton playing={playing} onClick={() => { void togglePlayback(); }} />
   </>;
 }
 
@@ -96,6 +102,16 @@ function HeroPoster({ hidden = false, state }: { hidden?: boolean; state: string
 
 export function HeroVideo() {
   // No video element or media request until the browser confirms motion/data preferences.
-  const preference = useSyncExternalStore<PlaybackPreference>(subscribeToPreferences, playbackPreference, () => "pending");
-  return preference === "autoplay" ? <HeroPlayback /> : <HeroPoster state={preference} />;
+  const [preference, setPreference] = useState<PlaybackPreference>("pending");
+  useEffect(() => {
+    const update = () => setPreference(playbackPreference());
+    const frame = window.requestAnimationFrame(update);
+    const unsubscribe = subscribeToPreferences(update);
+    return () => { window.cancelAnimationFrame(frame); unsubscribe(); };
+  }, []);
+
+  return preference === "autoplay" ? <HeroPlayback /> : <>
+    <HeroPoster state={preference} />
+    <PlaybackButton playing={false} onClick={() => setPreference("autoplay")} />
+  </>;
 }

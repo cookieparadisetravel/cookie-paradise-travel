@@ -19,8 +19,9 @@ tomb in Huế, and Hội An at night. No further generation was used for this ch
 `HeroVideo` renders only its poster on the server. After hydration it checks
 `prefers-reduced-motion` and the browser's data-saving preference before mounting
 the video or its sources. Preference changes are observed. The video plays muted,
-inline and looping, with a visible keyboard-accessible pause/play button. Playback
-errors retain the poster. The existing hero text, overlay, availability and booking
+inline and looping, with a visible keyboard-accessible pause/play button. Visitors
+can explicitly start playback from the poster, including when autoplay is disabled;
+playback errors retain the poster and allow retry. The existing hero text, overlay, availability and booking
 controls are unchanged.
 
 ## Visual references used during generation
