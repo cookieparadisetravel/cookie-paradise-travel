@@ -40,9 +40,11 @@ function PlaybackButton({ playing, onClick }: { playing: boolean; onClick: () =>
 
 function HeroPlayback() {
   const video = useRef<HTMLVideoElement>(null);
+  const [source] = useState(() => window.matchMedia("(max-width: 767px)").matches
+    ? "/vietnam-hero-mobile.mp4" : "/vietnam-hero.mp4");
   const [hasFrame, setHasFrame] = useState(false);
   const [playing, setPlaying] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failure, setFailure] = useState<number | null>(null);
 
   async function togglePlayback() {
     if (!video.current) return;
@@ -50,22 +52,23 @@ function HeroPlayback() {
       try {
         await video.current.play();
       } catch {
-        setFailed(true);
+        setFailure(0);
       }
     } else {
       video.current.pause();
     }
   }
 
-  if (failed) return <>
-    <HeroPoster state="playback-error" />
-    <PlaybackButton playing={false} onClick={() => { setHasFrame(false); setPlaying(false); setFailed(false); }} />
+  if (failure !== null) return <>
+    <HeroPoster state={`playback-error-${failure}`} />
+    <PlaybackButton playing={false} onClick={() => { setHasFrame(false); setPlaying(false); setFailure(null); }} />
   </>;
 
   return <>
     <HeroPoster hidden={hasFrame} state={hasFrame ? "playing" : "loading-video"} />
     <video
       ref={video}
+      src={source}
       id="hero-background-video"
       className={`pointer-events-none absolute inset-0 -z-20 h-full w-full object-cover ${hasFrame ? "opacity-50" : "opacity-0"}`}
       aria-hidden="true"
@@ -78,11 +81,8 @@ function HeroPlayback() {
       poster="/vietnam-hero-poster.webp"
       onPlaying={() => { setHasFrame(true); setPlaying(true); }}
       onPause={() => setPlaying(false)}
-      onError={() => setFailed(true)}
-    >
-      <source src="/vietnam-hero-mobile.mp4" type="video/mp4" media="(max-width: 767px)" />
-      <source src="/vietnam-hero.mp4" type="video/mp4" />
-    </video>
+      onError={(event) => setFailure(event.currentTarget.error?.code ?? 0)}
+    />
     <PlaybackButton playing={playing} onClick={() => { void togglePlayback(); }} />
   </>;
 }
