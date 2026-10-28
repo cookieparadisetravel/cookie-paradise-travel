@@ -18,11 +18,11 @@ const itinerary = [
   ["01", "Arrive in Ho Chi Minh City", "A private airport welcome, hotel transfer and an easy first evening to settle in."],
   ["02", "The many sides of Saigon", "Morning life in Tao Dan Park, city icons, markets and a vintage-Jeep food adventure after dark."],
   ["03", "Mekong Delta life", "Floating communities, sampan waterways, village paths, family workshops and a home-hosted lunch."],
-  ["04", "Fly to Huế", "Imperial Citadel, Thiên Mụ Pagoda and a private sunset cruise on the Perfume River."],
-  ["05", "Gardens, tombs & royal dinner", "Thả Om Garden House, the royal tombs of Tự Đức and Khải Định, then dinner with traditional music."],
-  ["06", "Huế to Hội An", "The Hải Vân Pass, lantern making, old-town heritage and basket boats."],
-  ["07", "Hội An culinary challenge", "Herb-farm games, hands-on cooking, a free afternoon, an optional massage and a celebratory farewell dinner."],
-  ["08", "Depart Hội An", "Breakfast and a private transfer to Đà Nẵng International Airport for your onward flight."],
+  ["04", "Fly to Hue", "Imperial Citadel, Thien Mu Pagoda and a private sunset cruise on the Perfume River."],
+  ["05", "Gardens, tombs & royal dinner", "Tha Om Garden House, the royal tombs of Tu Duc and Khai Dinh, then dinner with traditional music."],
+  ["06", "Hue to Hoi An", "The Hai Van Pass, lantern making, old-town heritage and basket boats."],
+  ["07", "Hoi An culinary challenge", "Herb-farm games, hands-on cooking, a free afternoon, an optional massage and a celebratory farewell dinner."],
+  ["08", "Depart Hoi An via Da Nang", "Breakfast and a private transfer to Da Nang International Airport (DAD) for your onward flight."],
 ];
 
 const pricing = [
@@ -36,7 +36,7 @@ const detailedItinerary = [
   {
     day: "01", title: "Arrive in Ho Chi Minh City", meals: "Meals: none",
     events: [
-      ["On arrival", "Airport welcome", "Meet your local representative at Tân Sơn Nhất International Airport and transfer privately to the hotel, approximately 30 minutes."],
+      ["On arrival", "Airport welcome", "Meet your local representative at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City and transfer privately to the hotel, approximately 30 minutes."],
       ["From 2:00 PM", "Hotel check-in", "Settle into the Paragon Saigon Hotel, Premier Sakura room, or a comparable property."],
       ["Rest of day", "At leisure", "Unpack, rest and explore nearby at your own pace."],
     ],
@@ -44,56 +44,56 @@ const detailedItinerary = [
   {
     day: "02", title: "The many sides of Saigon", meals: "Meals: Breakfast, Dinner",
     events: [
-      ["6:30–9:30 AM", "Good Morning Saigon", "Tao Đàn Park and its bird café, a century-old private house and temple, a local breakfast and a neighborhood wet market."],
-      ["1:00–5:00 PM", "Central Saigon", "City Hall, Đồng Khởi Street, the Continental Hotel, Opera House, Central Post Office, the former CIA building, 30 April Park, Reunification Palace and Bến Thành Market."],
+      ["6:30–9:30 AM", "Good Morning Saigon", "Tao Dan Park and its bird café, a century-old private house and temple, a local breakfast and a neighborhood wet market."],
+      ["1:00–5:00 PM", "Central Saigon", "City Hall, Dong Khoi Street, the Continental Hotel, Opera House, Central Post Office, the former CIA building, 30 April Park, Reunification Palace and Ben Thanh Market."],
       ["6:30–10:30 PM", "Saigon after dark", "Travel by vintage Jeep for local food stops, the flower market and street snacks, finishing with a rooftop drink."],
     ],
   },
   {
     day: "03", title: "Mekong Delta life", meals: "Meals: Breakfast, Lunch",
     events: [
-      ["8:00 AM–5:00 PM", "Waterways, farms and a shared table", "Travel about two hours to the delta. Visit the Tân Mỹ floating community and a working fish farm, continue by sampan, explore village paths by bicycle or buggy, meet local producers and share a home-hosted lunch before returning to Saigon."],
+      ["8:00 AM–5:00 PM", "Waterways, farms and a shared table", "Travel about two hours to the delta. Visit the Tan My floating community and a working fish farm, continue by sampan, explore village paths by bicycle or buggy, meet local producers and share a home-hosted lunch before returning to Saigon."],
     ],
   },
   {
-    day: "04", title: "Fly to Huế", meals: "Meals: Breakfast, Lunch",
+    day: "04", title: "Fly to Hue", meals: "Meals: Breakfast, Lunch",
     events: [
-      ["Morning", "Airport transfer", "Transfer from the hotel to Tân Sơn Nhất Airport."],
-      ["11:05 AM–12:25 PM", "Flight to Huế", "Planned Vietnam Airlines flight VN1370. The airline may change the schedule."],
-      ["2:30–6:00 PM", "Imperial Huế", "Explore the Imperial Citadel and restored Kiến Trung Palace, followed by Thiên Mụ Pagoda."],
+      ["Morning", "Airport transfer", "Transfer from the hotel to Tan Son Nhat International Airport (SGN)."],
+      ["11:05 AM–12:25 PM", "Flight to Hue", "Planned Vietnam Airlines flight VN1370 from Ho Chi Minh City (SGN) to Phu Bai International Airport (HUI), serving Hue. The airline may change the schedule."],
+      ["2:30–6:00 PM", "Imperial Hue", "Explore the Imperial Citadel and restored Kien Trung Palace, followed by Thien Mu Pagoda."],
       ["About 5:00 PM", "Perfume River sunset", "Board a private river cruise with a cocktail and canapés."],
     ],
   },
   {
     day: "05", title: "Gardens, royal tombs and royal dinner", meals: "Meals: Breakfast, Lunch, Dinner",
     events: [
-      ["10:30 AM–1:00 PM", "Thả Om Garden House", "Enjoy Huế cakes and tea in the garden house, followed by lunch."],
-      ["1:00–5:00 PM", "Tombs of the emperors", "Explore the contrasting royal tombs of Tự Đức and Khải Định."],
+      ["10:30 AM–1:00 PM", "Tha Om Garden House", "Enjoy Hue cakes and tea in the garden house, followed by lunch."],
+      ["1:00–5:00 PM", "Tombs of the emperors", "Explore the contrasting royal tombs of Tu Duc and Khai Dinh."],
       ["Evening", "Royal dinner", "Enjoy a multi-course dinner with live traditional music and the opportunity to wear royal-style robes."],
     ],
   },
   {
-    day: "06", title: "Huế to Hội An", meals: "Meals: Breakfast, Lunch",
+    day: "06", title: "Hue to Hoi An", meals: "Meals: Breakfast, Lunch",
     events: [
-      ["9:00 AM", "Cross the Hải Vân Pass", "Depart Huế for the scenic drive toward Đà Nẵng and Hội An, with lunch en route."],
-      ["1:00–5:00 PM", "Lanterns, lanes and basket boats", "Make a traditional lantern, explore Hội An old town and continue to Cẩm Thanh coconut village for a basket-boat experience."],
-      ["Evening", "Check in at Almanity", "Deluxe Pool View room at Almanity Hội An Resort & Spa, or a comparable property."],
+      ["9:00 AM", "Cross the Hai Van Pass", "Depart Hue for the scenic drive toward Da Nang and Hoi An, with lunch en route."],
+      ["1:00–5:00 PM", "Lanterns, lanes and basket boats", "Make a traditional lantern, explore Hoi An old town and continue to Cam Thanh coconut village for a basket-boat experience."],
+      ["Evening", "Check in at Almanity", "Deluxe Pool View room at Almanity Hoi An Resort & Spa, or a comparable property."],
     ],
   },
   {
-    day: "07", title: "Hội An culinary challenge", meals: "Meals: Breakfast, Lunch, Dinner",
+    day: "07", title: "Hoi An culinary challenge", meals: "Meals: Breakfast, Lunch, Dinner",
     events: [
       ["8:30 AM–1:00 PM", "Farm-to-table challenge", "Take on a herb hunt, spring-roll showdown, Vietnamese rice-pancake challenge and mystery-box juice creation, followed by lunch."],
-      ["Afternoon", "Free time", "Relax at the resort or explore Hội An independently."],
+      ["Afternoon", "Free time", "Relax at the resort or explore Hoi An independently."],
       ["During free time", "Optional 60-minute massage", "A body massage at Almanity is available as an optional add-on. Participation is not required, and timing is arranged separately."],
       ["7:00 PM", "Farewell dinner", "Gather for a celebratory dinner with one glass of house wine."],
     ],
   },
   {
-    day: "08", title: "Depart Hội An", meals: "Meals: Breakfast",
+    day: "08", title: "Depart Hoi An via Da Nang", meals: "Meals: Breakfast",
     events: [
       ["Morning", "Breakfast", "Enjoy breakfast at the hotel and prepare for departure."],
-      ["Before 12:00 PM", "Check out and airport transfer", "Transfer privately to Đà Nẵng International Airport according to your onward flight schedule."],
+      ["Before 12:00 PM", "Check out and airport transfer", "Transfer privately to Da Nang International Airport (DAD) according to your onward flight schedule."],
     ],
   },
 ];
@@ -143,7 +143,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
               Discover Southern Vietnam
             </h1>
             <p className="mt-7 max-w-2xl text-lg leading-8 text-white/80 sm:text-xl">
-              Eight thoughtfully paced days from the energy of Saigon through Mekong waterways and imperial Huế to lantern-lit Hội An—created by Trung Le and hosted by Trung or a trusted Cookie Paradise Travel Company host.
+              Eight thoughtfully paced days from the energy of Ho Chi Minh City (Saigon) through Mekong waterways and imperial Hue to lantern-lit Hoi An—created by Trung Le and hosted by Trung or a trusted Cookie Paradise Travel Company host.
             </p>
             <TripAvailability availability={availability} label={vietnamDeparture.label} />
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -155,10 +155,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <div className="mt-10 flex flex-wrap gap-x-8 gap-y-4 text-sm text-white/75">
               <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[var(--gold)]" /> 8 days / 7 nights</span>
               <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[var(--gold)]" /> 8–15 travelers</span>
-              <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[var(--gold)]" /> Saigon to Hội An</span>
+              <span className="flex items-center gap-2"><MapPin className="h-4 w-4 text-[var(--gold)]" /> Ho Chi Minh City to Hoi An</span>
               <span className="flex items-center gap-2 font-semibold text-white"><Tag className="h-4 w-4 text-[var(--gold)]" /> From $2,500–$2,875 per person</span>
               <span className="flex items-center gap-2"><Calendar className="h-4 w-4 text-[var(--gold)]" /> Departs June 1, 2027</span>
             </div>
+            <p className="mt-5 text-sm leading-6 text-white/80">
+              <span className="block">Arrive: Ho Chi Minh City — Tan Son Nhat International Airport (SGN).</span>
+              <span className="block">Depart: Da Nang International Airport (DAD), with a transfer from Hoi An.</span>
+            </p>
           </div>
         </div>
       </section>
@@ -248,7 +252,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
                 Trung Le is the founder of Cookie Paradise Travel Company and the co-owner of Cookie Paradise, the Columbus cottage bakery known for its generous cookies and warm hospitality. For him, travel is an extension of that same idea: bringing people together through food, stories and experiences that feel personal.
               </p>
               <p>
-                Born in 1989 in the mountains of Northern Vietnam’s Hoàng Liên Sơn range, Trung came to French Lick, Indiana, as an exchange student in 2006. He attended Franklin College the following year, then moved to Columbus and worked for Cummins from 2011 to 2017.
+                Born in 1989 in the mountains of Northern Vietnam’s Hoang Lien Son range, Trung came to French Lick, Indiana, as an exchange student in 2006. He attended Franklin College the following year, then moved to Columbus and worked for Cummins from 2011 to 2017.
               </p>
               <p>
                 In 2017, Trung returned to Vietnam and spent seven years living in Ho Chi Minh City before relocating his family back to Columbus. He loves both Vietnam and the United States and remains deeply connected to each country. These journeys are his way of sharing the Vietnam he knows—not simply as a destination, but as a place of family, flavor, resilience and welcome.
@@ -297,12 +301,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {[
-            [Plane, "Hotels & transport", "Seven hotel nights, daily breakfast, private ground transportation, scheduled airport transfers and the domestic flight to Huế."],
-            [Utensils, "Meals & local flavor", "Meals marked in the itinerary, a home-hosted Mekong lunch, Huế royal dinner and Hội An farewell dinner."],
+            [Plane, "Hotels & transport", "Seven hotel nights, daily breakfast, private ground transportation, scheduled airport transfers and the domestic flight to Hue."],
+            [Utensils, "Meals & local flavor", "Meals marked in the itinerary, a home-hosted Mekong lunch, Hue royal dinner and Hoi An farewell dinner."],
             [Sparkles, "Signature experiences", "Saigon by vintage Jeep, Perfume River sunset cruise, lantern workshop, basket boat and culinary challenge."],
             [Users, "Guides & admissions", "English-speaking local guides, entrance fees and the scheduled activities described in the itinerary."],
             [Check, "Thoughtful details", "Refillable water bottle, purified drinking water, private boats and carefully paced days."],
-            [MapPin, "Three distinct regions", "Ho Chi Minh City and the Mekong Delta, imperial Huế, and the living heritage of Hội An."],
+            [MapPin, "Three distinct regions", "Ho Chi Minh City and the Mekong Delta, imperial Hue, and the living heritage of Hoi An."],
           ].map(([Icon, title, text]) => {
             const CardIcon = Icon as typeof Plane;
             return (
