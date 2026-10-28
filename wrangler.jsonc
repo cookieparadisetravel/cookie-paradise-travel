@@ -2,6 +2,10 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "cookie-paradise-travel",
   "main": "worker.ts",
+  "assets": {
+    "binding": "ASSETS",
+    "run_worker_first": ["/vietnam-hero.mp4", "/vietnam-hero-mobile.mp4"]
+  },
   "triggers": { "crons": ["0 * * * *"] },
   "workers_dev": false,
   "routes": [
