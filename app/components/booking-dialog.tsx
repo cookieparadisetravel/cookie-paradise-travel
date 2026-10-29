@@ -12,6 +12,7 @@ import {
 
 import { ReferralBrand } from "./referral-brand";
 import { consultationBookingUrl } from "@/lib/consultation";
+import { trackSavedInquiry } from "@/lib/openai-pixel";
 
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
 
@@ -219,6 +220,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       setSubmittedIntent(bookingIntent);
       setSubmittedAutomationStatus(typeof result?.automationStatus === "string" ? result.automationStatus : null);
       setStatus("success");
+      trackSavedInquiry(result, bookingIntent);
     } catch (error) {
       setErrorMessage(error instanceof Error && error.message
         ? error.message
