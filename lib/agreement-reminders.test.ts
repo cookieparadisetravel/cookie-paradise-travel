@@ -82,7 +82,9 @@ async function fixture() {
   return { sqlite, db, emails, runtime, add, sign, run: (now = NOW) => remindersModule.sendDueAgreementReminders(now), resolve: (token: string) => invitations.getAgreementInvitation(token), setBeforeSend: (f: () => Promise<void>) => { beforeSend = f; }, setAfterClaim: (f: () => void) => { afterClaim = f; }, failSend: () => { throwOnSend = true; } };
 }
 
-test("reminds once at seven full days, never earlier, and both links share one acceptance", async () => {
+test("reminds once at seven full days, never earlier, and both links share one acceptance", async (t) => {
+  // Invitation resolution must use the same clock as this fixed-date reminder scenario.
+  t.mock.timers.enable({ apis: ["Date"], now: NOW });
   const f = await fixture();
   const original = await f.add();
   assert.deepEqual(await f.run(new Date(NOW.getTime() - 1)), { sent: 0, failed: 0 });

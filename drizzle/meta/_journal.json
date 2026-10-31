@@ -169,6 +169,13 @@
       "when": 1793124656329,
       "tag": "0023_steady_masque",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "6",
+      "when": 1793435438853,
+      "tag": "0024_wide_sleeper",
+      "breakpoints": true
     }
   ]
 }
