@@ -53,7 +53,7 @@ declare global {
 
 let turnstileScriptPromise: Promise<void> | null = null;
 
-function loadTurnstileScript() {
+export function loadTurnstileScript() {
   if (typeof window === "undefined" || window.turnstile) return Promise.resolve();
   if (turnstileScriptPromise) return turnstileScriptPromise;
 

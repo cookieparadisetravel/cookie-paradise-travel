@@ -148,6 +148,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <TripAvailability availability={availability} label={vietnamDeparture.label} />
             <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
               <BookingDialog triggerLabel="Request your spot" />
+              <a href="/vietnam" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-[var(--gold)] px-6 text-sm font-bold text-[var(--gold)] transition hover:bg-white/10">Get the free trip guide <ArrowRight className="h-4 w-4" /></a>
               <a href="#journey" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/35 px-6 text-sm font-bold transition hover:bg-white/10">
                 Explore the journey <ArrowRight className="h-4 w-4" />
               </a>

@@ -31,6 +31,10 @@ type SendEmailInput = {
   attachments?: MailerSendAttachment[];
 };
 
+export async function sendTripGuideEmailMessage(input: SendEmailInput) {
+  return sendEmail(input);
+}
+
 export type TransactionalEmailResult = {
   messageId: string | null;
   sentAt: string;

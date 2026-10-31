@@ -1,6 +1,32 @@
 import { sql } from "drizzle-orm";
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
+export const tripGuideLeads = sqliteTable("trip_guide_leads", {
+  id: text("id").primaryKey(), firstName: text("first_name").notNull(), email: text("email").notNull(),
+  phone: text("phone").notNull().default(""), city: text("city").notNull(), travelTiming: text("travel_timing").notNull(),
+  referralCode: text("referral_code"), source: text("source").notNull(), status: text("status").notNull().default("new"),
+  contactConsentedAt: text("contact_consented_at").notNull(), marketingConsent: integer("marketing_consent", { mode: "boolean" }).notNull().default(false),
+  marketingConsentedAt: text("marketing_consented_at"), guideEmailStatus: text("guide_email_status").notNull().default("pending"),
+  guideEmailClaimedAt: text("guide_email_claimed_at"), guideEmailSentAt: text("guide_email_sent_at"), guideEmailMessageId: text("guide_email_message_id"),
+  ownerNotificationStatus: text("owner_notification_status").notNull().default("pending"), mailerLiteStatus: text("mailerlite_status").notNull().default("not_requested"),
+  contactedAt: text("contacted_at"), consultationBookedAt: text("consultation_booked_at"), stopToken: text("stop_token").notNull(), createdAt: text("created_at").notNull(),
+}, table => [uniqueIndex("trip_guide_leads_email_unique").on(table.email), uniqueIndex("trip_guide_leads_stop_token_unique").on(table.stopToken), index("trip_guide_leads_created_idx").on(table.createdAt)]);
+
+export const tripGuideSubmissions = sqliteTable("trip_guide_submissions", {
+  id: text("id").primaryKey(), leadId: text("lead_id").notNull().references(() => tripGuideLeads.id, { onDelete: "cascade" }),
+  source: text("source").notNull(), formId: text("form_id").notNull().default(""),
+  utmSource: text("utm_source").notNull().default(""), utmMedium: text("utm_medium").notNull().default(""),
+  utmCampaign: text("utm_campaign").notNull().default(""), utmContent: text("utm_content").notNull().default(""),
+  utmTerm: text("utm_term").notNull().default(""), audience: text("audience").notNull().default(""),
+  campaignId: text("campaign_id").notNull().default(""), adSetId: text("ad_set_id").notNull().default(""), adId: text("ad_id").notNull().default(""),
+  marketingConsent: integer("marketing_consent", { mode: "boolean" }).notNull().default(false), createdAt: text("created_at").notNull(),
+}, table => [index("trip_guide_submissions_lead_idx").on(table.leadId)]);
+
+export const tripGuideReminders = sqliteTable("trip_guide_reminders", {
+  leadId: text("lead_id").notNull().references(() => tripGuideLeads.id, { onDelete: "cascade" }), reminderDay: integer("reminder_day").notNull(),
+  status: text("status").notNull(), claimedAt: text("claimed_at").notNull(), sentAt: text("sent_at"), messageId: text("message_id"),
+}, table => [primaryKey({ columns: [table.leadId, table.reminderDay] })]);
+
 export const bookingRequests = sqliteTable("booking_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   tripSlug: text("trip_slug").notNull(),

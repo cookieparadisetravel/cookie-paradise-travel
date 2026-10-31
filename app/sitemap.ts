@@ -4,6 +4,7 @@ const siteUrl = "https://cookieparadisetravel.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
+    { url: `${siteUrl}/vietnam`, changeFrequency: "weekly", priority: 0.9 },
     {
       url: siteUrl,
       changeFrequency: "weekly",
