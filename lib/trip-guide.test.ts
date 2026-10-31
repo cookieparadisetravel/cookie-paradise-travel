@@ -164,3 +164,32 @@ test("owner lead updates reject unauthenticated and cross-origin calls before st
   assert.equal((await run("https://example.test")).status, 403); owner = { email: "owner@example.test" };
   assert.equal((await run()).status, 403); assert.equal((await run("https://other.test")).status, 403); assert.equal(writes, 0);
 });
+
+test("owner inbox loads real source/delivery data and authorized stage updates suppress reminders", async () => {
+  const f = await ready();
+  await f.save({ ...leadInput(), source: "meta", submissionId: "meta:456", attribution: { ...guide.emptyAttribution } });
+  const row = f.sqlite.prepare("SELECT id FROM trip_guide_leads").get()!;
+  const inbox = await loadModule<{ loadLeadInbox(page?: number): Promise<{ leads: { sources: string; campaign: string; guide_email_status: string }[]; totals: { total: number } }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage });
+  const data = await inbox.loadLeadInbox();
+  assert.equal(data.totals.total,1); assert.equal(data.leads[0].sources,"website,meta"); assert.equal(data.leads[0].campaign,"vietnam-june"); assert.equal(data.leads[0].guide_email_status,"sent");
+  const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/leads/[id]/route.ts", {
+    "cloudflare:workers": { env: f.runtime }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => ({ email: "owner@example.test" }) }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": f.storage,
+  });
+  const request = new Request(`https://example.test/api/admin/leads/${row.id}`, { method: "PATCH", headers: { Origin: "https://example.test" }, body: JSON.stringify({ status: "consultation_booked" }) });
+  assert.equal((await route.PATCH(request,{ params: Promise.resolve({ id: String(row.id) }) })).status,200);
+  assert.ok(f.sqlite.prepare("SELECT consultation_booked_at FROM trip_guide_leads").get()!.consultation_booked_at);
+  await f.run(DAY3); assert.equal(f.emails.length,0);
+});
+
+test("confirmed reminder stop closes only the matching guide lead and preserves newsletter consent", async () => {
+  const f = await fixture(); await f.save({ ...leadInput(), marketingConsent: true }); f.emails.length=0;
+  const row = f.sqlite.prepare("SELECT stop_token FROM trip_guide_leads").get()!;
+  const route = await loadModule<{ POST(request: Request): Promise<Response> }>("app/api/trip-guide/stop/route.ts", { "cloudflare:workers": { env: f.runtime }, "@/lib/lead-request": requests, "@/lib/trip-guide-storage": f.storage });
+  const run = (origin: string, token = String(row.stop_token)) => route.POST(new Request("https://example.test/api/trip-guide/stop", { method: "POST", headers: { Origin: origin, "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token }) }));
+  assert.equal((await run("https://other.test")).status,403);
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"new");
+  const response = await run("https://example.test"); assert.equal(response.status,303);
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"closed");
+  assert.equal(f.sqlite.prepare("SELECT marketing_consent FROM trip_guide_leads").get()!.marketing_consent,1);
+  await f.run(DAY3); assert.equal(f.emails.length,0);
+});
