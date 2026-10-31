@@ -43,7 +43,7 @@ Meta menu names vary by account and app setup. Use the official Page leadgen web
    - `META_APP_SECRET`: the Meta app secret.
    - `META_PAGE_ACCESS_TOKEN`: the Page access token.
    - `META_WEBHOOK_VERIFY_TOKEN`: your new random verification token.
-6. Add the following text variables, then click **Deploy** to apply the settings:
+6. Add the following runtime settings as **Secret** values too, then click **Deploy** to apply the settings. Although these IDs and field names are not credentials, storing them as secrets preserves them across future Git/Wrangler deployments without changing `wrangler.jsonc`:
    - `META_PAGE_ID`: the one approved numeric Page ID.
    - `META_FORM_IDS`: approved numeric form IDs, separated by commas.
    - `META_GRAPH_API_VERSION`: the supported version for your app, including its `v` prefix.
