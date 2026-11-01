@@ -2,7 +2,7 @@
 
 Guide requests are stored in Cloudflare D1 in `trip_guide_leads`, with one
 submission record per request in `trip_guide_submissions`. The protected owner
-inbox is https://cookieparadisetravel.com/admin/leads. It shows the full name,
+inbox is https://cookieparadisetravel.com/admin/inquiries. It shows the full name,
 contact details, trip interest, source, email delivery, reminder history and
 MailerLite sync status. The existing `first_name` column holds the complete
 name entered on the new form; no database migration is required.
@@ -32,7 +32,7 @@ select it are sent to MailerLite; guide delivery does not depend on selecting it
    it is still used by the older booking form. Guide requests look up Interest
    List by its exact name and do not need another group-ID setting.
 5. Submit a new guide request using an email you control and select **Send me
-   occasional future trip news.** In the owner guide inbox check **MailerLite ·
+   occasional future trip news.** In the Inquiries dashboard check **MailerLite ·
    Interest List: Synced**, then confirm the contact is in that MailerLite group.
    A MailerLite double-opt-in setting may require the subscriber to confirm
    before receiving campaigns. This implementation does not disable it or

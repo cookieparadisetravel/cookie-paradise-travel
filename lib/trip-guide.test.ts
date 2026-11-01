@@ -172,11 +172,11 @@ test("public intake enforces origin, bounded bodies, explicit contact consent an
 
 test("owner lead updates reject unauthenticated and cross-origin calls before storage", async () => {
   let owner: unknown = null, writes = 0;
-  const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/leads/[id]/route.ts", {
+  const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/inquiries/guide/[id]/route.ts", {
     "cloudflare:workers": { env: {} }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => owner },
     "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": { ensureTripGuideStorage: async () => { writes++; } },
   });
-  const run = (origin?: string) => route.PATCH(new Request("https://example.test/api/admin/leads/test", { method: "PATCH", headers: origin ? { Origin: origin } : {}, body: JSON.stringify({ status: "closed" }) }), { params: Promise.resolve({ id: uuid() }) });
+  const run = (origin?: string) => route.PATCH(new Request("https://example.test/api/admin/inquiries/guide/test", { method: "PATCH", headers: origin ? { Origin: origin } : {}, body: JSON.stringify({ status: "closed" }) }), { params: Promise.resolve({ id: uuid() }) });
   assert.equal((await run("https://example.test")).status, 403); owner = { email: "owner@example.test" };
   assert.equal((await run()).status, 403); assert.equal((await run("https://other.test")).status, 403); assert.equal(writes, 0);
 });
@@ -188,10 +188,10 @@ test("owner inbox loads real source/delivery data and authorized stage updates s
   const inbox = await loadModule<{ loadLeadInbox(page?: number): Promise<{ leads: { sources: string; campaign: string; guide_email_status: string }[]; totals: { total: number } }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage });
   const data = await inbox.loadLeadInbox();
   assert.equal(data.totals.total,1); assert.equal(data.leads[0].sources,"website,meta"); assert.equal(data.leads[0].campaign,"vietnam-june"); assert.equal(data.leads[0].guide_email_status,"sent");
-  const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/leads/[id]/route.ts", {
+  const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/inquiries/guide/[id]/route.ts", {
     "cloudflare:workers": { env: f.runtime }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => ({ email: "owner@example.test" }) }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": f.storage,
   });
-  const request = new Request(`https://example.test/api/admin/leads/${row.id}`, { method: "PATCH", headers: { Origin: "https://example.test" }, body: JSON.stringify({ status: "consultation_booked" }) });
+  const request = new Request(`https://example.test/api/admin/inquiries/guide/${row.id}`, { method: "PATCH", headers: { Origin: "https://example.test" }, body: JSON.stringify({ status: "consultation_booked" }) });
   assert.equal((await route.PATCH(request,{ params: Promise.resolve({ id: String(row.id) }) })).status,200);
   assert.ok(f.sqlite.prepare("SELECT consultation_booked_at FROM trip_guide_leads").get()!.consultation_booked_at);
   await f.run(DAY3); assert.equal(f.emails.length,0);
@@ -208,4 +208,21 @@ test("confirmed reminder stop closes only the matching guide lead and preserves 
   assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"closed");
   assert.equal(f.sqlite.prepare("SELECT marketing_consent FROM trip_guide_leads").get()!.marketing_consent,1);
   await f.run(DAY3); assert.equal(f.emails.length,0);
+});
+
+test("unified inquiries loads every guide request and scopes details without creating bookings", async () => {
+  const f = await fixture(); await f.storage.ensureTripGuideStorage();
+  const insert = f.sqlite.prepare("INSERT INTO trip_guide_leads (id,first_name,email,city,travel_timing,source,contact_consented_at,stop_token,created_at) VALUES (?,?,?,?,?,?,?,?,?)");
+  const ids: string[] = [];
+  for (let i=0; i<105; i++) {
+    const id=uuid(); ids.push(id);
+    insert.run(id,`Guide ${i}`,`guide${i}@example.test`,"Not provided","not_sure","website","2026-11-01T12:00:00Z",uuid(),"2026-11-01T12:00:00Z");
+  }
+  const inbox = await loadModule<{ loadLeadInbox(page?: number | null, filter?: { id?: string; email?: string }): Promise<{ leads: { id: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage });
+  assert.equal((await inbox.loadLeadInbox()).leads.length,100);
+  assert.equal((await inbox.loadLeadInbox(null)).leads.length,105);
+  assert.deepEqual((await inbox.loadLeadInbox(null,{ id: ids[104] })).leads.map(row=>row.id),[ids[104]]);
+  assert.deepEqual((await inbox.loadLeadInbox(null,{ email: " GUIDE104@example.test " })).leads.map(row=>row.id),[ids[104]]);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM booking_requests").get()!.n,0);
+  assert.equal(f.emails.length,0);
 });

@@ -68,9 +68,9 @@ export async function saveTripGuideLead(input: TripGuideInput) {
   let ownerStatus = "not_configured";
   if (env.ADMIN_OWNER_EMAIL && env.MAILERSEND_API_TOKEN?.trim() && env.MAILERSEND_FROM_EMAIL?.trim()) {
     try {
-      const text = [`New Vietnam trip guide request`, `Name: ${input.firstName}`, `Email: ${email}`, `Phone: ${input.phone || "Not provided"}`, `City: ${input.city}`, `Interest: ${input.timing}`, `Source: ${input.source}`, `Campaign: ${boundedText(attribution.utmCampaign) || "Not provided"}`, `Guide email: ${emailStatus}`, "", "Review and update this lead:", "https://cookieparadisetravel.com/admin/leads"].join("\n");
+      const text = [`New Vietnam trip guide request`, `Name: ${input.firstName}`, `Email: ${email}`, `Phone: ${input.phone || "Not provided"}`, `City: ${input.city}`, `Interest: ${input.timing}`, `Source: ${input.source}`, `Campaign: ${boundedText(attribution.utmCampaign) || "Not provided"}`, `Guide email: ${emailStatus}`, "", "Review this inquiry:", `https://cookieparadisetravel.com/admin/inquiries/guide/${id}`].join("\n");
       const escaped = text.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-      await sendTripGuideEmailMessage({ toEmail: env.ADMIN_OWNER_EMAIL.trim(), toName: "Trung", subject: "New Vietnam trip guide inquiry", text, html: `<pre style="font:15px/1.7 Arial,sans-serif;white-space:pre-wrap">${escaped}</pre><p><a href="https://cookieparadisetravel.com/admin/leads">Open guide leads</a></p>` });
+      await sendTripGuideEmailMessage({ toEmail: env.ADMIN_OWNER_EMAIL.trim(), toName: "Trung", subject: "New Vietnam trip guide inquiry", text, html: `<pre style="font:15px/1.7 Arial,sans-serif;white-space:pre-wrap">${escaped}</pre><p><a href="https://cookieparadisetravel.com/admin/inquiries/guide/${id}">Open inquiry</a></p>` });
       ownerStatus = "sent";
     } catch { ownerStatus = "error"; }
   } else if (runtime.OWNER_NOTIFICATION_WEBHOOK_URL) {
@@ -80,7 +80,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
         body: JSON.stringify({ event: "travel_guide.requested", submittedAt: now,
           lead: { id, firstName: input.firstName, email, phone: input.phone, city: input.city,
             timing: input.timing, source: input.source, campaign: boundedText(attribution.utmCampaign),
-            referralCode: input.referralCode, emailStatus, dashboardUrl: "https://cookieparadisetravel.com/admin/leads" } }),
+            referralCode: input.referralCode, emailStatus, dashboardUrl: `https://cookieparadisetravel.com/admin/inquiries/guide/${id}` } }),
       });
       ownerStatus = response.ok ? "sent" : "error";
     } catch { ownerStatus = "error"; }

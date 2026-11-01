@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireOwner } from "@/lib/owner-auth";
 import { loadInquiryDashboardData } from "../dashboard-data";
 import { InquiryDashboardClient } from "../inquiry-dashboard-client";
+import { loadLeadInbox } from "@/lib/lead-inbox";
 
 export const dynamic = "force-dynamic";
 export const metadata = {
@@ -34,6 +35,8 @@ export default async function InquiryDetailPage({
   const { acceptanceDate, inquiries, squareMode } = await loadInquiryDashboardData(inquiryId);
   const inquiry = inquiries.find((item) => item.id === inquiryId);
   if (!inquiry) notFound();
+  const guideRequests = inquiry.squareEnvironment === "production"
+    ? (await loadLeadInbox(null, { email: inquiry.email })).leads : [];
 
   const requestedSection = (await searchParams).section;
   const initialDetailSection = isDetailSection(requestedSection) ? requestedSection : undefined;
@@ -46,6 +49,7 @@ export default async function InquiryDetailPage({
       inquiries={[inquiry]}
       ownerEmail={owner.email}
       squareMode={squareMode}
+      guideRequests={guideRequests}
     />
   );
 }

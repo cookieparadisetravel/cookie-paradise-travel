@@ -32,9 +32,12 @@ import { TravelerListInvitationAction } from "./traveler-list-invitation-action"
 import type { DashboardInquiry, GeneratedInvitationDraft, PaymentPreferenceGeneratedDraft, SquareMode } from "./dashboard-types";
 import { isPaymentPreferenceDraftUsable } from "./payment-preference-state";
 import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
+import type { GuideLeadRow } from "@/lib/lead-inbox";
+import { guideTimingLabel, leadStageLabel } from "@/lib/trip-guide";
+import { GuideRequestSummary } from "./guide-request-summary";
+import { buildInquiryFeed, feedCreatedAt, feedDeparture, feedIsActive, feedIsNew, feedMatchesSearch, feedName, feedStage, type InquiryFeedEntry } from "@/lib/inquiry-feed";
 import {
   inquiryStageLabel,
-  inquiryStageMatchesFilter,
   inquiryStageOptions,
   isActiveInquiryStage,
   normalizeInquiryStage,
@@ -47,6 +50,7 @@ type Props = {
   initialInquiryId?: number;
   ownerEmail: string;
   squareMode: SquareMode;
+  guideRequests?: GuideLeadRow[];
 };
 
 type MainTab = "active" | "all" | "waitlist" | "closed";
@@ -73,7 +77,7 @@ type DashboardListState = {
   departure: string;
   sort: SortOption;
   scrollY: number;
-  focusedInquiryId: number;
+  focusedInquiryId: number | string;
 };
 
 type GeneratedLinkCache = {
@@ -96,7 +100,8 @@ const stateLabels: Record<string, string> = {
   WA: "Washington",
 };
 
-export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetailSection, initialInquiryId, ownerEmail, squareMode }: Props) {
+const noGuideRequests: GuideLeadRow[] = [];
+export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetailSection, initialInquiryId, ownerEmail, squareMode, guideRequests = noGuideRequests }: Props) {
   const router = useRouter();
   const [mainTab, setMainTab] = useState<MainTab>("active");
   const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>(null);
@@ -113,6 +118,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
   const detailBackButton = useRef<HTMLButtonElement>(null);
   const loadedListState = useRef(false);
   const restoredListPosition = useRef(false);
+  const feed = useMemo(() => buildInquiryFeed(inquiries, guideRequests), [inquiries, guideRequests]);
 
   const selectedInquiry = inquiries.find((inquiry) => inquiry.id === selectedInquiryId) ?? null;
   const validatedGeneratedLinks = useMemo<GeneratedLinkCache>(() => ({
@@ -163,41 +169,40 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
   }, [listStateToRestore, selectedInquiryId]);
   const activeInquiries = inquiries.filter((inquiry) => isActiveInquiryStage(inquiry.status));
   const attentionCounts = {
-    new: activeInquiries.filter((inquiry) => inquiry.status === "new").length,
+    new: feed.filter(entry => feedIsActive(entry) && feedIsNew(entry)).length,
     missing_travelers: activeInquiries.filter(hasMissingTravelerDetails).length,
     agreements: activeInquiries.filter(hasIncompleteAgreements).length,
     invoice_issues: activeInquiries.filter(hasInvoiceIssue).length,
   };
 
   const tabCounts = {
-    active: activeInquiries.length,
-    all: inquiries.length,
-    waitlist: inquiries.filter((inquiry) => inquiry.status === "waitlist").length,
-    closed: inquiries.filter((inquiry) => inquiry.status === "closed").length,
+    active: feed.filter(feedIsActive).length,
+    all: feed.length,
+    waitlist: feed.filter(entry => feedStage(entry) === "waitlist").length,
+    closed: feed.filter(entry => feedStage(entry) === "closed").length,
   };
 
-  const departures = Array.from(new Set(inquiries.map((inquiry) => inquiry.departure)))
+  const departures = Array.from(new Set(feed.map(feedDeparture)))
     .sort((a, b) => departureSortValue(a) - departureSortValue(b));
 
-  const visibleInquiries = useMemo(() => {
+  const visibleEntries = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
-    const filtered = inquiries.filter((inquiry) => {
-      if (mainTab === "active" && !isActiveInquiryStage(inquiry.status)) return false;
-      if (mainTab === "waitlist" && inquiry.status !== "waitlist") return false;
-      if (mainTab === "closed" && inquiry.status !== "closed") return false;
-      if (stage !== "all" && !inquiryStageMatchesFilter(inquiry.status, stage)) return false;
-      if (departure !== "all" && inquiry.departure !== departure) return false;
-      if (attentionFilter === "new" && inquiry.status !== "new") return false;
-      if (attentionFilter === "missing_travelers" && !hasMissingTravelerDetails(inquiry)) return false;
-      if (attentionFilter === "agreements" && !hasIncompleteAgreements(inquiry)) return false;
-      if (attentionFilter === "invoice_issues" && !hasInvoiceIssue(inquiry)) return false;
+    const filtered = feed.filter((entry) => {
+      if (mainTab === "active" && !feedIsActive(entry)) return false;
+      if (mainTab === "waitlist" && feedStage(entry) !== "waitlist") return false;
+      if (mainTab === "closed" && feedStage(entry) !== "closed") return false;
+      if (stage !== "all" && feedStage(entry) !== stage) return false;
+      if (departure !== "all" && feedDeparture(entry) !== departure) return false;
+      if (attentionFilter === "new" && !feedIsNew(entry)) return false;
+      if (attentionFilter === "missing_travelers" && (entry.kind !== "booking" || !hasMissingTravelerDetails(entry.inquiry))) return false;
+      if (attentionFilter === "agreements" && (entry.kind !== "booking" || !hasIncompleteAgreements(entry.inquiry))) return false;
+      if (attentionFilter === "invoice_issues" && (entry.kind !== "booking" || !hasInvoiceIssue(entry.inquiry))) return false;
       if (!normalizedSearch) return true;
-      return [inquiry.fullName, inquiry.email, inquiry.phone, String(inquiry.id)]
-        .some((value) => value.toLowerCase().includes(normalizedSearch));
+      return feedMatchesSearch(entry, normalizedSearch);
     });
 
-    return [...filtered].sort((a, b) => compareInquiries(a, b, sort));
-  }, [attentionFilter, departure, inquiries, mainTab, search, sort, stage]);
+    return [...filtered].sort((a, b) => compareFeedEntries(a, b, sort));
+  }, [attentionFilter, departure, feed, mainTab, search, sort, stage]);
 
   function selectAttention(next: Exclude<AttentionFilter, null>) {
     setMainTab("active");
@@ -228,6 +233,11 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
       return;
     }
     router.push("/admin/inquiries");
+  }
+
+  function rememberGuideRequest(lead: GuideLeadRow) {
+    const listState: DashboardListState = { mainTab, attentionFilter, search, stage, departure, sort, scrollY: window.scrollY, focusedInquiryId: `guide-${lead.id}` };
+    window.sessionStorage.setItem(dashboardListStateKey, JSON.stringify(listState));
   }
 
   function changeDetailSection(section: DetailSection) {
@@ -275,6 +285,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
           acceptanceDate={acceptanceDate}
           backButtonRef={detailBackButton}
           inquiry={selectedInquiry}
+          guideRequest={guideRequests.find(lead => lead.booking_id === selectedInquiry.id)}
           onClose={closeInquiry}
           onSectionChange={changeDetailSection}
           paymentChoiceDraft={validatedGeneratedLinks.paymentChoices[selectedInquiry.id]}
@@ -290,6 +301,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
           <div>
             <h2 className="font-serif text-3xl font-bold sm:text-4xl">Who needs attention?</h2>
             <p className="mt-1 text-sm text-[var(--muted-ink)]">Attention counts overlap and are not a total.</p>
+            <p className="mt-1 text-sm text-[var(--muted-ink)]">Guide requests and booking inquiries are managed together below.</p>
           </div>
           <p className="text-xs font-semibold text-[var(--muted-ink)]">Signed in as {ownerEmail}</p>
         </div>
@@ -312,6 +324,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
               <FilterSelect icon={ListFilter} label="Stage" onChange={setStage} value={stage}>
                 <option value="all">All sales stages</option>
                 {inquiryStageOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                <option value="consultation_booked">Consultation booked</option>
               </FilterSelect>
               <FilterSelect icon={CalendarDays} label="Departure" onChange={setDeparture} value={departure}>
                 <option value="all">All departures</option>
@@ -342,7 +355,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
             </div>
           )}
 
-          <InquiryList inquiries={visibleInquiries} onOpen={openInquiry} />
+          <InquiryList entries={visibleEntries} onOpen={openInquiry} onOpenGuide={rememberGuideRequest} />
         </section>
       </div>
       )}
@@ -370,8 +383,8 @@ function FilterSelect({ children, icon: Icon, label, onChange, value }: { childr
   );
 }
 
-function InquiryList({ inquiries, onOpen }: { inquiries: DashboardInquiry[]; onOpen: (inquiry: DashboardInquiry, section?: DetailSection) => void }) {
-  if (inquiries.length === 0) {
+function InquiryList({ entries, onOpen, onOpenGuide }: { entries: InquiryFeedEntry[]; onOpen: (inquiry: DashboardInquiry, section?: DetailSection) => void; onOpenGuide: (lead: GuideLeadRow) => void }) {
+  if (entries.length === 0) {
     return <div className="p-10 text-center"><ClipboardList className="mx-auto h-9 w-9 text-[var(--muted-ink)]" /><h3 className="mt-3 font-serif text-2xl font-bold">No matching inquiries</h3><p className="mt-1 text-sm text-[var(--muted-ink)]">Try a different tab or clear a filter.</p></div>;
   }
 
@@ -381,7 +394,9 @@ function InquiryList({ inquiries, onOpen }: { inquiries: DashboardInquiry[]; onO
         <span>Contact</span><span>Departure / party</span><span>Stage</span><span>Progress</span><span>Payment</span><span>Next step</span>
       </div>
       <div className="divide-y divide-[var(--line)]">
-        {inquiries.map((inquiry) => {
+        {entries.map((entry) => {
+          if (entry.kind === "guide") return <GuideRequestRow key={entry.key} lead={entry.guide} onOpen={onOpenGuide} />;
+          const inquiry = entry.inquiry;
           const workflow = workflowFor(inquiry);
           const acceptedCount = acceptedAgreementCount(inquiry);
           return (
@@ -389,6 +404,7 @@ function InquiryList({ inquiries, onOpen }: { inquiries: DashboardInquiry[]; onO
               <div className="min-w-0">
                 <div className="flex items-center gap-2"><span className="truncate font-bold text-[var(--ink)]">{inquiry.fullName}</span><span className="text-xs font-semibold text-[var(--muted-ink)]">#{inquiry.id}</span></div>
                 <p className="truncate text-sm text-[var(--muted-ink)]">{inquiry.email}</p>
+                {entry.guide && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide requested · {entry.guide.guide_email_status.replaceAll("_", " ")}</p>}
                 {inquiry.referralCode && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Referred by {getSalonPartner(inquiry.referralCode)?.name ?? inquiry.referralCode}</p>}
                 {inquiry.sellerOfTravelStateResident && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[0.68rem] font-extrabold text-red-800"><ShieldAlert className="h-3 w-3" /> Review {inquiry.residenceState ?? "state"} residency</p>}
               </div>
@@ -415,7 +431,7 @@ function InquiryList({ inquiries, onOpen }: { inquiries: DashboardInquiry[]; onO
   );
 }
 
-function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; backButtonRef: React.RefObject<HTMLButtonElement | null>; inquiry: DashboardInquiry; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
+function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, guideRequest, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; backButtonRef: React.RefObject<HTMLButtonElement | null>; inquiry: DashboardInquiry; guideRequest?: GuideLeadRow; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
   const workflow = workflowFor(inquiry);
   const acceptedCount = acceptedAgreementCount(inquiry);
   const [stageBusy, setStageBusy] = useState(false);
@@ -461,7 +477,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, onClose, onPaym
       </section>
 
         <div aria-labelledby={`inquiry-tab-${section}`} className="mt-5" id={`inquiry-panel-${section}`} role="tabpanel" tabIndex={0}>
-          {section === "overview" && <OverviewSection inquiry={inquiry} />}
+          {section === "overview" && <OverviewSection inquiry={inquiry} guideRequest={guideRequest} />}
           {section === "travelers" && (
             <div className="space-y-4">
               <SectionHeading description={`${inquiry.travelers.length} of ${inquiry.partySize} traveler records · ${acceptedCount} current agreements accepted`} title="Travelers & agreements" />
@@ -543,7 +559,7 @@ function InquiryProgressChecklist({ inquiry, onSectionChange }: { inquiry: Dashb
   );
 }
 
-function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
+function OverviewSection({ inquiry, guideRequest }: { inquiry: DashboardInquiry; guideRequest?: GuideLeadRow }) {
   return (
     <div className="space-y-5">
       {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
@@ -570,6 +586,7 @@ function OverviewSection({ inquiry }: { inquiry: DashboardInquiry }) {
         <InquiryNotes inquiryId={inquiry.id} key={inquiry.id} />
         </div>
       </section>
+      {guideRequest && <GuideRequestSummary key={`${guideRequest.id}-${guideRequest.status}`} lead={guideRequest} showContact={false} />}
     </div>
   );
 }
@@ -787,6 +804,28 @@ function formatCurrency(cents: number) { return new Intl.NumberFormat("en-US", {
 function formatTimestamp(value: string | null) { if (!value) return "Not recorded"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Not recorded"; return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" }); }
 function detailSectionLabel(section: DetailSection) { return section[0].toUpperCase() + section.slice(1); }
 function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) { return filter === "new" ? "New inquiries" : filter === "missing_travelers" ? "Missing traveler details" : filter === "agreements" ? "Agreements incomplete" : "Invoice issues"; }
+function compareFeedEntries(a: InquiryFeedEntry, b: InquiryFeedEntry, sort: SortOption) {
+  if (a.kind === "booking" && b.kind === "booking") return compareInquiries(a.inquiry, b.inquiry, sort);
+  if (sort === "newest") return feedCreatedAt(b).localeCompare(feedCreatedAt(a));
+  if (sort === "oldest") return feedCreatedAt(a).localeCompare(feedCreatedAt(b));
+  if (sort === "departure") return departureSortValue(feedDeparture(a)) - departureSortValue(feedDeparture(b)) || feedCreatedAt(b).localeCompare(feedCreatedAt(a));
+  if (sort === "name") return feedName(a).localeCompare(feedName(b));
+  const score = (entry: InquiryFeedEntry) => entry.kind === "booking" ? attentionScore(entry.inquiry)
+    : (["failed", "not_configured", "sending"].includes(entry.guide.guide_email_status) ? 30 : 0) + (entry.guide.status === "new" ? 10 : 0);
+  return score(b) - score(a) || feedCreatedAt(b).localeCompare(feedCreatedAt(a));
+}
+
+function GuideRequestRow({ lead, onOpen }: { lead: GuideLeadRow; onOpen: (lead: GuideLeadRow) => void }) {
+  return <a id={`inquiry-row-guide-${lead.id}`} className="group grid w-full gap-3 px-4 py-4 text-left hover:bg-[var(--gold)]/8 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--gold)]/45 sm:px-5 xl:grid-cols-[minmax(210px,1.35fr)_minmax(145px,.8fr)_130px_minmax(175px,1fr)_155px_minmax(190px,1fr)] xl:items-center xl:gap-4" href={`/admin/inquiries/guide/${lead.id}`} onClick={() => onOpen(lead)}>
+    <div className="min-w-0"><p className="truncate font-bold">{lead.first_name}</p><p className="truncate text-sm text-[var(--muted-ink)]">{lead.email}</p><p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide request · {(lead.sources || lead.source).includes("meta") ? "Facebook" : "Website"}</p></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Departure / party</MobileLabel><p className="text-sm font-semibold">{guideTimingLabel(lead.travel_timing)}</p></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Stage</MobileLabel><span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold">{leadStageLabel(lead.status)}</span></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Progress</MobileLabel><div className="text-xs leading-6"><p>Guide email: {lead.guide_email_status.replaceAll("_", " ")}</p><p>{lead.reminder_days_sent ? `Reminders: day ${lead.reminder_days_sent.replaceAll(",", ", day ")}` : "No reminders sent"}</p></div></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Payment</MobileLabel><p className="text-xs text-[var(--muted-ink)]">Not requested</p></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Next step</MobileLabel><span className="inline-flex rounded-lg bg-[var(--gold)] px-3 py-2 text-xs font-extrabold">Review guide request</span></div>
+  </a>;
+}
+
 function compareInquiries(a: DashboardInquiry, b: DashboardInquiry, sort: SortOption) {
   if (sort === "newest") return b.createdAt.localeCompare(a.createdAt);
   if (sort === "oldest") return a.createdAt.localeCompare(b.createdAt);
@@ -855,8 +894,8 @@ function isDashboardListState(value: unknown): value is DashboardListState {
     && validSortOptions.includes(state.sort as SortOption)
     && typeof state.scrollY === "number"
     && Number.isFinite(state.scrollY)
-    && Number.isInteger(state.focusedInquiryId)
-    && Number(state.focusedInquiryId) > 0;
+    && ((Number.isInteger(state.focusedInquiryId) && Number(state.focusedInquiryId) > 0)
+      || (typeof state.focusedInquiryId === "string" && /^guide-[0-9a-f-]{36}$/i.test(state.focusedInquiryId)));
 }
 
 function readDashboardListState(): DashboardListState | null {

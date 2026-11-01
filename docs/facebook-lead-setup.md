@@ -2,7 +2,7 @@
 
 Website landing page: https://cookieparadisetravel.com/vietnam
 
-Protected lead inbox: https://cookieparadisetravel.com/admin/leads
+Protected lead inbox: https://cookieparadisetravel.com/admin/inquiries
 
 Both website requests and approved Facebook Instant Forms feed the guide lead inbox. They do not create booking requests, travelers, agreements or invoices. Existing booking inquiry, agreement and Square automation is unchanged.
 
@@ -52,7 +52,7 @@ Meta menu names vary by account and app setup. Use the official Page leadgen web
 7. Return to the Meta app: **Webhooks → Page → Add callback URL**. Set the callback to `https://cookieparadisetravel.com/api/meta/leads` and enter the same verification token. Click **Verify and save**.
 8. Subscribe to **leadgen**. Also subscribe the app to the actual Facebook Page (the Page's `subscribed_apps` edge); configuring the app callback alone does not install it on the Page. Meta's API tools can perform that step with the Page token. Never put the token into a public URL or share it in a screenshot.
 9. In the Lead Ads Testing Tool, select the approved Page and form, create a test lead using an email you control and a Yes permission answer, and check **Track status**.
-10. Sign into the existing owner dashboard and open **Trip guide leads**. Confirm the lead shows Meta source, correct city/interest/ad ID, one guide email, and no booking inquiry. Confirm the guide email contains the PDF, correct consultation link and reminder-stop link. Delete a previous test lead in Meta's testing tool before generating another for the same form if Meta only permits one.
+10. Sign into the existing owner dashboard and open **Inquiries**. Confirm the lead shows Meta source, correct city/interest/ad ID, one guide email, and no booking inquiry. Confirm the guide email contains the PDF, correct consultation link and reminder-stop link. Delete a previous test lead in Meta's testing tool before generating another for the same form if Meta only permits one.
 11. Submit the same email through the website form. It should remain one lead with two source submissions, without another guide email or a new reminder clock. Mark the test lead **Closed** after testing.
 12. Test a No permission answer: it must be acknowledged without creating a lead or sending an email. A missing or unrecognized permission field is treated as a configuration error for review. Test an unapproved form: it is acknowledged and ignored. Unsigned or modified requests are rejected.
 
@@ -60,7 +60,7 @@ Official reference: https://github.com/facebookincubator/catalogue-of-api-soluti
 
 ## Owner workflow and reminders
 
-- Use `/admin/leads` for guide requests and `/admin/inquiries` for booking inquiries; navigation connects them. A matching booking inquiry has a direct link from its guide lead.
+- Use `/admin/inquiries` for both guide requests and booking inquiries. The list shares search, sorting, active/closed filters and sales-stage filters. A guide request with a matching production booking appears with that booking, with guide delivery and follow-up details in its Overview. Unmatched guide requests open under `/admin/inquiries/guide/`. Older `/admin/leads` bookmarks redirect to the single dashboard.
 - Default lead stage is New. Mark Contacted after your personal outreach, Consultation booked after a booked appointment, Considering while discussing, Booking in progress when handling it manually, or Closed to stop automatic guide reminders.
 - The hourly job sends at most one reminder for day three and one for day seven. It checks the existing consultation calendar freshly before sending. Missing or failed calendar access pauses delivery; it never means "not booked."
 - Any production booking inquiry for the same normalized email suppresses the new guide reminders, so the existing booking-inquiry reminder system owns that person from then on. Closed or manually progressed guide stages, future-departure interest and already-observed consultations also suppress them. No June-trip guide reminders are sent once June 1, 2027 begins (UTC).
@@ -80,6 +80,6 @@ Apply the reviewed 0024 migration only. If unexpected older migrations appear, s
 
 ## Campaign launch check
 
-Use the real form on a phone, confirm the PDF opens, and book a test consultation using the same email. Check the calendar event includes the booking email and the exact existing consultation title/duration. Keep the test lead closed afterward. Confirm protected `/admin/leads` is covered by your existing Cloudflare Access application; if your policy lists only `/admin/inquiries` instead of `/admin/*`, add the new owner path with the same owner-only policy before using it. Server-side owner verification remains required either way.
+Use the real form on a phone, confirm the PDF opens, and book a test consultation using the same email. Check the calendar event includes the booking email and the exact existing consultation title/duration. Keep the test lead closed afterward. Guide details use the existing `/admin/inquiries/` path and owner verification. Keep the existing Cloudflare Access owner policy protecting that path and its subpages. Server-side owner verification remains required either way.
 
 Website conversion tracking through Meta Pixel/CAPI, SMS, ad creation, budgets and campaign publishing are separate follow-up work; they are not activated here.
