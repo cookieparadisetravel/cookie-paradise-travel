@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BookingDialog } from "./booking-dialog";
+import { ConsultationLink } from "./consultation-link";
 
 import type { TripAvailabilityValue } from "./trip-availability";
 
@@ -25,13 +25,9 @@ export function MobileBookBar({ availability }: { availability: TripAvailability
     <div
       className="fixed inset-x-0 bottom-0 z-40 border-t border-white/15 bg-[var(--navy)] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] text-white shadow-[0_-8px_24px_rgba(0,0,0,0.18)] md:hidden"
     >
-      {availability && <p className="mx-auto mb-2 max-w-md text-xs font-semibold text-[var(--gold)]">June 1, 2027 · {availability.booked} of {availability.tierTarget} spots booked{availability.full ? " · Fully booked" : ""}</p>}
-      <div className="mx-auto flex max-w-md items-center justify-between gap-3">
-        <div className="min-w-0 shrink-0">
-          <p className="whitespace-nowrap text-sm font-bold leading-tight text-[var(--gold)]">From $2,875</p>
-          <p className="mt-1 whitespace-nowrap text-[0.7rem] leading-tight text-white/70">per person · 8 days · 2027</p>
-        </div>
-        <BookingDialog triggerLabel="Request a spot" />
+      <div className="mx-auto max-w-md">
+        <p className="mb-2 text-center text-xs leading-5 text-white/85">{availability?.full ? "Departure fully booked · Ask about future trips" : "June 1–8, 2027 · Free 30-minute Google Meet"}</p>
+        <ConsultationLink compact className="w-full" />
       </div>
     </div>
   );
