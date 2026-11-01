@@ -103,8 +103,15 @@ const detailedItinerary = [
 ];
 
 
-const approvedSummary = (label: string) => travelerAgreementSummary.items.find(item => item.label === label)?.text
-  ?? "Please ask Trung for the current terms and review your personalized Traveler Agreement before booking.";
+const approvedSummary = (label: string) => {
+  const text = travelerAgreementSummary.items.find(item => item.label === label)?.text
+    ?? "Please ask Trung for the current terms and review your personalized Traveler Agreement before booking.";
+  // Homepage visitors need standalone explanations; agreement documents retain their references.
+  return text
+    .replace(", subject to Sections 4, 12 and 14", ", with exceptions for company cancellation and events beyond our control")
+    .replace("For a force majeure cancellation", "For a cancellation caused by events beyond our control")
+    .replace(/\s*\(Sections? [^)]+\)/g, "");
+};
 const homepageFaqs = [
   { question: "Do I need to be ready to book before we talk?", answer: "No. The free 30-minute Google Meet is a chance to ask about the itinerary, flights, rooms and whether the trip fits your plans. There is no obligation to book. You can also get the guide first or email Trung at trung@cookieparadise.co." },
   { question: "Where do I fly into and out of?", answer: "Arrive at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City for June 1, 2027. Depart from Da Nang International Airport (DAD), near Hoi An, on June 8. The listed domestic flight from Ho Chi Minh City to Hue (HUI) is included; international flights are extra. Discuss flight plans with Trung before purchasing." },
@@ -113,6 +120,7 @@ const homepageFaqs = [
   { question: "Who will host the trip?", answer: "The trip is created by Trung Le and hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides. Ask who is planned to host your departure when you speak with Trung." },
   { question: "What are the deposit and payment terms?", answer: approvedSummary("Deposit and payments") },
   { question: "What happens if the minimum group is not reached?", answer: approvedSummary("Minimum group and company cancellation") + " Independently purchased international flights and other arrangements are not covered by this refund." },
+  { question: "What if a major disruption affects the trip?", answer: approvedSummary("Changes and major disruptions") },
   { question: "What if I need to cancel?", answer: approvedSummary("If you cancel") },
   { question: "What if June 2027 does not work for me?", answer: "June 1–8, 2027 is the currently open departure. Future dates have not been announced. You can still request the guide, choose a future departure as your interest, or book a call to discuss your plans." },
 ];
