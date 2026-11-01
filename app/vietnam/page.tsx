@@ -46,7 +46,7 @@ export default async function VietnamTrip() {
       <TripAvailability availability={availability} label={vietnamDeparture.label} />
       <p className="mt-8 max-w-lg text-base leading-7 text-white/85">Meet Trung, your Columbus, Indiana-based trip planner. Get the guide first, then ask your questions in a free 30-minute call.</p>
       <a href="#get-guide" className="mt-6 inline-flex items-center gap-2 font-semibold text-[var(--gold)] underline underline-offset-4 lg:hidden">Get the free trip guide <ArrowRight size={17} /></a>
-    </div><TripGuideForm /></div></section>
+    </div><TripGuideForm showCity /></div></section>
     <section className="mx-auto max-w-7xl px-5 py-14 sm:px-8 sm:py-20"><div className="flex flex-wrap items-end justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#87551f]">Four places. One unforgettable journey.</p><h2 className="mt-3 font-serif text-4xl sm:text-5xl">A closer look at Vietnam</h2></div>
       {/* Use native navigation so the browser loads the destination before scrolling to its fragment. */}
       {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}

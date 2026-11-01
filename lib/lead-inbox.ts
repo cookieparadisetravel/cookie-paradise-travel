@@ -7,12 +7,13 @@ export type GuideLeadRow = {
   contacted_at: string | null; consultation_booked_at: string | null; created_at: string; marketing_consent: number;
   campaign: string | null; audience: string | null; ad_id: string | null; submission_count: number; booking_id: number | null;
   reminder_days_sent: string | null; reminder_failures: number;
+  mailerlite_status: string;
 };
 export async function loadLeadInbox(page = 1) {
   await ensureTripGuideStorage();
   const db = env.DB!;
   const { results } = await db.prepare(`SELECT l.id,l.first_name,l.email,l.phone,l.city,l.travel_timing,l.status,l.source,l.referral_code,
-    l.guide_email_status,l.guide_email_sent_at,l.contacted_at,l.consultation_booked_at,l.created_at,l.marketing_consent,
+    l.guide_email_status,l.guide_email_sent_at,l.contacted_at,l.consultation_booked_at,l.created_at,l.marketing_consent,l.mailerlite_status,
     (SELECT group_concat(DISTINCT source) FROM trip_guide_submissions WHERE lead_id=l.id) AS sources,
     (SELECT utm_campaign FROM trip_guide_submissions WHERE lead_id=l.id AND utm_campaign!='' ORDER BY created_at DESC LIMIT 1) AS campaign,
     (SELECT audience FROM trip_guide_submissions WHERE lead_id=l.id AND audience!='' ORDER BY created_at DESC LIMIT 1) AS audience,

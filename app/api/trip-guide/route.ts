@@ -12,7 +12,7 @@ export async function POST(request: Request) {
   catch { return Response.json({ error: "Please review your request and try again." }, { status: 400 }); }
   if (raw && typeof raw === "object" && "website" in raw && raw.website) return Response.json({ ok: true, emailStatus: "not_sent" });
   const parsed = guideRequestSchema.safeParse(raw);
-  if (!parsed.success) return Response.json({ error: "Please complete your name, email, city, travel interest and contact permission." }, { status: 400 });
+  if (!parsed.success) return Response.json({ error: "Please complete your full name, email and travel interest, and review your request." }, { status: 400 });
   const secret = env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret || env.SQUARE_ENV !== "production") return Response.json({ error: "The request form is temporarily unavailable. Please book a consultation or try again later." }, { status: 503 });
   try {

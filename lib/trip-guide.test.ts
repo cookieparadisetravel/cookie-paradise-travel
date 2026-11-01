@@ -9,7 +9,7 @@ import * as referrals from "./salon-referrals.ts";
 import { databaseFixture, loadModule } from "../test-support/lead-fixture.ts";
 
 const uuid = () => crypto.randomUUID();
-const leadInput = () => ({ firstName: "Traveler", email: "Traveler@Example.test ", phone: "", city: "Columbus", timing: "june_2027" as const,
+const leadInput = () => ({ firstName: "Traveler", email: "Traveler@Example.test ", phone: "", city: "Columbus", timing: "june_2027" as guide.LeadTiming,
   source: "website" as "website" | "meta", referralCode: "columbus-uppercuts", marketingConsent: false, submissionId: `website:${uuid()}`, attribution: { ...guide.emptyAttribution, utmCampaign: "vietnam-june" } });
 async function fixture() {
   const f = databaseFixture();
@@ -23,7 +23,7 @@ async function fixture() {
     "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./trip-guide": guide,
     "./trip-guide-email": { sendTripGuideEmail: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: new Date().toISOString(), messageId: "test" }; } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: unknown) => { ownerEmails.push(input); return { sentAt: new Date().toISOString(), messageId: "owner-test" }; } },
-    "./mailerlite": { addConsentedSubscriber: async (input: unknown) => { subscriptions.push(input); return "subscribed"; } },
+    "./mailerlite": { addConsentedSubscriber: async (input: unknown, options: unknown) => { subscriptions.push({ input, options }); return "synced"; } },
   });
   const reminders = await loadModule<{ sendDueTripGuideReminders(now: Date): Promise<unknown> }>("lib/trip-guide-reminders.ts", {
     "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage,
@@ -78,6 +78,19 @@ test("provider failure preserves the lead and is never automatically resent; San
   assert.equal(f.emails.length, 1); assert.equal(f.sqlite.prepare("SELECT guide_email_status FROM trip_guide_leads").get()!.guide_email_status, "failed");
   const g = await fixture(); g.runtime.SQUARE_ENV = "sandbox"; await assert.rejects(g.save(input)); assert.equal(g.emails.length, 0);
   assert.equal(g.sqlite.prepare("SELECT count(*) n FROM trip_guide_leads").get()!.n, 0);
+});
+test("full names without a city are saved intact and news opt-ins target Interest List", async () => {
+  const f = await fixture();
+  const parsed = requests.guideRequestSchema.parse({ fullName: "  Alex Morgan Lee  ", email: "Alex@Example.test", timing: "not_sure", contactConsent: true,
+    marketingConsent: true, submissionId: uuid(), turnstileToken: "test" });
+  assert.equal(parsed.firstName, "Alex Morgan Lee");
+  assert.equal(parsed.city, "Not provided");
+  await f.save({ ...leadInput(), ...parsed, attribution: guide.campaignAttribution(parsed.attribution), submissionId: `website:${parsed.submissionId}` });
+  const row = f.sqlite.prepare("SELECT first_name,city,contact_consented_at,marketing_consent,mailerlite_status FROM trip_guide_leads").get()!;
+  assert.equal(row.first_name, "Alex Morgan Lee"); assert.equal(row.city, "Not provided");
+  assert.ok(row.contact_consented_at); assert.equal(row.marketing_consent, 1); assert.equal(row.mailerlite_status, "synced");
+  assert.deepEqual(f.subscriptions, [{ input: { firstName: "Alex", lastName: "Morgan Lee", email: "alex@example.test" }, options: { groupName: "Interest List" } }]);
+  assert.equal(requests.guideRequestSchema.safeParse({ fullName: "", email: "alex@example.test", timing: "not_sure", contactConsent: true, submissionId: uuid(), turnstileToken: "test" }).success, false);
 });
 test("runtime storage and migration are additive and idempotent in either order", async () => {
   const f = await fixture();
@@ -151,6 +164,9 @@ test("public intake enforces origin, bounded bodies, explicit contact consent an
     globalThis.fetch = async () => Response.json({ success: true, action: "trip_guide", hostname: "example.test" });
     assert.equal((await route.POST(request(body))).status, 201);
     assert.equal((saved[0] as { referralCode: string }).referralCode, "columbus-uppercuts");
+    assert.equal((await route.POST(request({ ...body, firstName: undefined, fullName: "Alex Morgan Lee", city: undefined }))).status, 201);
+    assert.equal((saved[1] as { firstName: string }).firstName, "Alex Morgan Lee");
+    assert.equal((saved[1] as { city: string }).city, "Not provided");
   } finally { globalThis.fetch = original; }
 });
 

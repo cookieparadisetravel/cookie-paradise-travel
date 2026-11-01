@@ -6,7 +6,7 @@ import { loadTurnstileScript } from "./booking-dialog";
 import { attributionFromSearch, leadCities, tripGuideUrl } from "@/lib/trip-guide";
 import { consultationBookingUrl } from "@/lib/consultation";
 
-export function TripGuideForm() {
+export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
   const widget = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const submissionId = useRef<string | null>(null);
@@ -38,8 +38,8 @@ export function TripGuideForm() {
     setStatus("saving"); setError("");
     try {
       const response = await fetch("/api/trip-guide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
-        firstName: data.get("firstName"), email: data.get("email"), phone: data.get("phone") || "", city: data.get("city"), timing: data.get("timing"),
-        contactConsent: data.get("contactConsent") === "on", marketingConsent: data.get("marketingConsent") === "on", website: data.get("website") || "",
+        fullName: data.get("fullName"), email: data.get("email"), phone: data.get("phone") || "", ...(showCity ? { city: data.get("city") } : {}), timing: data.get("timing"),
+        contactConsent: true, marketingConsent: data.get("marketingConsent") === "on", website: data.get("website") || "",
         turnstileToken: token, submissionId: submissionId.current, attribution: attributionFromSearch(window.location.search),
       }) });
       const result = await response.json() as { error?: string; emailStatus?: string };
@@ -66,15 +66,15 @@ export function TripGuideForm() {
       <h2 className="mt-3 font-serif text-3xl leading-tight">Get your free Vietnam trip guide</h2>
       <p className="mt-3 text-sm leading-6 text-[#6c6055]">The daily itinerary, pricing and what&apos;s included—plus an invitation to talk it through with Trung.</p>
       <form onSubmit={event => { void submit(event); }} className="mt-6 space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">First name<input className={inputClass} name="firstName" autoComplete="given-name" required maxLength={60} /></label><label className="text-sm font-semibold">Email<input className={inputClass} name="email" type="email" autoComplete="email" required maxLength={180} /></label></div>
-        <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Your city<select className={inputClass} name="city" defaultValue="" required><option value="" disabled>Select a city</option>{leadCities.map(city => <option key={city}>{city}</option>)}</select></label><label className="text-sm font-semibold">Travel interest<select className={inputClass} name="timing" defaultValue="" required><option value="" disabled>Select an option</option><option value="june_2027">June 1-8, 2027</option><option value="not_sure">I&apos;m still deciding</option><option value="future">A future departure</option></select></label></div>
+        <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Full Name<input className={inputClass} name="fullName" autoComplete="name" required maxLength={121} /></label><label className="text-sm font-semibold">Email<input className={inputClass} name="email" type="email" autoComplete="email" required maxLength={180} /></label></div>
+        <div className={`grid gap-4 ${showCity ? "sm:grid-cols-2" : ""}`}>{showCity && <label className="text-sm font-semibold">Your city<select className={inputClass} name="city" defaultValue="" required><option value="" disabled>Select a city</option>{leadCities.map(city => <option key={city}>{city}</option>)}</select></label>}<label className="text-sm font-semibold">Travel interest<select className={inputClass} name="timing" defaultValue="not_sure" required><option value="june_2027">June 1-8, 2027</option><option value="not_sure">I&apos;m still deciding</option><option value="future">A future departure</option></select></label></div>
         <label className="block text-sm font-semibold">Phone <span className="font-normal text-[#6c6055]">(optional; no automated texts)</span><input className={inputClass} name="phone" type="tel" autoComplete="tel" maxLength={40} /></label>
         <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-        <label className="flex gap-3 text-sm leading-6"><input className="mt-1 h-4 w-4 shrink-0 accent-[#593412]" type="checkbox" name="contactConsent" required /><span>Send me the guide and let Trung contact me about this trip, including up to two consultation reminders if I haven&apos;t booked a call.</span></label>
-        <label className="flex gap-3 text-sm leading-6 text-[#6c6055]"><input className="mt-1 h-4 w-4 shrink-0 accent-[#593412]" type="checkbox" name="marketingConsent" /><span>Also send me occasional future trip news. <span className="font-semibold">Optional.</span></span></label>
+        <label className="flex gap-3 text-sm leading-6"><input className="mt-1 h-4 w-4 shrink-0 accent-[#593412]" type="checkbox" name="marketingConsent" /><span>Send me occasional future trip news.</span></label>
         <div ref={widget} className="min-h-[140px] max-w-full overflow-hidden min-[401px]:min-h-[65px]" />
         {(error || verificationError) && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm leading-6 text-red-900">{error || verificationError}</p>}
         <button disabled={status === "saving" || !token} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#593412] px-4 py-3 font-bold text-white transition hover:bg-[#75481b] disabled:cursor-wait disabled:opacity-60">{status === "saving" ? <><Loader2 className="animate-spin" size={18} /> Saving your request...</> : <>Send my free guide <ArrowRight size={18} /></>}</button>
+        <p className="text-sm leading-6">By selecting &ldquo;Send my free guide,&rdquo; you ask Trung to email the guide and contact you about this trip, including up to two consultation reminders if you haven&apos;t booked a call.</p>
         <p className="text-xs leading-5 text-[#6c6055]">No payment or booking obligation. We respect your <a className="underline" href="/privacy">privacy</a>. Prefer to talk first? <a className="font-semibold underline" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free 30-minute call.</a></p>
       </form>
     </>}
