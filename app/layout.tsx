@@ -44,7 +44,7 @@ export default function RootLayout({
         {/* The App Router root layout is the document-wide location for this stylesheet. */}
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link
-          href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..800;1,400..800&family=Valley+Sans:ital,wght@0,400..800;1,400..800&display=swap"
           rel="stylesheet"
         />
       </head>
