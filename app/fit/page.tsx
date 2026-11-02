@@ -58,7 +58,7 @@ export default async function FitTravelPage() {
       <div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5 sm:px-8">
         <div className="site-header-brand flex min-w-0 items-center gap-4">
           <Link href="/" className="site-header-home flex shrink-0 items-center gap-3" aria-label="Cookie Paradise Travel Company home">
-            <BrandLogo />
+            <BrandLogo surface="dark" />
           </Link>
           <ReferralBrand header />
         </div>

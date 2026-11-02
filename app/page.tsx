@@ -140,7 +140,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
             <a href="#top" className="site-header-home flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
-              <BrandLogo />
+              <BrandLogo surface="dark" />
             </a>
             <ReferralBrand header />
           </div>
@@ -398,7 +398,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       <footer className="bg-[var(--navy)] px-5 pb-40 pt-10 text-white/65 sm:px-8 md:pb-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <BrandLogo footer />
+            <BrandLogo footer surface="dark" />
             <p className="mt-3 text-sm">Hosted small-group journeys from Columbus, Indiana.</p>
           </div>
           <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><Link className="underline hover:text-white" href="/fit">Private Vietnam trips</Link></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>

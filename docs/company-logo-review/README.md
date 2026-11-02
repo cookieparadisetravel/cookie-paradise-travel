@@ -1,5 +1,7 @@
 # Consistent landing-page logo
 
+This records the initial logo deployment. The subsequent [blended logo refinement](../unboxed-logo-review/README.md) supersedes its cream backing treatment.
+
 Use the owner's supplied `Untitled design.png` as the common company logo on the homepage, `/vietnam` and `/fit`, including their existing referral experiences. The homepage footer uses the same artwork.
 
 The original PNG is copied byte-for-byte to `public/cookie-paradise-travel-logo.png`. SHA-256: `7139d65c4cb621258bc42e0ec9a6ac12c49beff5f34ca6ef1f999fe3b559d72e`.
