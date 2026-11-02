@@ -15,6 +15,7 @@ import { TripAvailability } from "./components/trip-availability";
 import { HeroVideo } from "./components/hero-video";
 import { JourneyPhoto } from "./components/journey-photo";
 import { ConsultationLink } from "./components/consultation-link";
+import { BrandLogo } from "./components/brand-logo";
 import { TripGuideForm } from "./components/trip-guide-form";
 import { tripGuideUrl } from "@/lib/trip-guide";
 import travelerAgreementSummary from "@/lib/traveler-agreement-summary.json";
@@ -139,8 +140,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
             <a href="#top" className="site-header-home flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
-              <img src="/cookie-paradise-logo.png" alt="Cookie Paradise" className="site-header-logo rounded-sm" />
-              <span className="site-header-descriptor shrink-0 border-l border-white/30 pl-2 text-[0.625rem] font-bold uppercase leading-3 tracking-[0.12em] text-white/85 sm:pl-3 sm:leading-4">Travel<br /> Company</span>
+              <BrandLogo />
             </a>
             <ReferralBrand header />
           </div>
@@ -398,12 +398,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       <footer className="bg-[var(--navy)] px-5 pb-40 pt-10 text-white/65 sm:px-8 md:pb-10">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <img
-              src="/cookie-paradise-logo.png"
-              alt="Cookie Paradise"
-              className="h-auto w-full max-w-[18rem] rounded-sm"
-            />
-            <p className="mt-3 text-xs font-bold uppercase tracking-[0.22em] text-[var(--gold)]">Travel Company</p>
+            <BrandLogo footer />
             <p className="mt-3 text-sm">Hosted small-group journeys from Columbus, Indiana.</p>
           </div>
           <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><Link className="underline hover:text-white" href="/fit">Private Vietnam trips</Link></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>

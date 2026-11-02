@@ -3,6 +3,7 @@ import Link from "next/link";
 import { cookies } from "next/headers";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, MapPin } from "lucide-react";
 import { ConsultationLink } from "../components/consultation-link";
+import { BrandLogo } from "../components/brand-logo";
 import { JourneyPhoto } from "../components/journey-photo";
 import { ReferralBrand, ReferralProvider } from "../components/referral-brand";
 import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
@@ -57,9 +58,7 @@ export default async function FitTravelPage() {
       <div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5 sm:px-8">
         <div className="site-header-brand flex min-w-0 items-center gap-4">
           <Link href="/" className="site-header-home flex shrink-0 items-center gap-3" aria-label="Cookie Paradise Travel Company home">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/cookie-paradise-logo.png" alt="Cookie Paradise" width={1878} height={268} className="site-header-logo object-contain" />
-            <span className="site-header-descriptor border-l border-white/30 pl-3 text-[10px] font-semibold uppercase leading-4 tracking-[.18em] text-white/85">Travel<br className="hidden sm:block" /> Company</span>
+            <BrandLogo />
           </Link>
           <ReferralBrand header />
         </div>

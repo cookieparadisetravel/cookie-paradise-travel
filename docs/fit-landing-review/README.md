@@ -1,6 +1,6 @@
 # Vietnam FIT landing page review
 
-A new `/fit` page for custom, independent Vietnam travel, prepared from production main `83df892efcfa9917ebd0788d6806e0baa2575ddd`. The user confirmed Vietnam as the destination scope. This is a draft for review; no production deployment or settings changes were made.
+A new `/fit` page for custom, independent Vietnam travel, prepared from production main `83df892efcfa9917ebd0788d6806e0baa2575ddd`. The user confirmed Vietnam as the destination scope. The owner approved publication, with service fees left for a later decision. Deployment is tracked in pull request #13; no production settings changes are required.
 
 ## Research and design decisions
 
@@ -11,7 +11,7 @@ The primary benchmarks were [EXO Travel's tailormade service](https://www.exotra
 - Audley explains that custom-trip prices depend on the individual itinerary. The page uses individually quoted arrangements rather than assigning the group departure's prices, supplement or payment terms to FIT travel.
 - Editorial hierarchy, asymmetrical local photography, readable text, clear navigation, accessible native FAQ controls and mobile layout checks support exploration and the next step. These are implementation choices, not performance claims.
 
-The design retains Playfair Display, Valley Sans, existing brand colors, logo treatment and previously approved photo assets/credits. Copy is original. No reviews, service guarantees, accreditation badges or supplier relationships were invented.
+The design retains Playfair Display, Valley Sans, existing brand colors and previously approved photo assets/credits. The final landing-page headers share the newly supplied complete company logo; see ../company-logo-review. Copy is original. No reviews, service guarantees, accreditation badges or supplier relationships were invented.
 
 ## Conversion and referral behavior
 
