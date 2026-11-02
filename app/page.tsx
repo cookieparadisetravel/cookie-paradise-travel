@@ -135,11 +135,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
     <ReferralProvider partner={partner}>
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
       <header className="absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white">
-        <div className="mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
-          <div className="flex items-center gap-3">
-            <a href="#top" className="flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
-              <img src="/cookie-paradise-logo.png" alt="Cookie Paradise" className="h-5 w-auto max-w-[5.8rem] rounded-sm sm:h-7 sm:max-w-none lg:h-8" />
-              <span className="shrink-0 border-l border-white/30 pl-2 text-[0.625rem] font-bold uppercase leading-3 tracking-[0.12em] text-white/85 sm:pl-3 sm:leading-4">Travel<br />Company</span>
+        <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
+          <div className="site-header-brand flex items-center gap-3">
+            <a href="#top" className="site-header-home flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
+              <img src="/cookie-paradise-logo.png" alt="Cookie Paradise" className="site-header-logo rounded-sm" />
+              <span className="site-header-descriptor shrink-0 border-l border-white/30 pl-2 text-[0.625rem] font-bold uppercase leading-3 tracking-[0.12em] text-white/85 sm:pl-3 sm:leading-4">Travel<br /> Company</span>
             </a>
             <ReferralBrand header />
           </div>
@@ -149,7 +149,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
             <a className="hover:text-[var(--gold)]" href="#faq">Questions</a>
           </nav>
-          <ConsultationLink compact />
+          <ConsultationLink compact className="site-header-call" />
         </div>
       </header>
 
