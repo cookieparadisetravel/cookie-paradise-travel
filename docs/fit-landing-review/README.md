@@ -21,16 +21,29 @@ The page reads the existing referral cookie through the existing partner resolve
 
 A homepage footer link and sitemap entry make the new page discoverable. The shared photo component gains an optional `priority` prop for the new hero; existing photos retain lazy loading by default.
 
-## Business details to confirm before publication
+## Service positioning and business policies
 
-Exact bookable services, planning fees or minimum budget, ideal traveler focus, the operating partner and in-country assistance arrangements remain for the owner to define. The draft therefore describes a planning conversation and individually agreed proposals rather than promising specific inclusions or round-the-clock support. The existing group departure remains a separate offering.
+The owner confirmed broad flexibility: help with one arrangement, selected portions of an existing plan, a full journey, family visits, celebrations or other special requests. The hero, approach section, email prompts and FAQs now make this explicit. Arrangements, feasibility, availability and prices are confirmed in each proposal.
+
+The initial call remains free under the existing offering. No new planning fee, advertised minimum budget, supplier relationship or round-the-clock support promise was adopted. The existing group departure remains a separate offering. The new pricing and service research below is for the owner's decision, not a set of terms automatically applied to this website.
+
+### Comparable-service research, November 2, 2026
+
+| Operator | Published practice |
+| --- | --- |
+| [Local Vietnam](https://localvietnam.com/tailor-made-vietnam-tour/) | Free custom proposals, budget-based trip quotes and direct local-team contact through WhatsApp during travel. |
+| [What About Vietnam](https://www.whataboutvietnam.com/trip-plan-request-form) | US$150 upfront, nonrefundable full-trip planning fee, credited toward the trip when the client books the tour with them. |
+| [Wellness Vietnam](https://wellnessvietnam.com/planning-fees/) | Planning fees of $300 for up to seven days, $500 for 8–14 and $700 for 15–21. Separate from the trip price and nonrefundable; includes up to two revision rounds. Its [custom trips page](https://wellnessvietnam.com/custom-trips/) addresses individuals, couples, families and private groups. |
+| [Scott Dunn](https://www.scottdunn.com/us/about/why-scott-dunn/how-we-work) | Phone or online inquiry, a designated specialist, a refined quote, then booking. Advertises 24/7 support backed by global offices. |
+
+These examples show several pricing approaches, not a single industry standard. Recommended options for discussion: keep the first call free, quote individual requests on scope, and consider a credited planning fee for extensive itinerary design. Keep the audience broad, identify the relevant operating/support contacts in each proposal, and consider a dedicated short FIT inquiry form alongside the call option. No fee or backend-form policy has been implemented by this research update.
 
 ## Verification
 
 - Production build: passed, including the new dynamic `/fit` route.
 - TypeScript: passed.
 - ESLint on changed source files: no errors; homepage retains its existing image warnings.
-- Existing automated suite: 193 tests passed.
+- Existing automated suite: 193 tests passed on the initial feature. This follow-up changes copy only; the build, TypeScript, focused lint and phone layout checks were repeated successfully.
 - Diff whitespace check: passed.
 - Rendered HTML checks: one H1; all local fragment links resolve; image files and alt text exist; new hero is eager/high-priority; the scheduler URL matches current configuration.
 - Direct and two referral render checks: email subject/body correct; Columbus Uppercuts and Gossip Nails attribution appears only in the appropriate prepared email.

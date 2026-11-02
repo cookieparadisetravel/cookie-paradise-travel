@@ -12,7 +12,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Private Vietnam Travel & Custom Trips | Cookie Paradise Travel",
-  description: "Plan a private Vietnam journey around your dates, interests and pace. Start with a free 30-minute conversation with Trung, your Columbus, Indiana-based Vietnam trip planner.",
+  description: "A whole Vietnam journey or help with one arrangement. Plan around your dates, interests and budget with Trung, your Columbus, Indiana-based Vietnam trip planner.",
   alternates: { canonical: "https://cookieparadisetravel.com/fit" },
   openGraph: {
     title: "Vietnam, at your pace. | Cookie Paradise Travel",
@@ -30,6 +30,8 @@ export const metadata: Metadata = {
 
 const questions = [
   ["What is FIT travel?", "Here, FIT means a custom, independent journey for you and your travel companions. You work with Trung on the route and arrangements, rather than joining a scheduled group departure. Independent travel can still include prearranged hotels, transfers, experiences and local guides, as agreed in your proposal."],
+  ["Can you help with just one part of my trip?", "Absolutely. Ask for help with a hotel, a transfer, a local guide, an experience, or whatever is missing from your plans. You can book other parts yourself and ask Trung to bring the rest together. We will confirm the arrangements and any fees with you before proceeding."],
+  ["What if I have an unusual or very specific request?", "Tell Trung what you have in mind. A family visit, a special occasion, a restaurant reservation, a particular place you want to see, or a different kind of travel experience can all be the starting point. We will explore the possibilities with you and confirm what can be arranged, availability and cost."],
   ["Is this the June 2027 group trip?", "This is a separate service. Your private journey is planned around your preferred dates, party and interests, subject to availability. The dates, group-size requirements and published prices for Discover Southern Vietnam do not automatically apply to a custom trip."],
   ["Can I travel solo, as a couple, or with family and friends?", "Yes. Tell Trung who is traveling, including the ages of any children, and how you like to spend your days. Room arrangements, transport and activities are considered for your own party and reflected in your proposal."],
   ["How much does a private trip cost?", "The price depends on your dates, trip length, number of travelers, rooms, hotels, transport and experiences. The initial 30-minute consultation is free. Any planning fees, included services, payment schedule and booking terms will be explained before you decide to proceed."],
@@ -43,7 +45,7 @@ export default async function FitTravelPage() {
   const emailBody = [
     "Hi Trung, I'd like to discuss a private Vietnam trip.", "",
     "Approximate dates or travel window:", "How many travelers:", "Places or experiences I am interested in:",
-    "Approximate trip length:", "Comfort preferences and budget (if known):", "",
+    "Approximate trip length:", "What I would like help with (one arrangement or the whole trip):", "Comfort preferences and budget (if known):", "",
     ...(partner ? [`Referred by: ${partner.name} (${partner.code})`, ""] : []),
     "Sent from the private Vietnam travel page: https://cookieparadisetravel.com/fit",
   ].join("\r\n");
@@ -73,7 +75,7 @@ export default async function FitTravelPage() {
         <p className="fit-kicker">Private Vietnam journeys</p>
         <h1 id="fit-title">Vietnam,<br /><em>at your pace.</em></h1>
         <p className="fit-hero-intro">Your dates. Your people. Your kind of adventure.</p>
-        <p className="fit-body">A private journey shaped around what you love, with time for the moments you didn&apos;t plan. Thoughtfully planned with Trung, your Vietnam trip planner in Columbus, Indiana.</p>
+        <p className="fit-body">The whole journey, or just the part you need help with. Tell Trung what you have in mind, and shape your Vietnam plans around your dates, interests and budget.</p>
         <a className="fit-button fit-button-dark" href="#fit-plan">Plan my Vietnam trip <ArrowRight size={18} aria-hidden="true" /></a>
         <p className="fit-small fit-hero-note">Start with a free 30-minute conversation.</p>
         <a className="fit-text-link fit-explore" href="#fit-ideas">Find a little inspiration <ArrowDown size={16} aria-hidden="true" /></a>
@@ -93,12 +95,12 @@ export default async function FitTravelPage() {
     </div>
 
     <section id="fit-approach" className="fit-wrap fit-section fit-approach" aria-labelledby="fit-approach-title">
-      <div><p className="fit-kicker">Independent travel. Personally planned.</p><h2 id="fit-approach-title">The freedom to explore.<br /><em>A plan that feels like you.</em></h2></div>
+      <div><p className="fit-kicker">As much help as you want</p><h2 id="fit-approach-title">One arrangement.<br /><em>Or the whole adventure.</em></h2></div>
       <div className="fit-approach-details">
-        <p className="fit-body">Perhaps you want to linger in Hoi An, follow the food through Ho Chi Minh City (Saigon), or leave a little space for family connections. Your itinerary begins with the way you want to travel.</p>
-        <p className="fit-body">We&apos;ll talk through the route, stays, transport and experiences that suit your party. You choose the balance of guided discovery and time on your own; the agreed arrangements are set out in your proposal.</p>
+        <p className="fit-body">Perhaps you&apos;ve booked your flights and need help with the rest. Maybe it&apos;s a hotel, an airport transfer, a guide for a day, or time with family between a few adventures. Or perhaps you&apos;d like the entire journey planned for you.</p>
+        <p className="fit-body">Bring your ideas, your existing plans and your special requests. From Ho Chi Minh City (Saigon) to wherever your Vietnam story takes you, we&apos;ll work out the help you want. The arrangements, availability and cost are confirmed in your proposal.</p>
         <ul className="fit-options">
-          {["Dates and trip length", "Hotel and room preferences", "Food, culture and local experiences", "Guiding, transport and downtime"].map(item => <li key={item}><Check size={16} aria-hidden="true" />{item}</li>)}
+          {["Complete trips or individual arrangements", "Help with plans you've already started", "Hotels, transport, guides and experiences", "Family visits, celebrations and special requests"].map(item => <li key={item}><Check size={16} aria-hidden="true" />{item}</li>)}
         </ul>
       </div>
     </section>
@@ -124,7 +126,7 @@ export default async function FitTravelPage() {
       <div className="fit-process-heading"><p className="fit-kicker">From an idea to an itinerary</p><h2 id="fit-process-title">A personal trip.<br /><em>A clear way forward.</em></h2></div>
       <ol className="fit-process">
         {[
-          ["01", "Start with a conversation.", "Tell Trung about your travel window, your people, your interests and your budget. You don't need every answer before we talk."],
+          ["01", "Start with a conversation.", "Tell Trung what you want to do and where you'd like help. Share your dates, interests, budget and any plans you've already made."],
           ["02", "Shape the details together.", "Discuss a route, the right pace, stays and experiences. Refine the plan around what matters most to you."],
           ["03", "Review, then decide.", "Your proposal sets out the arrangements, price and booking terms. Review the details before making a commitment."],
         ].map(([number, title, text]) => <li key={number}><span className="fit-step-number" aria-hidden="true">{number}</span><h3>{title}</h3><p className="fit-body">{text}</p></li>)}
@@ -150,7 +152,7 @@ export default async function FitTravelPage() {
     <section id="fit-plan" className="fit-plan" aria-labelledby="fit-plan-title">
       <div className="fit-wrap fit-section fit-plan-grid">
         <div><p className="fit-kicker">Your Vietnam starts with a conversation</p><h2 id="fit-plan-title">Tell us what<br /><em>you&apos;re dreaming of.</em></h2><p className="fit-body">A free 30-minute Google Meet with Trung. Bring an idea, a few questions, or simply the wish to go.</p><div className="fit-plan-actions"><ConsultationLink /><a className="fit-email-link" href={emailHref}>Email Trung your trip ideas <ArrowUpRight size={17} aria-hidden="true" /></a></div><p className="fit-small">No obligation to book. The email link opens your email app with a few planning prompts; you can edit them before sending.</p><a className="fit-contact-address" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></div>
-        <aside className="fit-conversation-note"><p className="fit-kicker">If you know, bring along…</p><ul><li>Your approximate dates and trip length</li><li>Who is traveling with you</li><li>Places and experiences you&apos;re drawn to</li><li>Your preferred comfort level and budget</li></ul><p className="fit-body">Still figuring it out? That&apos;s what the conversation is for.</p>{partner && <div className="fit-referral-disclosure"><ReferralBrand /></div>}</aside>
+        <aside className="fit-conversation-note"><p className="fit-kicker">If you know, bring along…</p><ul><li>What you&apos;d like help with</li><li>Your dates, travelers and existing plans</li><li>Places, experiences or special requests</li><li>Your preferred comfort level and budget</li></ul><p className="fit-body">Still figuring it out? That&apos;s what the conversation is for.</p>{partner && <div className="fit-referral-disclosure"><ReferralBrand /></div>}</aside>
       </div>
     </section>
 
