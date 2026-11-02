@@ -20,7 +20,7 @@ export const dynamic = "force-dynamic";
 
 const itinerary = [
   ["01", "Arrive in Ho Chi Minh City", "A private airport welcome, hotel transfer and an easy first evening to settle in."],
-  ["02", "The many sides of Saigon", "Morning life in Tao Dan Park, city icons, markets and a vintage-Jeep food adventure after dark."],
+  ["02", "The many sides of Ho Chi Minh City", "Morning life in Tao Dan Park, city icons, markets and a vintage-Jeep food adventure after dark."],
   ["03", "Mekong Delta life", "Floating communities, sampan waterways, village paths, family workshops and a home-hosted lunch."],
   ["04", "Fly to Hue", "Imperial Citadel, Thien Mu Pagoda and a private sunset cruise on the Perfume River."],
   ["05", "Gardens, tombs & royal dinner", "Tha Om Garden House, the royal tombs of Tu Duc and Khai Dinh, then dinner with traditional music."],
@@ -46,17 +46,17 @@ const detailedItinerary = [
     ],
   },
   {
-    day: "02", title: "The many sides of Saigon", meals: "Meals: Breakfast, Dinner",
+    day: "02", title: "The many sides of Ho Chi Minh City", meals: "Meals: Breakfast, Dinner",
     events: [
-      ["6:30–9:30 AM", "Good Morning Saigon", "Tao Dan Park and its bird café, a century-old private house and temple, a local breakfast and a neighborhood wet market."],
-      ["1:00–5:00 PM", "Central Saigon", "City Hall, Dong Khoi Street, the Continental Hotel, Opera House, Central Post Office, the former CIA building, 30 April Park, Reunification Palace and Ben Thanh Market."],
-      ["6:30–10:30 PM", "Saigon after dark", "Travel by vintage Jeep for local food stops, the flower market and street snacks, finishing with a rooftop drink."],
+      ["6:30–9:30 AM", "Morning in Ho Chi Minh City", "Tao Dan Park and its bird café, a century-old private house and temple, a local breakfast and a neighborhood wet market."],
+      ["1:00–5:00 PM", "Central Ho Chi Minh City", "City Hall, Dong Khoi Street, the Continental Hotel, Opera House, Central Post Office, the former CIA building, 30 April Park, Reunification Palace and Ben Thanh Market."],
+      ["6:30–10:30 PM", "Ho Chi Minh City after dark", "Travel by vintage Jeep for local food stops, the flower market and street snacks, finishing with a rooftop drink."],
     ],
   },
   {
     day: "03", title: "Mekong Delta life", meals: "Meals: Breakfast, Lunch",
     events: [
-      ["8:00 AM–5:00 PM", "Waterways, farms and a shared table", "Travel about two hours to the delta. Visit the Tan My floating community and a working fish farm, continue by sampan, explore village paths by bicycle or buggy, meet local producers and share a home-hosted lunch before returning to Saigon."],
+      ["8:00 AM–5:00 PM", "Waterways, farms and a shared table", "Travel about two hours to the delta. Visit the Tan My floating community and a working fish farm, continue by sampan, explore village paths by bicycle or buggy, meet local producers and share a home-hosted lunch before returning to Ho Chi Minh City."],
     ],
   },
   {
@@ -159,7 +159,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="max-w-3xl">
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)] sm:text-sm">Small-group Vietnam · June 1–8, 2027</p>
             <h1 className="font-serif text-[2.6rem] leading-[1.02] tracking-[-0.04em] sm:text-7xl lg:text-[5.3rem]">Discover Southern Vietnam</h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 sm:text-xl sm:leading-8">Discover Saigon, Mekong waterways, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
+            <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 sm:text-xl sm:leading-8">Discover Ho Chi Minh City (Saigon), Mekong waterways, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/90">
               <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[var(--gold)]" /> 8 days / 7 nights</span>
               <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[var(--gold)]" /> 8–15 travelers</span>
@@ -216,7 +216,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="max-w-3xl"><p className="eyebrow">Four places. One memorable journey.</p><h2 className="section-title">Picture yourself here.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted-ink)]">Food, local stories and shared experiences—from Southern Vietnam to the country&apos;s central coast. A personal group of no more than 15, hosted by Trung or a carefully selected Cookie Paradise Travel Company host with experienced local guides.</p></div>
         <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["01", "Ho Chi Minh City", "Explore Saigon's neighborhoods and landmarks, then head out by vintage Jeep for a food adventure after dark."],
+            ["01", "Ho Chi Minh City", "Explore Ho Chi Minh City's neighborhoods and landmarks, then head out by vintage Jeep for a food adventure after dark."],
             ["02", "Mekong Delta", "Travel sampan waterways, meet local makers and share a home-hosted lunch, with village paths along the way."],
             ["03", "Hue", "Discover imperial heritage and royal tombs, savor garden-house traditions and cruise the Perfume River at sunset."],
             ["04", "Hoi An", "Cross the Hai Van Pass, make a lantern, explore old-town lanes and join a hands-on culinary challenge."],
@@ -268,7 +268,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           {[
             [Plane, "Hotels & transport", "Seven hotel nights, daily breakfast, private ground transportation, scheduled airport transfers and the domestic flight to Hue."],
             [Utensils, "Meals & local flavor", "Meals marked in the itinerary, a home-hosted Mekong lunch, Hue royal dinner and Hoi An farewell dinner."],
-            [Sparkles, "Signature experiences", "Saigon by vintage Jeep, Perfume River sunset cruise, lantern workshop, basket boat and culinary challenge."],
+            [Sparkles, "Signature experiences", "Ho Chi Minh City by vintage Jeep, Perfume River sunset cruise, lantern workshop, basket boat and culinary challenge."],
             [Users, "Guides & admissions", "English-speaking local guides, entrance fees and the scheduled activities described in the itinerary."],
             [Check, "Thoughtful details", "Refillable water bottle, purified drinking water, private boats and carefully paced days."],
             [MapPin, "Three distinct regions", "Ho Chi Minh City and the Mekong Delta, imperial Hue, and the living heritage of Hoi An."],
