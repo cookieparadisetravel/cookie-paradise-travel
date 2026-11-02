@@ -134,7 +134,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
   return (
     <ReferralProvider partner={partner}>
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
-      <header className={`absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white ${partner ? "site-header-with-partner" : ""}`}>
+      <header className="absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white">
         <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
             <a href="#top" className="site-header-home flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
@@ -156,7 +156,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       <section id="top" className="relative isolate overflow-hidden bg-[var(--navy)] text-white">
         <HeroVideo />
         <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.94)_0%,rgba(45,29,16,.78)_55%,rgba(45,29,16,.3)_100%)]" />
-        <div className="site-hero-content mx-auto flex min-h-[760px] max-w-7xl items-center px-5 pb-20 pt-40 sm:px-8 sm:pb-24">
+        <div className="mx-auto flex min-h-[760px] max-w-7xl items-center px-5 pb-20 pt-40 sm:px-8 sm:pb-24">
           <div className="max-w-3xl">
             <p className="mb-5 text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)] sm:text-sm">Small-group Vietnam · June 1–8, 2027</p>
             <h1 className="font-serif text-[2.6rem] leading-[1.02] tracking-[-0.04em] sm:text-7xl lg:text-[5.3rem]">Discover Southern Vietnam</h1>

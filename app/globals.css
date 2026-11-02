@@ -49,14 +49,13 @@ a { text-underline-offset: 4px; }
 @media (min-width: 640px) { .site-header-logo { height: 1.75rem; width: auto; } }
 @media (min-width: 1024px) { .site-header-logo { height: 2rem; } }
 @media (max-width: 639px) {
-  .site-header-bar { display: grid; grid-template-columns: minmax(0, 1fr); row-gap: 1rem; padding: 1rem; }
+  .site-header-bar { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 1.5rem; padding: 1rem; }
   .site-header-brand { display: contents; }
   .site-header-home { grid-column: 1; grid-row: 1; justify-self: start; flex-direction: column; align-items: center; gap: .5rem; }
   .site-header-descriptor { border-left: 0; padding-left: 0; font-size: .5625rem; line-height: .75rem; }
   .site-header-descriptor br { display: none; }
   .site-header-call { display: none; }
-  .site-header-brand > div { grid-column: 1 / -1; grid-row: 2; justify-self: start; border-left: 0; padding-left: 0; }
-  .site-header-with-partner + #top .site-hero-content { padding-top: 13rem; }
+  .site-header-brand > div { grid-column: 2; grid-row: 1; justify-self: end; border-left: 1px solid rgb(255 255 255 / 30%); padding-left: 1.25rem; }
 }
 
 /* Editorial photography: fixed, intentional placements keep the reading order stable. */
