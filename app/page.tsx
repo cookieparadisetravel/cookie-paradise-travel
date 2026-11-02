@@ -270,7 +270,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
         <div className="story-inclusions">
         <JourneyPhoto photo="mekong" className="story-mekong" sizes="(min-width: 1280px) 450px, (min-width: 768px) 36vw, 92vw" />
-        <div className="grid gap-5 sm:grid-cols-2">
+        <div className="grid gap-5 sm:grid-cols-2 md:grid-cols-1 xl:grid-cols-2">
           {[
             [Plane, "Hotels & transport", "Seven hotel nights, daily breakfast, private ground transportation, scheduled airport transfers and the domestic flight to Hue."],
             [Utensils, "Meals & local flavor", "Meals marked in the itinerary, a home-hosted Mekong lunch, Hue royal dinner and Hoi An farewell dinner."],
