@@ -12,6 +12,7 @@ import { getPublicTripAvailability } from "@/lib/public-trip-availability";
 import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "./components/trip-availability";
 import { HeroVideo } from "./components/hero-video";
+import { JourneyPhoto } from "./components/journey-photo";
 import { ConsultationLink } from "./components/consultation-link";
 import { TripGuideForm } from "./components/trip-guide-form";
 import { tripGuideUrl } from "@/lib/trip-guide";
@@ -213,7 +214,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       </section>
 
       <section id="journey" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
+        <div className="story-intro">
         <div className="max-w-3xl"><p className="eyebrow">Four places. One memorable journey.</p><h2 className="section-title">Picture yourself here.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted-ink)]">Food, local stories and shared experiences—from Southern Vietnam to the country&apos;s central coast. A personal group of no more than 15, hosted by Trung or a carefully selected Cookie Paradise Travel Company host with experienced local guides.</p></div>
+        <JourneyPhoto photo="skyline" className="story-skyline" sizes="(min-width: 1280px) 580px, (min-width: 768px) 47vw, 92vw" />
+        </div>
         <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
             ["01", "Ho Chi Minh City", "Explore Ho Chi Minh City's neighborhoods and landmarks, then head out by vintage Jeep for a food adventure after dark."],
@@ -264,7 +268,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <p className="eyebrow">Included in your trip</p>
           <h2 className="section-title">The essentials—and the experiences you’ll remember.</h2>
         </div>
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="story-inclusions">
+        <JourneyPhoto photo="mekong" className="story-mekong" sizes="(min-width: 1280px) 450px, (min-width: 768px) 36vw, 92vw" />
+        <div className="grid gap-5 sm:grid-cols-2">
           {[
             [Plane, "Hotels & transport", "Seven hotel nights, daily breakfast, private ground transportation, scheduled airport transfers and the domestic flight to Hue."],
             [Utensils, "Meals & local flavor", "Meals marked in the itinerary, a home-hosted Mekong lunch, Hue royal dinner and Hoi An farewell dinner."],
@@ -283,6 +289,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             );
           })}
         </div>
+        </div>
         <div className="mt-10 grid gap-6 rounded-3xl border border-[var(--line)] bg-[var(--cream)] p-7 sm:grid-cols-2 sm:p-9">
           <div><h3 className="font-serif text-2xl">Not included</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">International flights, travel insurance, Vietnam visa, personal expenses, gratuities, airport fast-track assistance and anything not specifically listed.</p></div>
           <div><h3 className="font-serif text-2xl">A note about plans</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">Hotels, flight times, activities and routing may change because of local conditions or supplier requirements. Comparable arrangements will be used when practical.</p></div>
@@ -291,8 +298,12 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
 
 
       <section id="faq" className="mx-auto max-w-5xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
-        <p className="eyebrow">Find your fit</p><h2 className="section-title">Your questions, answered.</h2>
+        <div className="story-faq-intro">
+        <div><p className="eyebrow">Find your fit</p><h2 className="section-title">Your questions, answered.</h2>
         <p className="mt-5 max-w-3xl text-lg leading-8 text-[var(--muted-ink)]">You should have the practical details before deciding. If something still needs a conversation, Trung is here to help.</p>
+        </div>
+        <JourneyPhoto photo="street" className="story-street" sizes="(min-width: 1024px) 340px, (min-width: 768px) 35vw, 80vw" />
+        </div>
         <div className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
           {homepageFaqs.map(item => <details key={item.question} className="group py-5">
             <summary className="flex cursor-pointer list-none items-start justify-between gap-5 text-lg font-semibold [&::-webkit-details-marker]:hidden">{item.question}<ChevronDown aria-hidden="true" className="mt-1 h-5 w-5 shrink-0 transition-transform group-open:rotate-180" /></summary>
@@ -305,7 +316,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
 
       <section id="itinerary" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
         <div className="grid gap-12 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
-          <div className="lg:sticky lg:top-10 lg:self-start">
+          <div className="lg:self-start">
             <p className="eyebrow">The daily itinerary</p>
             <h2 className="section-title">Eight days, thoughtfully arranged</h2>
             <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">
@@ -320,6 +331,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
               <p className="mt-5 font-serif text-2xl">Thoughtfully hosted</p>
               <p className="mt-3 leading-7 text-white/70">Each departure is hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides.</p>
             </div>
+            <JourneyPhoto photo="hue" className="story-hue" sizes="(min-width: 1280px) 400px, (min-width: 1024px) 32vw, 92vw" />
           </div>
           <div id="daily-schedule" className="scroll-mt-6 space-y-4">
             {detailedItinerary.map((day, index) => (
@@ -359,6 +371,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">Save the itinerary and pricing, share it with your travel companion and come back with your questions. Request an emailed copy here without starting a booking.</p>
             <a href={tripGuideUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center gap-2 font-semibold underline underline-offset-4">View the guide now (PDF) <ArrowRight className="h-4 w-4" /></a>
             <p className="mt-6 text-base leading-7 text-[var(--muted-ink)]">Prefer to ask by email? Write to <a href="mailto:trung@cookieparadise.co" className="font-semibold underline">trung@cookieparadise.co</a>.</p>
+            <JourneyPhoto photo="lanterns" className="story-guide-lanterns" sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 70vw" />
           </div>
           <TripGuideForm />
         </div>
