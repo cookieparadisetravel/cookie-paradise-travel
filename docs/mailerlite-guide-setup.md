@@ -44,7 +44,7 @@ select it are sent to MailerLite; guide delivery does not depend on selecting it
 Missing token or missing/ambiguous exact group is **Setup needed**. An API
 failure is **Sync failed**; the lead remains saved and the guide email can still
 be delivered. Existing leads are not bulk imported by this change, and a repeat
-request does not restart the guide or reminder emails.
+active request does not restart the guide or reminder emails. A distinct new request after closure reopens it and starts a separate follow-up cycle while preserving history.
 
 Official API references:
 - https://developers.mailerlite.com/api/groups

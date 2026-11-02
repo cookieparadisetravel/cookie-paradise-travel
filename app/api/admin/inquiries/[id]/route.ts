@@ -3,6 +3,7 @@ import { getDb } from "@/db";
 import { eq } from "drizzle-orm";
 import { isOwnerRequest } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
+import { closeBookingInquiry } from "@/lib/followup-history";
 import { isAllowedInquiryStage } from "@/lib/inquiry-stage";
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
@@ -26,6 +27,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
     return Response.json({ error: "Invalid inquiry or status" }, { status: 400 });
   }
 
-  await getDb().update(bookingRequests).set({ status }).where(eq(bookingRequests.id, id));
+  if (status === "closed") await closeBookingInquiry(id);
+  else await getDb().update(bookingRequests).set({ status }).where(eq(bookingRequests.id, id));
   return Response.json({ ok: true });
 }

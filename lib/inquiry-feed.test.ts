@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { DashboardInquiry } from "../app/admin/inquiries/dashboard-types";
 import type { GuideLeadRow } from "./lead-inbox";
-import { buildInquiryFeed, feedDeparture, feedIsActive, feedIsNew, feedMatchesSearch, feedStage } from "./inquiry-feed.ts";
+import { buildInquiryFeed, feedCreatedAt, feedDeparture, feedIsActive, feedIsNew, feedMatchesSearch, feedStage } from "./inquiry-feed.ts";
 
 const booking = (changes: Partial<DashboardInquiry> = {}) => ({ id: 1, email: "traveler@example.test", fullName: "Traveler Example", phone: "123", status: "considering", createdAt: "2026-11-01T12:00:00Z", departure: "2027-06-01", squareEnvironment: "production", ...changes }) as DashboardInquiry;
 const guide = (changes: Partial<GuideLeadRow> = {}) => ({ id: crypto.randomUUID(), first_name: "Traveler Example", email: "traveler@example.test", phone: "123", city: "Not provided", source: "website", sources: "website", status: "new", travel_timing: "not_sure", booking_id: null, campaign: "Vietnam June", referral_code: null, ...changes }) as GuideLeadRow;
@@ -46,4 +46,14 @@ test("guide stages and search work in the common list without guessing a departu
   assert.equal(feedMatchesSearch(entries[0], " BLOOMINGTON "), true);
   assert.equal(feedMatchesSearch(entries[0], "traveler@example.test"), true);
   assert.equal(feedMatchesSearch(entries[0], "missing"), false);
+});
+
+
+test("renewed guide requests resurface using their latest activity while retaining the original date", () => {
+  const original="2026-10-01T12:00:00Z", renewed="2026-11-02T12:00:00Z";
+  const lead=guide({ created_at: original, renewed_at: renewed });
+  const entry=buildInquiryFeed([], [lead])[0];
+  assert.equal(feedCreatedAt(entry),renewed); assert.equal(lead.created_at,original);
+  const attached=buildInquiryFeed([booking()], [{ ...lead, booking_id: 1 }])[0];
+  assert.equal(feedCreatedAt(attached),renewed); assert.equal(feedIsNew(attached),true);
 });

@@ -15,23 +15,24 @@ async function fixture() {
   const f = databaseFixture();
   const runtime: Record<string, unknown> = { DB: f.db, SQUARE_ENV: "production", INQUIRY_REMINDERS_ENABLED: "true", MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test", CONSULTATION_CALENDAR_ID: "calendar", GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON: "test-only" };
   const storage = await loadModule<{ ensureTripGuideStorage(): Promise<void>; tripGuideStorageStatements: string[] }>("lib/trip-guide-storage.ts", { "cloudflare:workers": { env: runtime } });
+  const history = await loadModule<typeof import("./followup-history")>("lib/followup-history.ts", { "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage });
   const emails: Record<string, unknown>[] = [], ownerEmails: unknown[] = [], subscriptions: unknown[] = [];
   let emailFails = false, calendarFails = false;
   const booked = new Set<string>();
   let onCalendar: (() => void) | undefined;
-  const service = await loadModule<{ saveTripGuideLead(input: ReturnType<typeof leadInput>): Promise<{ created: boolean; emailStatus: string }> }>("lib/trip-guide-service.ts", {
-    "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./trip-guide": guide,
+  const service = await loadModule<{ saveTripGuideLead(input: ReturnType<typeof leadInput> & { submittedAt?: string }): Promise<{ created: boolean; emailStatus: string }> }>("lib/trip-guide-service.ts", {
+    "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./followup-history": history, "./trip-guide": guide,
     "./trip-guide-email": { sendTripGuideEmail: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: new Date().toISOString(), messageId: "test" }; } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: unknown) => { ownerEmails.push(input); return { sentAt: new Date().toISOString(), messageId: "owner-test" }; } },
     "./mailerlite": { addConsentedSubscriber: async (input: unknown, options: unknown) => { subscriptions.push({ input, options }); return "synced"; } },
   });
   const reminders = await loadModule<{ sendDueTripGuideReminders(now: Date): Promise<unknown> }>("lib/trip-guide-reminders.ts", {
-    "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage,
+    "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./followup-history": history,
     "./inquiry-reminder-storage": { ensureInquiryReminderStorage: async () => {} }, "./consultation": consultation,
     "./consultation-calendar": { hasBookedConsultation: async (email: string) => { onCalendar?.(); if (calendarFails) throw new Error("Unavailable"); return booked.has(email); } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: "2026-11-03T17:00:00Z", messageId: "test" }; } },
   });
-  return { ...f, runtime, storage, emails, ownerEmails, subscriptions, booked, save: service.saveTripGuideLead, run: reminders.sendDueTripGuideReminders,
+  return { ...f, runtime, storage, history, emails, ownerEmails, subscriptions, booked, save: service.saveTripGuideLead, run: reminders.sendDueTripGuideReminders,
     failEmail: () => { emailFails = true; }, failCalendar: (value: boolean) => { calendarFails = value; }, onCalendar: (fn: () => void) => { onCalendar = fn; } };
 }
 const DAY3 = new Date("2026-11-03T17:00:00Z"), DAY7 = new Date("2026-11-07T17:00:00Z");
@@ -174,7 +175,7 @@ test("owner lead updates reject unauthenticated and cross-origin calls before st
   let owner: unknown = null, writes = 0;
   const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/inquiries/guide/[id]/route.ts", {
     "cloudflare:workers": { env: {} }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => owner },
-    "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": { ensureTripGuideStorage: async () => { writes++; } },
+    "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": { ensureTripGuideStorage: async () => { writes++; } }, "@/lib/followup-history": {},
   });
   const run = (origin?: string) => route.PATCH(new Request("https://example.test/api/admin/inquiries/guide/test", { method: "PATCH", headers: origin ? { Origin: origin } : {}, body: JSON.stringify({ status: "closed" }) }), { params: Promise.resolve({ id: uuid() }) });
   assert.equal((await run("https://example.test")).status, 403); owner = { email: "owner@example.test" };
@@ -185,11 +186,11 @@ test("owner inbox loads real source/delivery data and authorized stage updates s
   const f = await ready();
   await f.save({ ...leadInput(), source: "meta", submissionId: "meta:456", attribution: { ...guide.emptyAttribution } });
   const row = f.sqlite.prepare("SELECT id FROM trip_guide_leads").get()!;
-  const inbox = await loadModule<{ loadLeadInbox(page?: number): Promise<{ leads: { sources: string; campaign: string; guide_email_status: string }[]; totals: { total: number } }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage });
+  const inbox = await loadModule<{ loadLeadInbox(page?: number): Promise<{ leads: { sources: string; campaign: string; guide_email_status: string }[]; totals: { total: number } }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history });
   const data = await inbox.loadLeadInbox();
   assert.equal(data.totals.total,1); assert.equal(data.leads[0].sources,"website,meta"); assert.equal(data.leads[0].campaign,"vietnam-june"); assert.equal(data.leads[0].guide_email_status,"sent");
   const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/inquiries/guide/[id]/route.ts", {
-    "cloudflare:workers": { env: f.runtime }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => ({ email: "owner@example.test" }) }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": f.storage,
+    "cloudflare:workers": { env: f.runtime }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => ({ email: "owner@example.test" }) }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": f.storage, "@/lib/followup-history": f.history,
   });
   const request = new Request(`https://example.test/api/admin/inquiries/guide/${row.id}`, { method: "PATCH", headers: { Origin: "https://example.test" }, body: JSON.stringify({ status: "consultation_booked" }) });
   assert.equal((await route.PATCH(request,{ params: Promise.resolve({ id: String(row.id) }) })).status,200);
@@ -200,7 +201,7 @@ test("owner inbox loads real source/delivery data and authorized stage updates s
 test("confirmed reminder stop closes only the matching guide lead and preserves newsletter consent", async () => {
   const f = await fixture(); await f.save({ ...leadInput(), marketingConsent: true }); f.emails.length=0;
   const row = f.sqlite.prepare("SELECT stop_token FROM trip_guide_leads").get()!;
-  const route = await loadModule<{ POST(request: Request): Promise<Response> }>("app/api/trip-guide/stop/route.ts", { "cloudflare:workers": { env: f.runtime }, "@/lib/lead-request": requests, "@/lib/trip-guide-storage": f.storage });
+  const route = await loadModule<{ POST(request: Request): Promise<Response> }>("app/api/trip-guide/stop/route.ts", { "cloudflare:workers": { env: f.runtime }, "@/lib/lead-request": requests, "@/lib/trip-guide-storage": f.storage, "@/lib/followup-history": f.history });
   const run = (origin: string, token = String(row.stop_token)) => route.POST(new Request("https://example.test/api/trip-guide/stop", { method: "POST", headers: { Origin: origin, "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ token }) }));
   assert.equal((await run("https://other.test")).status,403);
   assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"new");
@@ -218,11 +219,113 @@ test("unified inquiries loads every guide request and scopes details without cre
     const id=uuid(); ids.push(id);
     insert.run(id,`Guide ${i}`,`guide${i}@example.test`,"Not provided","not_sure","website","2026-11-01T12:00:00Z",uuid(),"2026-11-01T12:00:00Z");
   }
-  const inbox = await loadModule<{ loadLeadInbox(page?: number | null, filter?: { id?: string; email?: string }): Promise<{ leads: { id: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage });
+  const inbox = await loadModule<{ loadLeadInbox(page?: number | null, filter?: { id?: string; email?: string }): Promise<{ leads: { id: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history });
   assert.equal((await inbox.loadLeadInbox()).leads.length,100);
   assert.equal((await inbox.loadLeadInbox(null)).leads.length,105);
   assert.deepEqual((await inbox.loadLeadInbox(null,{ id: ids[104] })).leads.map(row=>row.id),[ids[104]]);
   assert.deepEqual((await inbox.loadLeadInbox(null,{ email: " GUIDE104@example.test " })).leads.map(row=>row.id),[ids[104]]);
   assert.equal(f.sqlite.prepare("SELECT count(*) n FROM booking_requests").get()!.n,0);
   assert.equal(f.emails.length,0);
+});
+
+test("a fresh guide request reopens a closed lead, alerts the owner and preserves original delivery history", async () => {
+  const f = await ready(); f.runtime.ADMIN_OWNER_EMAIL = "owner@example.test";
+  await f.run(DAY3); await f.run(DAY7);
+  const original = f.sqlite.prepare("SELECT * FROM trip_guide_leads").get()!;
+  await f.history.closeTripGuideLead("id",String(original.id));
+  const request = { ...leadInput(), source: "meta" as const, submittedAt: "2026-12-01T12:00:00Z", submissionId: "meta:returning",
+    firstName: "Returning Traveler", timing: "not_sure" as guide.LeadTiming, phone: "5551234" };
+  const result = await f.save(request);
+  assert.equal(result.emailStatus,"sent");
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"new");
+  const retained = f.sqlite.prepare("SELECT * FROM trip_guide_leads").get()!;
+  for (const field of ["id","first_name","created_at","stop_token","guide_email_status","guide_email_sent_at"]) assert.equal(retained[field],original[field]);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM trip_guide_reminders WHERE status='sent'").get()!.n,2);
+  assert.equal(f.ownerEmails.length,1); assert.match(JSON.stringify(f.ownerEmails[0]),/Returning Vietnam/);
+  assert.equal(f.emails.at(-1)!.stopToken,original.stop_token);
+  await f.save(request); assert.equal(f.ownerEmails.length,1);
+  const inbox = await loadModule<{ loadLeadInbox(): Promise<{ leads: { first_name: string; phone: string; renewed_at: string; followup_history: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history });
+  const lead = (await inbox.loadLeadInbox()).leads[0];
+  assert.equal(lead.first_name,"Returning Traveler"); assert.equal(lead.phone,"5551234"); assert.equal(lead.renewed_at,new Date(request.submittedAt).toISOString());
+  assert.match(lead.followup_history,/reopened/); assert.match(lead.followup_history,/owner_notification/);
+  f.emails.length=0;
+  await f.run(new Date("2026-12-04T11:59:59Z")); assert.equal(f.emails.length,0);
+  await Promise.all([f.run(new Date("2026-12-04T12:00:00Z")),f.run(new Date("2026-12-04T12:00:00Z"))]);
+  await f.run(new Date("2026-12-08T12:00:00Z")); await f.run(new Date("2026-12-08T12:00:00Z"));
+  assert.equal(f.emails.length,2);
+  assert.match(String(f.emails[0].text),/Hello Returning Traveler/);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_followup_history WHERE event IN ('reminder_3','reminder_7') AND status='sent'").get()!.n,2);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM trip_guide_reminders WHERE status='sent'").get()!.n,2);
+  await f.history.closeTripGuideLead("id",String(original.id)); await f.save(request);
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"closed");
+  await f.run(new Date("2026-12-12T12:00:00Z")); assert.equal(f.emails.length,2);
+});
+
+test("renewed guide reminders ignore older closed bookings but keep consultation, active booking and future-interest stops", async () => {
+  for (const stop of ["none","active","booked","future"]) {
+    const f = await ready();
+    f.sqlite.exec("UPDATE trip_guide_leads SET status='closed'");
+    f.sqlite.exec(`INSERT INTO booking_requests (trip_slug,full_name,email,departure,room_preference,party_size,square_environment,status,created_at)
+      VALUES ('vietnam','Traveler','traveler@example.test','2027-06-01','shared',1,'production','closed','2026-10-01T12:00:00Z')`);
+    await f.save({ ...leadInput(), source: "meta", submittedAt: "2026-12-01T12:00:00Z", submissionId: "meta:renewed", timing: stop==="future" ? "future" : "june_2027" });
+    f.emails.length=0;
+    if (stop==="active") f.sqlite.exec("UPDATE booking_requests SET status='new'");
+    if (stop==="booked") f.booked.add("traveler@example.test");
+    await f.run(new Date("2026-12-04T12:00:00Z")); await f.run(new Date("2026-12-08T12:00:00Z"));
+    assert.equal(f.emails.length,stop==="none" ? 2 : 0,stop);
+  }
+});
+
+test("delayed Meta deliveries cannot undo a newer closure or renewal", async () => {
+  const f = await ready();
+  const id = String(f.sqlite.prepare("SELECT id FROM trip_guide_leads").get()!.id);
+  await f.history.closeTripGuideLead("id",id);
+  await f.save({ ...leadInput(), source: "meta", submissionId: "meta:delayed", submittedAt: "2026-11-01T00:00:00Z" });
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"closed");
+  await f.save({ ...leadInput(), source: "meta", submissionId: "meta:latest", submittedAt: "2026-12-10T00:00:00Z" });
+  await f.history.closeTripGuideLead("id",id);
+  await f.save({ ...leadInput(), source: "meta", submissionId: "meta:out-of-order", submittedAt: "2026-12-09T00:00:00Z" });
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"closed");
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_followup_history WHERE event='reopened'").get()!.n,1);
+});
+
+test("renewed-cycle calendar errors release only unattempted claims; uncertain deliveries never resend", async () => {
+  const f = await ready(); f.sqlite.exec("UPDATE trip_guide_leads SET status='closed'");
+  await f.save({ ...leadInput(), source: "meta", submittedAt: "2026-12-01T12:00:00Z", submissionId: "meta:retry" });
+  f.emails.length=0; f.failCalendar(true);
+  await f.run(new Date("2026-12-04T12:00:00Z"));
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_followup_history WHERE event='reminder_3'").get()!.n,0);
+  f.failCalendar(false); f.failEmail();
+  await f.run(new Date("2026-12-04T12:00:00Z")); await f.run(new Date("2026-12-04T12:00:00Z"));
+  assert.equal(f.emails.length,1);
+  assert.equal(f.sqlite.prepare("SELECT status FROM inquiry_followup_history WHERE event='reminder_3'").get()!.status,"failed");
+});
+
+test("follow-up runtime storage and migration are additive and repeatable", async () => {
+  const f = await fixture();
+  const migration = readFileSync(new URL("../drizzle/0025_white_moira_mactaggert.sql",import.meta.url),"utf8");
+  f.sqlite.exec("DROP TABLE inquiry_followup_history");
+  await f.history.ensureFollowupHistoryStorage();
+  f.sqlite.exec(migration); f.sqlite.exec(migration);
+  for (const sql of f.history.followupHistoryStorageStatements) f.sqlite.exec(sql);
+  assert.deepEqual(f.sqlite.prepare("PRAGMA foreign_key_check").all(),[]);
+});
+
+
+test("closing a production booking also closes its guide follow-up; a later fresh guide request reopens it", async () => {
+  const f=await ready();
+  f.sqlite.exec(`INSERT INTO booking_requests (trip_slug,full_name,email,departure,room_preference,party_size,square_environment)
+    VALUES ('vietnam','Traveler',' TRAVELER@example.test ','2027-06-01','shared',1,'production')`);
+  await f.history.closeBookingInquiry(1);
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"closed");
+  const before=f.emails.length;
+  await f.run(DAY7); assert.equal(f.emails.length,before);
+  await f.save({ ...leadInput(), source: "meta", submittedAt: "2026-12-01T12:00:00Z", submissionId: "meta:after-booking-closed" });
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"new");
+  await f.history.closeBookingInquiry(1);
+  assert.equal(f.sqlite.prepare("SELECT status FROM trip_guide_leads").get()!.status,"new");
+  f.emails.length=0;
+  await f.run(new Date("2026-12-04T12:00:00Z")); assert.equal(f.emails.length,1);
+  f.onCalendar(()=>{f.sqlite.exec("UPDATE trip_guide_leads SET status='closed'");});
+  await f.run(new Date("2026-12-08T12:00:00Z")); assert.equal(f.emails.length,1);
 });

@@ -404,7 +404,7 @@ function InquiryList({ entries, onOpen, onOpenGuide }: { entries: InquiryFeedEnt
               <div className="min-w-0">
                 <div className="flex items-center gap-2"><span className="truncate font-bold text-[var(--ink)]">{inquiry.fullName}</span><span className="text-xs font-semibold text-[var(--muted-ink)]">#{inquiry.id}</span></div>
                 <p className="truncate text-sm text-[var(--muted-ink)]">{inquiry.email}</p>
-                {entry.guide && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide requested · {entry.guide.guide_email_status.replaceAll("_", " ")}</p>}
+                {entry.guide && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide requested · {(entry.guide.renewed_email_status ?? entry.guide.guide_email_status).replaceAll("_", " ")}</p>}
                 {inquiry.referralCode && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Referred by {getSalonPartner(inquiry.referralCode)?.name ?? inquiry.referralCode}</p>}
                 {inquiry.sellerOfTravelStateResident && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[0.68rem] font-extrabold text-red-800"><ShieldAlert className="h-3 w-3" /> Review {inquiry.residenceState ?? "state"} residency</p>}
               </div>
@@ -805,22 +805,24 @@ function formatTimestamp(value: string | null) { if (!value) return "Not recorde
 function detailSectionLabel(section: DetailSection) { return section[0].toUpperCase() + section.slice(1); }
 function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) { return filter === "new" ? "New inquiries" : filter === "missing_travelers" ? "Missing traveler details" : filter === "agreements" ? "Agreements incomplete" : "Invoice issues"; }
 function compareFeedEntries(a: InquiryFeedEntry, b: InquiryFeedEntry, sort: SortOption) {
-  if (a.kind === "booking" && b.kind === "booking") return compareInquiries(a.inquiry, b.inquiry, sort);
+  if (a.kind === "booking" && b.kind === "booking" && !a.guide?.renewed_at && !b.guide?.renewed_at) return compareInquiries(a.inquiry, b.inquiry, sort);
   if (sort === "newest") return feedCreatedAt(b).localeCompare(feedCreatedAt(a));
   if (sort === "oldest") return feedCreatedAt(a).localeCompare(feedCreatedAt(b));
   if (sort === "departure") return departureSortValue(feedDeparture(a)) - departureSortValue(feedDeparture(b)) || feedCreatedAt(b).localeCompare(feedCreatedAt(a));
   if (sort === "name") return feedName(a).localeCompare(feedName(b));
   const score = (entry: InquiryFeedEntry) => entry.kind === "booking" ? attentionScore(entry.inquiry)
-    : (["failed", "not_configured", "sending"].includes(entry.guide.guide_email_status) ? 30 : 0) + (entry.guide.status === "new" ? 10 : 0);
+    : (["failed", "not_configured", "sending"].includes(entry.guide.renewed_email_status ?? entry.guide.guide_email_status) ? 30 : 0) + (entry.guide.status === "new" ? 10 : 0);
   return score(b) - score(a) || feedCreatedAt(b).localeCompare(feedCreatedAt(a));
 }
 
 function GuideRequestRow({ lead, onOpen }: { lead: GuideLeadRow; onOpen: (lead: GuideLeadRow) => void }) {
+  const emailStatus = lead.renewed_email_status ?? lead.guide_email_status;
+  const reminderDays = lead.renewed_at ? lead.renewed_reminder_days_sent : lead.reminder_days_sent;
   return <a id={`inquiry-row-guide-${lead.id}`} className="group grid w-full gap-3 px-4 py-4 text-left hover:bg-[var(--gold)]/8 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--gold)]/45 sm:px-5 xl:grid-cols-[minmax(210px,1.35fr)_minmax(145px,.8fr)_130px_minmax(175px,1fr)_155px_minmax(190px,1fr)] xl:items-center xl:gap-4" href={`/admin/inquiries/guide/${lead.id}`} onClick={() => onOpen(lead)}>
-    <div className="min-w-0"><p className="truncate font-bold">{lead.first_name}</p><p className="truncate text-sm text-[var(--muted-ink)]">{lead.email}</p><p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide request · {(lead.sources || lead.source).includes("meta") ? "Facebook" : "Website"}</p></div>
+    <div className="min-w-0"><p className="truncate font-bold">{lead.first_name}</p><p className="truncate text-sm text-[var(--muted-ink)]">{lead.email}</p><p className="mt-1 text-xs font-bold text-[var(--orange)]">{lead.renewed_at ? "Renewed guide request" : "Guide request"} · {(lead.sources || lead.source).includes("meta") ? "Facebook" : "Website"}</p></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Departure / party</MobileLabel><p className="text-sm font-semibold">{guideTimingLabel(lead.travel_timing)}</p></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Stage</MobileLabel><span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold">{leadStageLabel(lead.status)}</span></div>
-    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Progress</MobileLabel><div className="text-xs leading-6"><p>Guide email: {lead.guide_email_status.replaceAll("_", " ")}</p><p>{lead.reminder_days_sent ? `Reminders: day ${lead.reminder_days_sent.replaceAll(",", ", day ")}` : "No reminders sent"}</p></div></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Progress</MobileLabel><div className="text-xs leading-6"><p>Guide email: {emailStatus.replaceAll("_", " ")}</p><p>{reminderDays ? `Reminders: day ${reminderDays.replaceAll(",", ", day ")}` : "No reminders sent"}</p></div></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Payment</MobileLabel><p className="text-xs text-[var(--muted-ink)]">Not requested</p></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Next step</MobileLabel><span className="inline-flex rounded-lg bg-[var(--gold)] px-3 py-2 text-xs font-extrabold">Review guide request</span></div>
   </a>;

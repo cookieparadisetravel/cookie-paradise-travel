@@ -22,6 +22,14 @@ export const tripGuideSubmissions = sqliteTable("trip_guide_submissions", {
   marketingConsent: integer("marketing_consent", { mode: "boolean" }).notNull().default(false), createdAt: text("created_at").notNull(),
 }, table => [index("trip_guide_submissions_lead_idx").on(table.leadId)]);
 
+export const inquiryFollowupHistory = sqliteTable("inquiry_followup_history", {
+  id: text("id").primaryKey(),
+  guideLeadId: text("guide_lead_id").references(() => tripGuideLeads.id, { onDelete: "cascade" }),
+  bookingRequestId: integer("booking_request_id").references(() => bookingRequests.id, { onDelete: "cascade" }),
+  cycleId: text("cycle_id").notNull(), event: text("event").notNull(), status: text("status").notNull(),
+  createdAt: text("created_at").notNull(), sentAt: text("sent_at"), messageId: text("message_id"), detailsJson: text("details_json"),
+}, table => [index("inquiry_followup_history_guide_created_idx").on(table.guideLeadId,table.createdAt), index("inquiry_followup_history_booking_idx").on(table.bookingRequestId)]);
+
 export const tripGuideReminders = sqliteTable("trip_guide_reminders", {
   leadId: text("lead_id").notNull().references(() => tripGuideLeads.id, { onDelete: "cascade" }), reminderDay: integer("reminder_day").notNull(),
   status: text("status").notNull(), claimedAt: text("claimed_at").notNull(), sentAt: text("sent_at"), messageId: text("message_id"),

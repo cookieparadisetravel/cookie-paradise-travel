@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireOwner } from "@/lib/owner-auth";
 import { boundedBody, sameOrigin } from "@/lib/lead-request";
 import { leadStages } from "@/lib/trip-guide";
+import { closeTripGuideLead } from "@/lib/followup-history";
 import { ensureTripGuideStorage } from "@/lib/trip-guide-storage";
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -16,7 +17,7 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   await ensureTripGuideStorage();
   const status = parsed.data.status;
   const timestamp = new Date().toISOString();
-  const row = await env.DB!.prepare(`UPDATE trip_guide_leads SET status=?,
+  const row = status === "closed" ? await closeTripGuideLead("id",id) : await env.DB!.prepare(`UPDATE trip_guide_leads SET status=?,
     contacted_at=CASE WHEN ?='contacted' THEN coalesce(contacted_at,?) ELSE contacted_at END,
     consultation_booked_at=CASE WHEN ?='consultation_booked' THEN coalesce(consultation_booked_at,?) ELSE consultation_booked_at END
     WHERE id=? RETURNING id`).bind(status,status,timestamp,status,timestamp,id).first();

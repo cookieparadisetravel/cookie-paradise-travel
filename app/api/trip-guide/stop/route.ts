@@ -1,4 +1,4 @@
-import { env } from "cloudflare:workers";
+import { closeTripGuideLead } from "@/lib/followup-history";
 import { boundedBody, sameOrigin } from "@/lib/lead-request";
 import { ensureTripGuideStorage } from "@/lib/trip-guide-storage";
 
@@ -9,6 +9,6 @@ export async function POST(request: Request) {
   catch { return new Response("Invalid request.", { status: 400 }); }
   if (!/^[0-9a-f-]{36}$/i.test(token)) return new Response("Invalid preference link.", { status: 400 });
   await ensureTripGuideStorage();
-  await env.DB!.prepare("UPDATE trip_guide_leads SET status='closed' WHERE stop_token=?").bind(token).run();
+  await closeTripGuideLead("stop_token",token);
   return Response.redirect(new URL(`/trip-guide/stop/${token}?saved=1`, request.url), 303);
 }

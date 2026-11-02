@@ -47,12 +47,17 @@ async function fixture() {
       async all() { return { results: sqlite.prepare(query).all(...params) }; },
       async first() {
         const row = sqlite.prepare(query).get(...params) ?? null;
-        if (query.startsWith("INSERT INTO inquiry_reminders") && afterClaim) afterClaim();
+        if ((query.startsWith("INSERT INTO inquiry_reminders") || query.startsWith("INSERT INTO inquiry_followup_history")) && afterClaim) afterClaim();
         return row;
       },
       async run() { return sqlite.prepare(query).run(...params); },
+      execute() { return sqlite.prepare(query).all(...params); },
     };
     return statement;
+  }, async batch(statements: { execute(): unknown[] }[]) {
+    sqlite.exec("BEGIN");
+    try { const results=statements.map(statement=>({ results: statement.execute() })); sqlite.exec("COMMIT"); return results; }
+    catch (error) { sqlite.exec("ROLLBACK"); throw error; }
   } };
   const runtime: Record<string, unknown> = { DB: db, INQUIRY_REMINDERS_ENABLED: "true", SQUARE_ENV: "production", MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test", CONSULTATION_CALENDAR_ID: "calendar@example.test", GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON: "test-only" };
   const emails: Email[] = [];
@@ -60,9 +65,11 @@ async function fixture() {
   let calendarFails = false;
   let sendFails = false;
   let onCalendar: (() => void) | undefined;
+  const history = await load<typeof import("./followup-history")>("./followup-history.ts", { "cloudflare:workers": { env: runtime }, "./trip-guide-storage": { ensureTripGuideStorage: async () => {} } });
   const reminders = await load<{ sendDueInquiryReminders(now: Date): Promise<unknown> }>("./inquiry-reminders.ts", {
     "cloudflare:workers": { env: runtime },
     "./inquiry-reminder-storage": { ensureInquiryReminderStorage: async () => {} },
+    "./followup-history": { ...history, ensureFollowupHistoryStorage: async () => {} },
     "./consultation-calendar": { hasBookedConsultation: async (email: string) => {
       onCalendar?.();
       if (calendarFails) throw new Error("Calendar unavailable");
@@ -81,7 +88,7 @@ async function fixture() {
       VALUES (?,'discover-southern-vietnam','Customer',?,'2027-06-01','shared',1,1,'needs_information','production',?)`).run(id, email, created);
     return id;
   }
-  return { sqlite, runtime, emails, booked, add, run: (now = DAY3) => reminders.sendDueInquiryReminders(now),
+  return { sqlite, runtime, history, emails, booked, add, run: (now = DAY3) => reminders.sendDueInquiryReminders(now),
     failCalendar: (value = true) => { calendarFails = value; }, failSend: () => { sendFails = true; },
     setAfterClaim: (fn: () => void) => { afterClaim = fn; }, setOnCalendar: (fn: () => void) => { onCalendar = fn; } };
 }
@@ -324,4 +331,55 @@ test("runtime storage and migration are both idempotent with equivalent tables",
   const migration = readFileSync(new URL("../drizzle/0021_inquiry_reminders.sql", import.meta.url), "utf8");
   sqlite.exec(migration); sqlite.exec(migration);
   assert.equal(sqlite.prepare("PRAGMA table_info(inquiry_reminders)").all().length, 8);
+});
+
+test("fresh inquiries after closure get their own day-three and day-seven reminders without erasing history", async () => {
+  const f = await fixture(); const old=f.add();
+  await f.run(DAY3); await f.run(DAY7);
+  f.sqlite.prepare("UPDATE booking_requests SET status='closed' WHERE id=?").run(old);
+  const renewed=f.add(" CUSTOMER@example.test ","2026-11-01T12:00:00Z");
+  f.add("customer@example.test","2026-11-03T12:00:00Z");
+  await f.run(new Date("2026-11-04T11:59:59Z")); assert.equal(f.emails.length,2);
+  await Promise.all([f.run(new Date("2026-11-04T12:00:00Z")),f.run(new Date("2026-11-04T12:00:00Z"))]);
+  await f.run(new Date("2026-11-08T12:00:00Z")); await f.run(new Date("2026-11-08T12:00:00Z"));
+  assert.deepEqual(f.emails.map(email=>email.reminderDay),[3,7,3,7]);
+  assert.equal(f.sqlite.prepare("SELECT status FROM booking_requests WHERE id=?").get(old)!.status,"closed");
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_reminders WHERE status='sent'").get()!.n,2);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_followup_history WHERE booking_request_id=? AND status='sent'").get(renewed)!.n,2);
+});
+
+test("renewed inquiries still stop for booked calls, later closure, screening and new booking progress", async () => {
+  for (const stop of ["booked","closed","screened","progress"]) {
+    const f=await fixture(); const old=f.add();
+    f.sqlite.prepare("UPDATE booking_requests SET status='closed' WHERE id=?").run(old);
+    const renewed=f.add("customer@example.test","2026-11-01T12:00:00Z");
+    if (stop==="booked") f.booked.add("customer@example.test");
+    if (stop==="closed") f.setOnCalendar(()=>{f.sqlite.prepare("UPDATE booking_requests SET status='closed' WHERE id=?").run(renewed);});
+    if (stop==="screened") f.sqlite.prepare("UPDATE booking_requests SET seller_of_travel_state_resident=1 WHERE id=?").run(renewed);
+    if (stop==="progress") { const next=f.add(); f.sqlite.prepare("UPDATE booking_requests SET booking_intent='ready_to_book' WHERE id=?").run(next); }
+    await f.run(new Date("2026-11-04T12:00:00Z")); await f.run(new Date("2026-11-08T12:00:00Z"));
+    assert.equal(f.emails.length,0,stop);
+  }
+});
+
+test("renewed inquiry calendar failures defer safely and uncertain sends retain their cycle claim", async () => {
+  const f=await fixture(); const old=f.add();
+  f.sqlite.prepare("UPDATE booking_requests SET status='closed' WHERE id=?").run(old);
+  f.add("customer@example.test","2026-11-01T12:00:00Z");
+  const due=new Date("2026-11-04T12:00:00Z");
+  f.failCalendar(); await f.run(due);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_followup_history").get()!.n,0);
+  f.failCalendar(false); f.failSend(); await f.run(due); await f.run(due);
+  assert.equal(f.emails.length,1);
+  assert.equal(f.sqlite.prepare("SELECT status FROM inquiry_followup_history").get()!.status,"failed");
+});
+
+
+test("closing a full inquiry also suppresses duplicates submitted before closure, but allows a later fresh request", async () => {
+  const f=await fixture(); const old=f.add();
+  f.add("customer@example.test","2026-10-17T17:00:00Z");
+  await f.history.closeBookingInquiry(old);
+  await f.run(new Date("2026-11-01T00:00:00Z")); assert.equal(f.emails.length,0);
+  f.add("customer@example.test","2026-11-02T12:00:00Z");
+  await f.run(new Date("2026-11-05T12:00:00Z")); assert.equal(f.emails.length,1);
 });
