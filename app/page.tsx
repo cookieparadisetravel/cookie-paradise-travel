@@ -1,3 +1,4 @@
+import Link from "next/link";
 import {
   ArrowRight, Check, ChevronDown, Clock3, Compass, MapPin, Plane,
   ShieldCheck, Sparkles, Users, Utensils,
@@ -405,7 +406,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="mt-3 text-xs font-bold uppercase tracking-[0.22em] text-[var(--gold)]">Travel Company</p>
             <p className="mt-3 text-sm">Hosted small-group journeys from Columbus, Indiana.</p>
           </div>
-          <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
+          <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><Link className="underline hover:text-white" href="/fit">Private Vietnam trips</Link></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
         </div>
       </footer>
       <MobileBookBar availability={availability} />
