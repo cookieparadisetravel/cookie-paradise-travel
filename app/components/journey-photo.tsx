@@ -31,10 +31,11 @@ const photographs = {
   },
 } as const;
 
-export function JourneyPhoto({ photo, className = "", sizes = "(min-width: 1024px) 45vw, 100vw" }: {
+export function JourneyPhoto({ photo, className = "", sizes = "(min-width: 1024px) 45vw, 100vw", priority = false }: {
   photo: keyof typeof photographs;
   className?: string;
   sizes?: string;
+  priority?: boolean;
 }) {
   const image = photographs[photo];
   return <figure className={`journey-photo ${className}`}>
@@ -44,7 +45,7 @@ export function JourneyPhoto({ photo, className = "", sizes = "(min-width: 1024p
       <img src={`/travel/${image.file}-1280.webp`}
         srcSet={[640, 1280, 1800].map(width => `/travel/${image.file}-${width}.webp ${width}w`).join(", ")}
         sizes={sizes} width={image.width} height={image.height}
-        alt={image.alt} loading="lazy" decoding="async" />
+        alt={image.alt} loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async" />
     </div>
     <figcaption>
       <span><strong>{image.place}</strong><span className="journey-photo-detail">{image.detail}</span></span>
