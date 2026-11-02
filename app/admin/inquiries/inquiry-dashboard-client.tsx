@@ -34,6 +34,9 @@ import { isPaymentPreferenceDraftUsable } from "./payment-preference-state";
 import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
 import type { GuideLeadRow } from "@/lib/lead-inbox";
 import { guideTimingLabel, leadStageLabel } from "@/lib/trip-guide";
+import { SalesOverview } from "./sales-overview";
+import { InquirySalesPanel } from "./inquiry-sales-panel";
+import type { SalesProcess } from "@/lib/inquiry-sales-types";
 import { GuideRequestSummary } from "./guide-request-summary";
 import { buildInquiryFeed, feedCreatedAt, feedDeparture, feedIsActive, feedIsNew, feedMatchesSearch, feedName, feedStage, type InquiryFeedEntry } from "@/lib/inquiry-feed";
 import {
@@ -51,6 +54,7 @@ type Props = {
   ownerEmail: string;
   squareMode: SquareMode;
   guideRequests?: GuideLeadRow[];
+  salesProcesses?: SalesProcess[];
 };
 
 type MainTab = "active" | "all" | "waitlist" | "closed";
@@ -101,7 +105,8 @@ const stateLabels: Record<string, string> = {
 };
 
 const noGuideRequests: GuideLeadRow[] = [];
-export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetailSection, initialInquiryId, ownerEmail, squareMode, guideRequests = noGuideRequests }: Props) {
+const noSalesProcesses: SalesProcess[] = [];
+export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetailSection, initialInquiryId, ownerEmail, squareMode, guideRequests = noGuideRequests, salesProcesses = noSalesProcesses }: Props) {
   const router = useRouter();
   const [mainTab, setMainTab] = useState<MainTab>("active");
   const [attentionFilter, setAttentionFilter] = useState<AttentionFilter>(null);
@@ -286,6 +291,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
           backButtonRef={detailBackButton}
           inquiry={selectedInquiry}
           guideRequest={guideRequests.find(lead => lead.booking_id === selectedInquiry.id)}
+          salesProcess={salesProcesses.find(sale=>sale.bookingId===selectedInquiry.id)}
           onClose={closeInquiry}
           onSectionChange={changeDetailSection}
           paymentChoiceDraft={validatedGeneratedLinks.paymentChoices[selectedInquiry.id]}
@@ -301,11 +307,12 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
           <div>
             <h2 className="font-serif text-3xl font-bold sm:text-4xl">Who needs attention?</h2>
             <p className="mt-1 text-sm text-[var(--muted-ink)]">Attention counts overlap and are not a total.</p>
-            <p className="mt-1 text-sm text-[var(--muted-ink)]">Guide requests and booking inquiries are managed together below.</p>
+            <p className="mt-1 text-sm text-[var(--muted-ink)]">Follow each inquiry from first interest through consultation and booking.</p>
           </div>
           <p className="text-xs font-semibold text-[var(--muted-ink)]">Signed in as {ownerEmail}</p>
         </div>
 
+        <div className="mt-6"><SalesOverview processes={salesProcesses} /></div>
         <section aria-label="Attention filters" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <AttentionCard active={attentionFilter === "new"} count={attentionCounts.new} icon={Inbox} label="New inquiries" onClick={() => selectAttention("new")} />
           <AttentionCard active={attentionFilter === "missing_travelers"} count={attentionCounts.missing_travelers} icon={UserRoundSearch} label="Missing traveler details" onClick={() => selectAttention("missing_travelers")} />
@@ -324,7 +331,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
               <FilterSelect icon={ListFilter} label="Stage" onChange={setStage} value={stage}>
                 <option value="all">All sales stages</option>
                 {inquiryStageOptions.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                <option value="consultation_booked">Consultation booked</option>
+
               </FilterSelect>
               <FilterSelect icon={CalendarDays} label="Departure" onChange={setDeparture} value={departure}>
                 <option value="all">All departures</option>
@@ -431,7 +438,7 @@ function InquiryList({ entries, onOpen, onOpenGuide }: { entries: InquiryFeedEnt
   );
 }
 
-function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, guideRequest, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; backButtonRef: React.RefObject<HTMLButtonElement | null>; inquiry: DashboardInquiry; guideRequest?: GuideLeadRow; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
+function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, guideRequest, salesProcess, onClose, onPaymentChoiceDraftChange, onSectionChange, onTravelerListDraftChange, paymentChoiceDraft, section, squareMode, travelerListDraft }: { acceptanceDate: string; backButtonRef: React.RefObject<HTMLButtonElement | null>; inquiry: DashboardInquiry; guideRequest?: GuideLeadRow; salesProcess?: SalesProcess; onClose: () => void; onPaymentChoiceDraftChange: (draft: PaymentPreferenceGeneratedDraft) => void; onSectionChange: (section: DetailSection) => void; onTravelerListDraftChange: (draft: GeneratedInvitationDraft) => void; paymentChoiceDraft?: PaymentPreferenceGeneratedDraft; section: DetailSection; squareMode: SquareMode; travelerListDraft?: GeneratedInvitationDraft }) {
   const workflow = workflowFor(inquiry);
   const acceptedCount = acceptedAgreementCount(inquiry);
   const [stageBusy, setStageBusy] = useState(false);
@@ -477,7 +484,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, guideRequest, o
       </section>
 
         <div aria-labelledby={`inquiry-tab-${section}`} className="mt-5" id={`inquiry-panel-${section}`} role="tabpanel" tabIndex={0}>
-          {section === "overview" && <OverviewSection inquiry={inquiry} guideRequest={guideRequest} />}
+          {section === "overview" && <OverviewSection inquiry={inquiry} guideRequest={guideRequest} salesProcess={salesProcess} />}
           {section === "travelers" && (
             <div className="space-y-4">
               <SectionHeading description={`${inquiry.travelers.length} of ${inquiry.partySize} traveler records · ${acceptedCount} current agreements accepted`} title="Travelers & agreements" />
@@ -559,11 +566,12 @@ function InquiryProgressChecklist({ inquiry, onSectionChange }: { inquiry: Dashb
   );
 }
 
-function OverviewSection({ inquiry, guideRequest }: { inquiry: DashboardInquiry; guideRequest?: GuideLeadRow }) {
+function OverviewSection({ inquiry, guideRequest, salesProcess }: { inquiry: DashboardInquiry; guideRequest?: GuideLeadRow; salesProcess?: SalesProcess }) {
   return (
     <div className="space-y-5">
       {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
       {inquiry.automatedBookingError && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><AlertCircle className="h-5 w-5" /> Automated booking needs attention</p><p className="mt-1 text-sm leading-6">{inquiry.automatedBookingError}</p></div>}
+      {salesProcess && <InquirySalesPanel key={`${salesProcess.id}-${salesProcess.updatedAt}`} sale={salesProcess} />}
       <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
         <SectionHeading description="Information submitted with the inquiry." title="Overview" />
         <div className="mt-4 grid gap-6 lg:grid-cols-3">
@@ -583,7 +591,7 @@ function OverviewSection({ inquiry, guideRequest }: { inquiry: DashboardInquiry;
         </dl>
         {inquiry.notes && <div className="mt-5 rounded-xl bg-[var(--cream)] p-4"><p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[var(--muted-ink)]">Customer notes</p><p className="mt-2 whitespace-pre-wrap text-sm leading-6">{inquiry.notes}</p></div>}
         </div>
-        <InquiryNotes inquiryId={inquiry.id} key={inquiry.id} />
+        <InquiryNotes inquiryId={inquiry.id} salesId={salesProcess?.id} key={inquiry.id} />
         </div>
       </section>
       {guideRequest && <GuideRequestSummary key={`${guideRequest.id}-${guideRequest.status}`} lead={guideRequest} showContact={false} />}

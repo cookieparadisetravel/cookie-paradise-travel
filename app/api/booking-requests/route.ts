@@ -9,6 +9,9 @@ import { startAutomatedReadyToBookFlow } from "@/lib/booking-automation";
 import { getSafeDatabaseErrorDetails } from "@/lib/safe-error";
 import { getSquareEnvironment } from "@/lib/square-config";
 
+import { connectNewBookingToSales } from "@/lib/inquiry-sales";
+import { getSalesBookingInvitation, completeSalesBookingInvitation } from "@/lib/inquiry-booking-invitations";
+import { sameOrigin } from "@/lib/lead-request";
 import { referralFromCookie } from "@/lib/salon-referrals";
 
 const validDepartures = new Set(["2027-06-01"]);
@@ -109,28 +112,55 @@ export async function POST(request: Request) {
     const bookingPaused = bookingIntent === "ready_to_book" && !automatedBookingEnabled;
     const now = new Date().toISOString();
 
+    const invitationToken=String(payload.bookingInvitationToken ?? "").trim();
+    if (invitationToken && (!sameOrigin(request) || !/^[a-f0-9]{64}$/.test(invitationToken) || bookingIntent!=="ready_to_book")) {
+      return Response.json({error:"Please use your secure booking link to continue."},{status:400});
+    }
+    const invitation=invitationToken ? await getSalesBookingInvitation(invitationToken) : null;
+    if (invitationToken && !invitation) return Response.json({error:"This booking link has expired or is no longer available. Please contact Trung."},{status:410});
+    if (invitation && invitation.sale.email!==email) return Response.json({error:"Use the email address this booking link was sent to."},{status:400});
+    let referralCode=invitation ? invitation.sale.referralCode : referralFromCookie(request.headers.get("cookie"))?.code ?? null;
     const db = getDb();
-    const [saved] = await db.insert(bookingRequests).values({
-      squareEnvironment: getSquareEnvironment(env as unknown as Record<string, string | undefined>),
-      tripSlug: "vietnam-southern-charms-central-heritage",
-      referralCode: referralFromCookie(request.headers.get("cookie"))?.code ?? null,
-      fullName, email, phone, departure,
-      roomPreference: room, partySize, notes,
-      contactConsent: true,
-      contactConsentedAt: new Date().toISOString(),
-      sellerOfTravelStateResident,
-      residenceState: sellerOfTravelStateResident ? residenceState : null,
-      marketingConsent,
-      marketingConsentedAt: marketingConsent ? new Date().toISOString() : null,
-      mailerLiteStatus: marketingConsent ? "pending" : "not_requested",
-      ownerNotificationStatus: "pending",
-      bookingIntent,
-      automatedBookingStatus: bookingPaused ? "paused" : "not_requested",
-      automatedBookingUpdatedAt: bookingPaused ? now : null,
-      status: bookingIntent === "ready_to_book" && automatedBookingEnabled ? "booking_in_progress" : "new",
-    }).returning({ id: bookingRequests.id });
+    let saved:{id:number};
+    if (invitation) {
+      let completed:{bookingId:number;started:boolean};
+      try {
+        completed=await completeSalesBookingInvitation(invitation,{firstName,lastName,fullName,email,phone,departure,room,partySize,notes,marketingConsent,sellerOfTravelStateResident,residenceState,bookingPaused});
+      } catch(error) {
+        console.error("Booking handoff could not be completed",getSafeDatabaseErrorDetails(error));
+        return Response.json({error:"This request could not be started. Refresh your booking link or contact Trung. No payment was collected."},{status:409});
+      }
+      saved={id:completed.bookingId};
+      if (!completed.started) {
+        const [existing]=await db.select({automationStatus:bookingRequests.automatedBookingStatus}).from(bookingRequests).where(eq(bookingRequests.id,saved.id)).limit(1);
+        return Response.json({ok:true,bookingIntent:"ready_to_book",automationStatus:existing?.automationStatus ?? "not_requested",bookingPaused},{status:200});
+      }
+    } else {
+      [saved] = await db.insert(bookingRequests).values({
+        squareEnvironment: getSquareEnvironment(env as unknown as Record<string, string | undefined>),
+        tripSlug: "vietnam-southern-charms-central-heritage",
+        referralCode,
+        fullName, email, phone, departure,
+        roomPreference: room, partySize, notes,
+        contactConsent: true,
+        contactConsentedAt: new Date().toISOString(),
+        sellerOfTravelStateResident,
+        residenceState: sellerOfTravelStateResident ? residenceState : null,
+        marketingConsent,
+        marketingConsentedAt: marketingConsent ? new Date().toISOString() : null,
+        mailerLiteStatus: marketingConsent ? "pending" : "not_requested",
+        ownerNotificationStatus: "pending",
+        bookingIntent,
+        automatedBookingStatus: bookingPaused ? "paused" : "not_requested",
+        automatedBookingUpdatedAt: bookingPaused ? now : null,
+        status: bookingIntent === "ready_to_book" && automatedBookingEnabled ? "booking_in_progress" : "new",
+      }).returning({ id: bookingRequests.id });
 
-    if (partySize === 1) {
+      try { referralCode=await connectNewBookingToSales(saved.id) ?? referralCode; }
+      catch { console.error("Booking saved; sales history needs synchronization."); }
+    }
+
+    if (partySize === 1 && !invitation) {
       try {
         await db.insert(travelers).values({
           bookingRequestId: saved.id,
@@ -152,12 +182,16 @@ export async function POST(request: Request) {
       mailerLiteStatus = await addConsentedSubscriber({ firstName, lastName, email });
     }
 
+    const screening = invitation ? (await db.select({
+      sellerOfTravelStateResident:bookingRequests.sellerOfTravelStateResident,
+      residenceState:bookingRequests.residenceState,
+    }).from(bookingRequests).where(eq(bookingRequests.id,saved.id)).limit(1))[0] : null;
     const ownerNotificationStatus = await sendOwnerInquiryNotification({
       id: saved.id, fullName, email, phone, departure, room, partySize, notes,
-      contactConsent: true, sellerOfTravelStateResident,
-      residenceState: sellerOfTravelStateResident ? residenceState : null,
+      contactConsent: true, sellerOfTravelStateResident:screening?.sellerOfTravelStateResident ?? sellerOfTravelStateResident,
+      residenceState: screening ? screening.residenceState : sellerOfTravelStateResident ? residenceState : null,
       bookingIntent: bookingIntent as "ready_to_book" | "needs_information",
-      referralCode: referralFromCookie(request.headers.get("cookie"))?.code ?? null,
+      referralCode,
     });
 
     try {

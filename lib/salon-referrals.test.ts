@@ -243,6 +243,9 @@ test("the public booking API persists the allowlisted cookie and ignores a forge
       stubs["@/lib/owner-notification"] = { sendOwnerInquiryNotification: async (input: { referralCode: string | null }) => { notifiedCode = input.referralCode; return "sent"; } };
       stubs["@/lib/booking-automation"] = { startAutomatedReadyToBookFlow: async () => { throw new Error("No automation requested"); } };
       stubs["@/lib/square-config"] = { getSquareEnvironment: () => "production" };
+      stubs["@/lib/inquiry-sales"]={connectNewBookingToSales:async()=>{}};
+      stubs["@/lib/inquiry-booking-invitations"]={getSalesBookingInvitation:async()=>null,completeSalesBookingInvitation:async()=>{throw new Error("Unexpected invitation");}};
+      stubs["@/lib/lead-request"]={sameOrigin:()=>true};
       const route = await loadModule("app/api/booking-requests/route.ts", stubs);
       const payload = { firstName: "New", lastName: "Traveler", email: "new@example.com", phone: "555-1234", departure: "2027-06-01", room: "shared", partySize: 1, bookingIntent: "needs_information", contactConsent: true, turnstileToken: "test-token", referralCode: "nails-station" };
       const response = await route.POST(new Request("https://example.com/api/booking-requests", { method: "POST", headers: { "content-type": "application/json", cookie }, body: JSON.stringify(payload) }) as never);

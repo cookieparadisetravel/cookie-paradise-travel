@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { requireOwner } from "@/lib/owner-auth";
 import { loadInquiryDashboardData } from "../dashboard-data";
 import { InquiryDashboardClient } from "../inquiry-dashboard-client";
+import { getSalesForBooking } from "@/lib/inquiry-sales";
 import { loadLeadInbox } from "@/lib/lead-inbox";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,7 @@ export default async function InquiryDetailPage({
   const guideRequests = inquiry.squareEnvironment === "production"
     ? (await loadLeadInbox(null, { email: inquiry.email })).leads : [];
 
+  const salesProcess=await getSalesForBooking(inquiryId);
   const requestedSection = (await searchParams).section;
   const initialDetailSection = isDetailSection(requestedSection) ? requestedSection : undefined;
 
@@ -50,6 +52,7 @@ export default async function InquiryDetailPage({
       ownerEmail={owner.email}
       squareMode={squareMode}
       guideRequests={guideRequests}
+      salesProcesses={salesProcess ? [salesProcess] : []}
     />
   );
 }

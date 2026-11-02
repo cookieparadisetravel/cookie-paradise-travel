@@ -25,7 +25,7 @@ test("matching production booking shows one row and preserves the guide and orig
   assert.equal(entries[0].inquiry, inquiry); assert.equal(entries[0].guide, lead);
   assert.equal("guide" in inquiry, false);
   assert.equal(feedMatchesSearch(entries[0], "vietnam june"), true);
-  assert.equal(feedIsNew(entries[0]), true);
+  assert.equal(feedIsNew(entries[0]), false);
 });
 
 test("unmatched, Sandbox, or closed bookings cannot hide an active guide request", () => {
@@ -40,7 +40,7 @@ test("unmatched, Sandbox, or closed bookings cannot hide an active guide request
 
 test("guide stages and search work in the common list without guessing a departure", () => {
   const entries = buildInquiryFeed([], [guide({ status: "contacted", city: "Bloomington" }), guide({ status: "consultation_booked", travel_timing: "june_2027" }), guide({ status: "closed", travel_timing: "future" })]);
-  assert.deepEqual(entries.map(feedStage), ["considering", "consultation_booked", "closed"]);
+  assert.deepEqual(entries.map(feedStage), ["considering", "considering", "closed"]);
   assert.deepEqual(entries.map(feedIsActive), [true, true, false]);
   assert.deepEqual(entries.map(feedDeparture), ["flexible", "2027-06-01", "flexible"]);
   assert.equal(feedMatchesSearch(entries[0], " BLOOMINGTON "), true);
@@ -55,5 +55,5 @@ test("renewed guide requests resurface using their latest activity while retaini
   const entry=buildInquiryFeed([], [lead])[0];
   assert.equal(feedCreatedAt(entry),renewed); assert.equal(lead.created_at,original);
   const attached=buildInquiryFeed([booking()], [{ ...lead, booking_id: 1 }])[0];
-  assert.equal(feedCreatedAt(attached),renewed); assert.equal(feedIsNew(attached),true);
+  assert.equal(feedCreatedAt(attached),renewed); assert.equal(feedIsNew(attached),false);
 });

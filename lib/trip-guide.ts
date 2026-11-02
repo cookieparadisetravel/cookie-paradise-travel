@@ -2,7 +2,7 @@ export const tripGuideUrl = "https://cookieparadisetravel.com/vietnam-trip-guide
 export const tripGuideLandingUrl = "https://cookieparadisetravel.com/vietnam";
 export const leadCities = ["Columbus", "Franklin", "Bloomington", "Other"] as const;
 export const leadTimings = ["june_2027", "not_sure", "future"] as const;
-export const leadStages = ["new", "contacted", "consultation_booked", "considering", "booking_in_progress", "closed"] as const;
+export const leadStages = ["new", "considering", "booking_in_progress", "waitlist", "closed"] as const;
 export type LeadTiming = typeof leadTimings[number];
 export type LeadSource = "website" | "meta";
 export type LeadStage = typeof leadStages[number];
@@ -34,5 +34,5 @@ export function guideTimingLabel(value: string) {
   return value === "june_2027" ? "June 1-8, 2027" : value === "future" ? "A future departure" : "Still deciding";
 }
 export function leadStageLabel(value: string) {
-  return ({ new: "New", contacted: "Contacted", consultation_booked: "Consultation booked", considering: "Considering", booking_in_progress: "Booking in progress", closed: "Closed" } as Record<string, string>)[value] ?? value;
+  return ({ new: "New", contacted: "Contacted", consultation_booked: "Considering", considering: "Considering", booking_in_progress: "Booking in progress", waitlist: "Waitlist", reserved: "Reserved", closed: "Closed" } as Record<string, string>)[value] ?? value;
 }

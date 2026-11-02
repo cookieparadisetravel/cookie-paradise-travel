@@ -1,6 +1,7 @@
 import handler from "vinext/server/fetch-handler";
 import { sendDueAgreementReminders } from "./lib/agreement-reminders";
 import { sendDueInquiryReminders } from "./lib/inquiry-reminders";
+import { synchronizeInquiryConsultations } from "./lib/inquiry-sales-calendar";
 import { sendDueTripGuideReminders } from "./lib/trip-guide-reminders";
 
 type AssetBinding = { fetch(request: Request): Promise<Response> };
@@ -66,13 +67,21 @@ const worker = {
         (path === "/vietnam-hero.mp4" || path === "/vietnam-hero-mobile.mp4")) {
       return heroVideoResponse(request, env.ASSETS);
     }
-    return handler.fetch(request, env, ctx);
+    const response=await handler.fetch(request, env, ctx);
+    if (path.startsWith("/start-booking/")) {
+      const headers=new Headers(response.headers);
+      headers.set("Cache-Control","private, no-store");
+      headers.set("Referrer-Policy","no-referrer");
+      headers.set("X-Robots-Tag","noindex, nofollow");
+      return new Response(response.body,{status:response.status,statusText:response.statusText,headers});
+    }
+    return response;
   },
   async scheduled() {
-    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders()];
+    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations()];
     const results = await Promise.allSettled(jobs);
     for (const [index, result] of results.entries()) {
-      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders"][index];
+      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations"][index];
       if (result.status === "fulfilled") console.log(job, result.value);
       else console.error(`${job} failed; check configuration and service availability.`);
     }

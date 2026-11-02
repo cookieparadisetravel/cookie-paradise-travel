@@ -9,6 +9,7 @@ export const inquiryStageOptions = [
 
 const legacyStageAliases: Record<string, string> = {
   contacted: "considering",
+  consultation_booked: "considering",
   qualified: "booking_in_progress",
 };
 

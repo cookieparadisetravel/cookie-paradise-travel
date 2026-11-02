@@ -51,23 +51,28 @@ async function accessToken() {
 }
 
 /** Fresh event lookup for every delivery. Errors must prevent sending, never mean 'not booked'. */
-export async function hasBookedConsultation(email: string) {
+export async function findCustomerConsultation(email: string, since?: string) {
   const calendarId = env.CONSULTATION_CALENDAR_ID;
   if (!calendarId) throw new Error("Consultation calendar is unavailable.");
   const token = await accessToken();
   let pageToken: string | undefined;
   for (let page = 0; page < 20; page++) {
     const url = new URL(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`);
-    url.search = new URLSearchParams({ q: email.trim().toLowerCase(), singleEvents: "true", showDeleted: "false", maxResults: "250", fields: "accessRole,nextPageToken,items(status,summary,description,start,end,attendees(email,organizer))", ...(pageToken ? { pageToken } : {}) }).toString();
+    url.search = new URLSearchParams({ ...(since ? { timeMin: since } : {}), q: email.trim().toLowerCase(), singleEvents: "true", showDeleted: "false", maxResults: "250", fields: "accessRole,nextPageToken,items(status,summary,description,start,end,attendees(email,organizer))", ...(pageToken ? { pageToken } : {}) }).toString();
     const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10_000) });
     if (!response.ok) throw new Error("Consultation calendar lookup failed.");
     const data = await response.json() as { accessRole?: string; items?: CalendarEvent[]; nextPageToken?: string };
     if (!["reader", "writer", "owner"].includes(data.accessRole ?? "") || !Array.isArray(data.items)) {
       throw new Error("Consultation calendar details are unavailable.");
     }
-    if (data.items.some((event) => isCustomerConsultation(event, email))) return true;
-    if (!data.nextPageToken) return false;
+    const appointment=data.items.find(event=>isCustomerConsultation(event,email));
+    if (appointment) return { startsAt:appointment.start!.dateTime! };
+    if (!data.nextPageToken) return null;
     pageToken = data.nextPageToken;
   }
   throw new Error("Consultation calendar lookup was incomplete.");
+}
+
+export async function hasBookedConsultation(email:string) {
+  return Boolean(await findCustomerConsultation(email));
 }

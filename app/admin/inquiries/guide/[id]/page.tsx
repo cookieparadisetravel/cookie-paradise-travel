@@ -1,7 +1,10 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { requireOwner } from "@/lib/owner-auth";
 import { loadLeadInbox } from "@/lib/lead-inbox";
+import { getSalesForGuide } from "@/lib/inquiry-sales";
+import { InquirySalesPanel } from "../../inquiry-sales-panel";
+import { InquiryNotes } from "../../inquiry-notes";
 import { GuideRequestSummary } from "../../guide-request-summary";
 
 export const dynamic = "force-dynamic";
@@ -14,10 +17,13 @@ export default async function GuideInquiryPage({ params }: { params: Promise<{ i
   const { leads } = await loadLeadInbox(null, { id });
   const lead = leads[0];
   if (!lead) notFound();
+  const sale=await getSalesForGuide(id);
+  if (sale?.bookingId) redirect(`/admin/inquiries/${sale.bookingId}?section=overview`);
   return <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)]"><div className="mx-auto max-w-[1500px]">
     {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Native navigation avoids the deployed vinext Link failure. */}
     <a className="inline-flex min-h-11 items-center rounded-full border border-[var(--line)] bg-white px-4 text-sm font-bold" href="/admin/inquiries">← Back to inquiries</a>
-    <p className="mt-7 text-xs font-extrabold uppercase tracking-widest text-[var(--orange)]">Owner dashboard</p><h1 className="mt-2 mb-6 font-serif text-3xl font-bold">Inquiry details</h1>
-    <GuideRequestSummary key={`${lead.id}-${lead.status}`} lead={lead} />
+    <p className="mt-7 text-xs font-extrabold uppercase tracking-widest text-[var(--orange)]">Owner dashboard</p><h1 className="mt-2 mb-6 font-serif text-3xl font-bold">{lead.first_name}</h1>
+    {sale && <div className="mb-5 grid gap-5 lg:grid-cols-3"><div className="min-w-0 lg:col-span-2"><InquirySalesPanel key={`${sale.id}-${sale.updatedAt}`} sale={sale} /></div><div className="rounded-2xl border border-[var(--line)] bg-white p-5"><InquiryNotes salesId={sale.id} /></div></div>}
+    <GuideRequestSummary key={`${lead.id}-${lead.status}`} lead={lead} manageStage={false} />
   </div></main>;
 }

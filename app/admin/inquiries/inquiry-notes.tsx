@@ -13,7 +13,7 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
   timeZone: "America/Indiana/Indianapolis", timeZoneName: "short",
 });
 
-export function InquiryNotes({ inquiryId }: { inquiryId: number }) {
+export function InquiryNotes({ inquiryId, salesId }: { inquiryId?: number; salesId?: string }) {
   const inputId = useId();
   const [notes, setNotes] = useState<InquiryNote[]>([]);
   const [draft, setDraft] = useState("");
@@ -25,7 +25,7 @@ export function InquiryNotes({ inquiryId }: { inquiryId: number }) {
   const [savedMessage, setSavedMessage] = useState("");
   const inFlight = useRef(false);
   const submission = useRef<{ id: string; body: string } | null>(null);
-  const endpoint = `/api/admin/inquiries/${inquiryId}/notes`;
+  const endpoint = salesId ? `/api/admin/inquiries/sales/${salesId}/notes` : `/api/admin/inquiries/${inquiryId}/notes`;
 
   useEffect(() => {
     const controller = new AbortController();

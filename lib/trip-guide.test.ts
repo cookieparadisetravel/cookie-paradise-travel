@@ -6,6 +6,8 @@ import * as guide from "./trip-guide.ts";
 import * as requests from "./lead-request.ts";
 import * as consultation from "./consultation.ts";
 import * as referrals from "./salon-referrals.ts";
+import { loadSalesModules } from "../test-support/sales-fixture.ts";
+import * as stages from "./inquiry-stage.ts";
 import { databaseFixture, loadModule } from "../test-support/lead-fixture.ts";
 
 const uuid = () => crypto.randomUUID();
@@ -16,6 +18,7 @@ async function fixture() {
   const runtime: Record<string, unknown> = { DB: f.db, SQUARE_ENV: "production", INQUIRY_REMINDERS_ENABLED: "true", MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test", CONSULTATION_CALENDAR_ID: "calendar", GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON: "test-only" };
   const storage = await loadModule<{ ensureTripGuideStorage(): Promise<void>; tripGuideStorageStatements: string[] }>("lib/trip-guide-storage.ts", { "cloudflare:workers": { env: runtime } });
   const history = await loadModule<typeof import("./followup-history")>("lib/followup-history.ts", { "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage });
+  const { sales,salesStorage }=await loadSalesModules(runtime,history);
   const emails: Record<string, unknown>[] = [], ownerEmails: unknown[] = [], subscriptions: unknown[] = [];
   let emailFails = false, calendarFails = false;
   const booked = new Set<string>();
@@ -32,7 +35,7 @@ async function fixture() {
     "./consultation-calendar": { hasBookedConsultation: async (email: string) => { onCalendar?.(); if (calendarFails) throw new Error("Unavailable"); return booked.has(email); } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: "2026-11-03T17:00:00Z", messageId: "test" }; } },
   });
-  return { ...f, runtime, storage, history, emails, ownerEmails, subscriptions, booked, save: service.saveTripGuideLead, run: reminders.sendDueTripGuideReminders,
+  return { ...f, runtime, storage, history, sales,salesStorage, emails, ownerEmails, subscriptions, booked, save: service.saveTripGuideLead, run: reminders.sendDueTripGuideReminders,
     failEmail: () => { emailFails = true; }, failCalendar: (value: boolean) => { calendarFails = value; }, onCalendar: (fn: () => void) => { onCalendar = fn; } };
 }
 const DAY3 = new Date("2026-11-03T17:00:00Z"), DAY7 = new Date("2026-11-07T17:00:00Z");
@@ -175,7 +178,7 @@ test("owner lead updates reject unauthenticated and cross-origin calls before st
   let owner: unknown = null, writes = 0;
   const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/inquiries/guide/[id]/route.ts", {
     "cloudflare:workers": { env: {} }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => owner },
-    "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": { ensureTripGuideStorage: async () => { writes++; } }, "@/lib/followup-history": {},
+    "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": { ensureTripGuideStorage: async () => { writes++; } }, "@/lib/followup-history": {}, "@/lib/inquiry-stage":stages, "@/lib/inquiry-sales":{},
   });
   const run = (origin?: string) => route.PATCH(new Request("https://example.test/api/admin/inquiries/guide/test", { method: "PATCH", headers: origin ? { Origin: origin } : {}, body: JSON.stringify({ status: "closed" }) }), { params: Promise.resolve({ id: uuid() }) });
   assert.equal((await run("https://example.test")).status, 403); owner = { email: "owner@example.test" };
@@ -186,11 +189,11 @@ test("owner inbox loads real source/delivery data and authorized stage updates s
   const f = await ready();
   await f.save({ ...leadInput(), source: "meta", submissionId: "meta:456", attribution: { ...guide.emptyAttribution } });
   const row = f.sqlite.prepare("SELECT id FROM trip_guide_leads").get()!;
-  const inbox = await loadModule<{ loadLeadInbox(page?: number): Promise<{ leads: { sources: string; campaign: string; guide_email_status: string }[]; totals: { total: number } }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history });
+  const inbox = await loadModule<{ loadLeadInbox(page?: number): Promise<{ leads: { sources: string; campaign: string; guide_email_status: string }[]; totals: { total: number } }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history, "./inquiry-sales-storage": f.salesStorage });
   const data = await inbox.loadLeadInbox();
   assert.equal(data.totals.total,1); assert.equal(data.leads[0].sources,"website,meta"); assert.equal(data.leads[0].campaign,"vietnam-june"); assert.equal(data.leads[0].guide_email_status,"sent");
   const route = await loadModule<{ PATCH(request: Request, context: { params: Promise<{ id: string }> }): Promise<Response> }>("app/api/admin/inquiries/guide/[id]/route.ts", {
-    "cloudflare:workers": { env: f.runtime }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => ({ email: "owner@example.test" }) }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": f.storage, "@/lib/followup-history": f.history,
+    "cloudflare:workers": { env: f.runtime }, zod: { z }, "@/lib/owner-auth": { requireOwner: async () => ({ email: "owner@example.test" }) }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/trip-guide-storage": f.storage, "@/lib/followup-history": f.history, "@/lib/inquiry-stage":stages,"@/lib/inquiry-sales":f.sales,
   });
   const request = new Request(`https://example.test/api/admin/inquiries/guide/${row.id}`, { method: "PATCH", headers: { Origin: "https://example.test" }, body: JSON.stringify({ status: "consultation_booked" }) });
   assert.equal((await route.PATCH(request,{ params: Promise.resolve({ id: String(row.id) }) })).status,200);
@@ -219,7 +222,7 @@ test("unified inquiries loads every guide request and scopes details without cre
     const id=uuid(); ids.push(id);
     insert.run(id,`Guide ${i}`,`guide${i}@example.test`,"Not provided","not_sure","website","2026-11-01T12:00:00Z",uuid(),"2026-11-01T12:00:00Z");
   }
-  const inbox = await loadModule<{ loadLeadInbox(page?: number | null, filter?: { id?: string; email?: string }): Promise<{ leads: { id: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history });
+  const inbox = await loadModule<{ loadLeadInbox(page?: number | null, filter?: { id?: string; email?: string }): Promise<{ leads: { id: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history, "./inquiry-sales-storage": f.salesStorage });
   assert.equal((await inbox.loadLeadInbox()).leads.length,100);
   assert.equal((await inbox.loadLeadInbox(null)).leads.length,105);
   assert.deepEqual((await inbox.loadLeadInbox(null,{ id: ids[104] })).leads.map(row=>row.id),[ids[104]]);
@@ -244,7 +247,7 @@ test("a fresh guide request reopens a closed lead, alerts the owner and preserve
   assert.equal(f.ownerEmails.length,1); assert.match(JSON.stringify(f.ownerEmails[0]),/Returning Vietnam/);
   assert.equal(f.emails.at(-1)!.stopToken,original.stop_token);
   await f.save(request); assert.equal(f.ownerEmails.length,1);
-  const inbox = await loadModule<{ loadLeadInbox(): Promise<{ leads: { first_name: string; phone: string; renewed_at: string; followup_history: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history });
+  const inbox = await loadModule<{ loadLeadInbox(): Promise<{ leads: { first_name: string; phone: string; renewed_at: string; followup_history: string }[] }> }>("lib/lead-inbox.ts", { "cloudflare:workers": { env: f.runtime }, "./trip-guide-storage": f.storage, "./followup-history": f.history, "./inquiry-sales-storage": f.salesStorage });
   const lead = (await inbox.loadLeadInbox()).leads[0];
   assert.equal(lead.first_name,"Returning Traveler"); assert.equal(lead.phone,"5551234"); assert.equal(lead.renewed_at,new Date(request.submittedAt).toISOString());
   assert.match(lead.followup_history,/reopened/); assert.match(lead.followup_history,/owner_notification/);

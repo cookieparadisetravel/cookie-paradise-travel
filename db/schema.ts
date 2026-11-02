@@ -22,6 +22,30 @@ export const tripGuideSubmissions = sqliteTable("trip_guide_submissions", {
   marketingConsent: integer("marketing_consent", { mode: "boolean" }).notNull().default(false), createdAt: text("created_at").notNull(),
 }, table => [index("trip_guide_submissions_lead_idx").on(table.leadId)]);
 
+// One sales process can begin with a guide and continue into an existing booking record.
+export const inquirySales = sqliteTable("inquiry_sales", {
+  id: text("id").primaryKey(),
+  guideLeadId: text("guide_lead_id").references(() => tripGuideLeads.id, { onDelete: "cascade" }),
+  bookingRequestId: integer("booking_request_id").references(() => bookingRequests.id, { onDelete: "cascade" }),
+  cycleId: text("cycle_id").notNull().default("initial"), archivedAt: text("archived_at"),
+  nextAction: text("next_action").notNull().default(""), followUpDate: text("follow_up_date"),
+  consultationBookedAt: text("consultation_booked_at"), consultationStartsAt: text("consultation_starts_at"),
+  consultationCompletedAt: text("consultation_completed_at"), calendarCheckedAt: text("calendar_checked_at"),
+  createdAt: text("created_at").notNull(), updatedAt: text("updated_at").notNull(),
+}, table => [uniqueIndex("inquiry_sales_guide_cycle_unique").on(table.guideLeadId,table.cycleId),uniqueIndex("inquiry_sales_booking_unique").on(table.bookingRequestId),index("inquiry_sales_follow_up_idx").on(table.followUpDate)]);
+export const inquirySalesNotes = sqliteTable("inquiry_sales_notes", {
+  id: text("id").primaryKey(), salesId: text("sales_id").notNull().references(() => inquirySales.id, { onDelete: "cascade" }),
+  body: text("body").notNull(), createdBy: text("created_by").notNull(), createdAt: text("created_at").notNull(),
+}, table => [index("inquiry_sales_notes_created_idx").on(table.salesId,table.createdAt)]);
+export const inquiryBookingInvitations = sqliteTable("inquiry_booking_invitations", {
+  id: text("id").primaryKey(), salesId: text("sales_id").notNull().references(() => inquirySales.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull(), expiresAt: text("expires_at").notNull(), revokedAt: text("revoked_at"),
+  completedAt: text("completed_at"), completionNonce: text("completion_nonce"),
+  bookingRequestId: integer("booking_request_id").references(() => bookingRequests.id),
+  emailStatus: text("email_status").notNull().default("sending"), emailSentAt: text("email_sent_at"), emailMessageId: text("email_message_id"),
+  createdAt: text("created_at").notNull(),
+}, table => [uniqueIndex("inquiry_booking_invitations_token_unique").on(table.tokenHash),index("inquiry_booking_invitations_sales_idx").on(table.salesId,table.createdAt)]);
+
 export const inquiryFollowupHistory = sqliteTable("inquiry_followup_history", {
   id: text("id").primaryKey(),
   guideLeadId: text("guide_lead_id").references(() => tripGuideLeads.id, { onDelete: "cascade" }),

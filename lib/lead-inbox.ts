@@ -1,6 +1,7 @@
 import { env } from "cloudflare:workers";
 import { ensureTripGuideStorage } from "./trip-guide-storage";
 import { ensureFollowupHistoryStorage } from "./followup-history";
+import { ensureInquirySalesStorage } from "./inquiry-sales-storage";
 
 export type GuideLeadRow = {
   id: string; first_name: string; email: string; phone: string; city: string; travel_timing: string; status: string;
@@ -17,11 +18,12 @@ export type GuideLeadRow = {
 export async function loadLeadInbox(page: number | null = 1, filter?: { id?: string; email?: string }) {
   await ensureTripGuideStorage();
   await ensureFollowupHistoryStorage();
+  await ensureInquirySalesStorage();
   const db = env.DB!;
   const where = filter?.id ? " WHERE l.id=?" : filter?.email ? " WHERE lower(trim(l.email))=?" : "";
   const bindings: (string | number)[] = filter?.id ? [filter.id] : filter?.email ? [filter.email.trim().toLowerCase()] : [];
   if (page !== null) bindings.push((page-1)*100);
-  const { results } = await db.prepare(`SELECT l.id,l.email,l.status,
+  const { results } = await db.prepare(`SELECT l.id,l.email,coalesce(b.status,l.status) AS status,
     coalesce(json_extract(h.details_json,'$.firstName'),l.first_name) AS first_name,
     coalesce(json_extract(h.details_json,'$.phone'),l.phone) AS phone,
     coalesce(json_extract(h.details_json,'$.city'),l.city) AS city,
@@ -39,10 +41,11 @@ export async function loadLeadInbox(page: number | null = 1, filter?: { id?: str
     (SELECT audience FROM trip_guide_submissions WHERE lead_id=l.id AND audience!='' ORDER BY created_at DESC LIMIT 1) AS audience,
     (SELECT ad_id FROM trip_guide_submissions WHERE lead_id=l.id AND ad_id!='' ORDER BY created_at DESC LIMIT 1) AS ad_id,
     (SELECT count(*) FROM trip_guide_submissions WHERE lead_id=l.id) AS submission_count,
-    (SELECT id FROM booking_requests WHERE lower(trim(email))=l.email AND square_environment='production' ORDER BY id DESC LIMIT 1) AS booking_id,
+    p.booking_request_id AS booking_id,
     (SELECT group_concat(reminder_day) FROM trip_guide_reminders WHERE lead_id=l.id AND status='sent') AS reminder_days_sent,
     (SELECT count(*) FROM trip_guide_reminders WHERE lead_id=l.id AND status IN ('failed','sending')) AS reminder_failures
-    FROM trip_guide_leads l LEFT JOIN inquiry_followup_history h ON h.id=(
+    FROM trip_guide_leads l LEFT JOIN inquiry_sales p ON p.id=(SELECT id FROM inquiry_sales WHERE guide_lead_id=l.id AND archived_at IS NULL ORDER BY julianday(created_at) DESC LIMIT 1)
+    LEFT JOIN booking_requests b ON b.id=p.booking_request_id LEFT JOIN inquiry_followup_history h ON h.id=(
       SELECT id FROM inquiry_followup_history WHERE guide_lead_id=l.id AND event='reopened'
       ORDER BY julianday(created_at) DESC,rowid DESC LIMIT 1)
     ${where} ORDER BY coalesce(h.created_at,l.created_at) DESC${page === null ? "" : " LIMIT 100 OFFSET ?"}`).bind(...bindings).all<GuideLeadRow>();

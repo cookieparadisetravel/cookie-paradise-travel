@@ -30,8 +30,8 @@ export const feedCreatedAt = (entry: InquiryFeedEntry) => {
 };
 export const feedDeparture = (entry: InquiryFeedEntry) => entry.kind === "booking" ? entry.inquiry.departure : entry.guide.travel_timing === "june_2027" ? "2027-06-01" : "flexible";
 export const feedStage = (entry: InquiryFeedEntry) => normalizeInquiryStage(entry.kind === "booking" ? entry.inquiry.status : entry.guide.status);
-export const feedIsActive = (entry: InquiryFeedEntry) => entry.kind === "booking" ? isActiveInquiryStage(entry.inquiry.status) : entry.guide.status !== "closed";
-export const feedIsNew = (entry: InquiryFeedEntry) => feedStage(entry) === "new" || entry.guide?.status === "new";
+export const feedIsActive = (entry: InquiryFeedEntry) => entry.kind === "booking" ? isActiveInquiryStage(entry.inquiry.status) : isActiveInquiryStage(entry.guide.status);
+export const feedIsNew = (entry: InquiryFeedEntry) => feedStage(entry) === "new";
 export function feedMatchesSearch(entry: InquiryFeedEntry, search: string) {
   const contact = entry.kind === "booking"
     ? [entry.inquiry.fullName, entry.inquiry.email, entry.inquiry.phone, String(entry.inquiry.id)] : [];

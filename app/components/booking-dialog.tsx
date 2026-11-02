@@ -13,7 +13,11 @@ import {
 import { ReferralBrand } from "./referral-brand";
 import { consultationBookingUrl } from "@/lib/consultation";
 
-type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean };
+type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean;
+  bookingInvitationToken?: string; initialOpen?: boolean;
+  initialContact?: { name: string; email: string; phone: string };
+  initialTrip?: { departure: string; room: string; partySize: number; sellerOfTravelStateResident?: boolean; residenceState?: string };
+};
 
 
 type RequiredField =
@@ -78,22 +82,22 @@ export function loadTurnstileScript() {
   return turnstileScriptPromise;
 }
 
-export function BookingDialog({ triggerLabel, compact = false, inverse = false }: Props) {
+export function BookingDialog({ triggerLabel, compact = false, inverse = false, bookingInvitationToken, initialContact, initialTrip, initialOpen = false }: Props) {
   // This is the public widget identifier, not the private Siteverify secret.
   // Keep the production default in source so a fresh checkout can build a working form.
   const turnstileSiteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY?.trim() || "0x4AAAAAAFFgsW7CiOEkimz7";
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(initialOpen);
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [departure, setDeparture] = useState("2027-06-01");
-  const [room, setRoom] = useState("shared");
-  const [partySize, setPartySize] = useState("1");
-  const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">("");
+  const [departure, setDeparture] = useState(initialTrip?.departure==="2027-06-01" ? initialTrip.departure : "2027-06-01");
+  const [room, setRoom] = useState(initialTrip?.room==="private" ? "private" : "shared");
+  const [partySize, setPartySize] = useState(String(initialTrip?.partySize || 1));
+  const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">(bookingInvitationToken ? "ready_to_book" : "");
   const [submittedIntent, setSubmittedIntent] = useState<"" | "ready_to_book" | "needs_information">("");
   const [submittedAutomationStatus, setSubmittedAutomationStatus] = useState<string | null>(null);
-  const [sellerOfTravelStateResident, setSellerOfTravelStateResident] = useState(false);
-  const [residenceState, setResidenceState] = useState("");
+  const [sellerOfTravelStateResident, setSellerOfTravelStateResident] = useState(Boolean(initialTrip?.sellerOfTravelStateResident));
+  const [residenceState, setResidenceState] = useState(initialTrip?.residenceState || "");
   const [turnstileToken, setTurnstileToken] = useState("");
   const [turnstileAvailable, setTurnstileAvailable] = useState(true);
   const [turnstileContainer, setTurnstileContainer] = useState<HTMLDivElement | null>(null);
@@ -203,6 +207,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
       residenceState: sellerOfTravelStateResident ? residenceState : "",
       marketingConsent: form.get("marketingConsent") === "yes",
       bookingIntent,
+      ...(bookingInvitationToken ? { bookingInvitationToken } : {}),
     };
     try {
       const response = await fetch("/api/booking-requests", {
@@ -285,7 +290,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 <X className="h-5 w-5" />
               </DialogClose>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Discover Southern Vietnam • 2027</p>
-              <DialogTitle className="font-serif text-3xl">Request a place</DialogTitle>
+              <DialogTitle className="font-serif text-3xl">{bookingInvitationToken ? "Complete your booking request" : "Request a place"}</DialogTitle>
               <DialogDescription className="text-sm leading-6 text-white/70">
                 Tell us which departure works for you. No payment is collected and this form does not confirm a reservation.
               </DialogDescription>
@@ -332,7 +337,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 </Select>
                 <p id="room-preference-help" className="mt-2 text-sm font-normal leading-6 text-[var(--muted-ink)]">The $399 private-room supplement applies only to single travelers who want a room to themselves. Couples can share a room with a queen bed or separate beds, depending on their preference. Couples sharing a room should select “Shared double/twin room.”</p>
               </div>
-              <fieldset
+              {!bookingInvitationToken && <fieldset
                 className={`rounded-2xl border p-4 sm:col-span-2 ${fieldErrors.bookingIntent ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : "border-[var(--line)] bg-white/60"}`}
                 aria-invalid={Boolean(fieldErrors.bookingIntent)}
                 aria-describedby={fieldErrors.bookingIntent ? "booking-intent-error" : undefined}
@@ -367,12 +372,13 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                   </label>
                 </div>
                 {fieldErrors.bookingIntent && <p id="booking-intent-error" className="mt-2 text-xs font-semibold text-red-700">{fieldErrors.bookingIntent}</p>}
-              </fieldset>
+              </fieldset>}
               <p className="mt-2 border-t border-[var(--line)] pt-5 text-xs font-bold uppercase tracking-[0.16em] text-[var(--orange)] sm:col-span-2">Your details</p>
               <label className="field-label">First Name
                 <input
                   className={`field-input ${fieldErrors.firstName ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
                   name="firstName"
+                  defaultValue={initialContact?.name.trim().split(/\s+/)[0] || ""}
                   autoComplete="given-name"
                   required
                   aria-required="true"
@@ -388,6 +394,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 <input
                   className={`field-input ${fieldErrors.lastName ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
                   name="lastName"
+                  defaultValue={initialContact?.name.trim().split(/\s+/).slice(1).join(" ") || ""}
                   autoComplete="family-name"
                   required
                   aria-required="true"
@@ -403,6 +410,8 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 <input
                   className={`field-input ${fieldErrors.email ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
                   name="email"
+                  defaultValue={initialContact?.email || ""}
+                  readOnly={Boolean(bookingInvitationToken)}
                   type="email"
                   autoComplete="email"
                   required
@@ -419,6 +428,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 <input
                   className={`field-input ${fieldErrors.phone ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : ""}`}
                   name="phone"
+                  defaultValue={initialContact?.phone || ""}
                   type="tel"
                   autoComplete="tel"
                   required
@@ -493,10 +503,10 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false }
                 <p className="rounded-xl bg-red-50 p-3 text-sm text-red-700 sm:col-span-2">{errorMessage}</p>
               )}
               <p id="contact-consent-notice" className="rounded-2xl border border-[var(--orange)]/35 bg-[var(--gold)]/15 p-4 text-sm leading-6 text-[var(--ink)] sm:col-span-2">
-                By clicking <strong>“Send my request,”</strong> I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.
+                By clicking <strong>“{bookingInvitationToken ? "Start my booking" : "Send my request"},”</strong> I agree that Cookie Paradise Travel Company may contact me about this trip. This is an inquiry, not a purchase.
               </p>
               <button aria-describedby="contact-consent-notice" disabled={status === "saving"} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 text-sm font-extrabold text-white transition hover:bg-[var(--navy)] disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">
-                {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>Send my request <ArrowRight className="h-4 w-4" /></>}
+                {status === "saving" ? <><Loader2 className="h-4 w-4 animate-spin" /> Saving…</> : <>{bookingInvitationToken ? "Start my booking" : "Send my request"} <ArrowRight className="h-4 w-4" /></>}
               </button>
               <p className="text-center text-xs leading-5 text-[var(--muted-ink)] sm:col-span-2">Please do not enter passport numbers, medical information or payment details here. See our <a className="font-semibold underline" href="/privacy" target="_blank">Privacy Policy</a>.</p>
             </form>
