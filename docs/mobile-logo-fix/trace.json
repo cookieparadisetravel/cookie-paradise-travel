@@ -1,0 +1,15 @@
+{
+  "source": "public/cookie-paradise-travel-logo.png",
+  "sourceSha256": "7139d65c4cb621258bc42e0ec9a6ac12c49beff5f34ca6ef1f999fe3b559d72e",
+  "crop": [
+    25,
+    380,
+    1255,
+    466
+  ],
+  "alphaThreshold": 128,
+  "simplificationToleranceInOriginalPixels": 0.35,
+  "opaquePixels": 22812,
+  "contours": 18,
+  "pathCharacters": 3723
+}
