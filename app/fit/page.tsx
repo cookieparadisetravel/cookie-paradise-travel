@@ -19,18 +19,18 @@ export const metadata: Metadata = {
     title: "Vietnam, at your pace. | Cookie Paradise Travel",
     description: "Private journeys, personally planned. Your dates, your people, your kind of Vietnam.",
     url: "https://cookieparadisetravel.com/fit",
-    images: [{ url: "/travel/hue-citadel-1800.webp", width: 1800, height: 1200, alt: "The Imperial Citadel in Hue, Vietnam" }],
+    images: [{ url: "/travel/fit-mu-cang-chai-1800.webp", width: 1800, height: 1201, alt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Vietnam, at your pace. | Cookie Paradise Travel",
     description: "Private Vietnam journeys shaped around your dates, interests and pace.",
-    images: ["/travel/hue-citadel-1800.webp"],
+    images: ["/travel/fit-mu-cang-chai-1800.webp"],
   },
 };
 
 const questions = [
-  ["What is FIT travel?", "Here, FIT means a custom, independent journey for you and your travel companions. You work with Trung on the route and arrangements, rather than joining a scheduled group departure. Independent travel can still include prearranged hotels, transfers, experiences and local guides, as agreed in your proposal."],
+  ["What is FIT travel?", "Here, FIT (Free Independent Travel) means a custom, independent journey for you and your travel companions. You work with Trung on the route and arrangements, rather than joining a scheduled group departure. Independent travel can still include prearranged hotels, transfers, experiences and local guides, as agreed in your proposal."],
   ["Can you help with just one part of my trip?", "Absolutely. Ask for help with a hotel, a transfer, a local guide, an experience, or whatever is missing from your plans. You can book other parts yourself and ask Trung to bring the rest together. We will confirm the arrangements and any fees with you before proceeding."],
   ["What if I have an unusual or very specific request?", "Tell Trung what you have in mind. A family visit, a special occasion, a restaurant reservation, a particular place you want to see, or a different kind of travel experience can all be the starting point. We will explore the possibilities with you and confirm what can be arranged, availability and cost."],
   ["Is this the June 2027 group trip?", "This is a separate service. Your private journey is planned around your preferred dates, party and interests, subject to availability. The dates, group-size requirements and published prices for Discover Southern Vietnam do not automatically apply to a custom trip."],
@@ -79,8 +79,8 @@ export default async function FitTravelPage() {
         <p className="fit-small fit-hero-note">Start with a free 30-minute conversation.</p>
         <a className="fit-text-link fit-explore" href="#fit-ideas">Find a little inspiration <ArrowDown size={16} aria-hidden="true" /></a>
       </div>
-      <div className="fit-hero-art">
-        <JourneyPhoto photo="street" priority className="fit-hero-photo" sizes="(min-width: 1280px) 535px, (min-width: 768px) 45vw, 90vw" />
+      <div id="fit-hero-art" className="fit-hero-art">
+        <JourneyPhoto photo="fitCafe" priority className="fit-hero-photo" sizes="(min-width: 1280px) 535px, (min-width: 768px) 45vw, 90vw" />
         <span className="fit-margin-note" aria-hidden="true">A different way to see Vietnam</span>
       </div>
     </section>
@@ -108,13 +108,13 @@ export default async function FitTravelPage() {
       <div className="fit-wrap fit-section">
         <div className="fit-ideas-heading"><div><p className="fit-kicker">A few possibilities</p><h2 id="fit-ideas-title">Start with a moment.<br /><em>Make the journey yours.</em></h2></div><p className="fit-body">These are starting points for a conversation. Combine places, stay longer, or ask about a different corner of Vietnam.</p></div>
         <div className="fit-editorial-grid">
-          <article className="fit-mekong-story">
-            <JourneyPhoto photo="mekong" className="fit-mekong-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" />
-            <div className="fit-story-copy"><p className="fit-kicker">01 / Slow down</p><h3>Follow the waterways.</h3><p className="fit-body">Palm-lined canals, village paths and a lunch worth lingering over. Explore the Mekong Delta with room for the quieter moments.</p></div>
+          <article id="fit-bay" className="fit-bay-story">
+            <JourneyPhoto photo="fitBay" className="fit-bay-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" />
+            <div className="fit-story-copy"><p className="fit-kicker">01 / Slow down</p><h3>Drift into a different rhythm.</h3><p className="fit-body">Limestone islands, mist over the water and time to take in Ha Long Bay. Talk through a cruise or a quieter stretch of your journey.</p></div>
           </article>
           <div className="fit-stories-right">
-            <article className="fit-hue-story"><div className="fit-story-copy"><p className="fit-kicker">02 / Look a little closer</p><h3>Let history set the scene.</h3><p className="fit-body">Imperial Hue, garden houses and the Perfume River. Make space for the stories behind the places you see.</p></div><JourneyPhoto photo="hue" className="fit-hue-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" /></article>
-            <article className="fit-lantern-story"><JourneyPhoto photo="lanterns" className="fit-lantern-photo" sizes="(min-width: 768px) 230px, 42vw" /><div className="fit-story-copy"><p className="fit-kicker">03 / Stay for the evening</p><h3>A little lantern magic.</h3><p className="fit-body">Old houses, good food and Hoi An after dark. A reason to leave an evening open.</p></div></article>
+            <article id="fit-terraces" className="fit-terrace-story"><div className="fit-story-copy"><p className="fit-kicker">02 / Follow the landscape</p><h3>Take the scenic way.</h3><p className="fit-body">Curving rice terraces, mountain views and time in the countryside. Explore Mu Cang Chai as part of a route planned around your interests and the season.</p></div><JourneyPhoto photo="fitTerraces" className="fit-terrace-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" /></article>
+            <article className="fit-city-story"><div className="fit-story-copy"><p className="fit-kicker">03 / Leave an evening open</p><h3>Make time for everyday Hanoi.</h3><p className="fit-body">Old Quarter walks, neighborhood cafés and an unhurried evening. Shape your time in Hanoi around the pace and places that interest you.</p></div></article>
           </div>
         </div>
         <p className="fit-small fit-ideas-note">Experiences, routing and availability are confirmed during planning. These ideas are not fixed packages or quoted inclusions.</p>

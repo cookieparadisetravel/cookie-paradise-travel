@@ -1,0 +1,55 @@
+{
+  "reviewed": "2026-11-03",
+  "license": "https://unsplash.com/license",
+  "status": "Owner selected C, M1 and H6. Implemented in the FIT draft; deployment approval pending. Original option records retained.",
+  "options": [
+    {
+      "id": "A",
+      "file": "HG1",
+      "place": "Ha Giang",
+      "title": "Winding mountain road",
+      "credit": "Phuong Anh",
+      "url": "https://unsplash.com/photos/a-winding-road-in-the-middle-of-a-mountain-l47jbeR9AVk"
+    },
+    {
+      "id": "B",
+      "file": "HG3",
+      "place": "Ha Giang",
+      "title": "Nho Que River canyon",
+      "credit": "Harry Le",
+      "url": "https://unsplash.com/photos/boats-travel-on-a-turquoise-river-through-a-mountain-gorge-FnNbDYuofmQ"
+    },
+    {
+      "id": "C",
+      "file": "HL1",
+      "place": "Ha Long Bay",
+      "title": "Misty limestone islands",
+      "credit": "Warren",
+      "url": "https://unsplash.com/photos/boat-surrounder-by-islands--HtfdIHSbsE"
+    },
+    {
+      "id": "D",
+      "file": "HL2",
+      "place": "Ha Long Bay",
+      "title": "Cruise boat and blue water",
+      "credit": "Adam Young",
+      "url": "https://unsplash.com/photos/a-boat-sails-through-a-bay-with-limestone-karsts-5RjpoBtb54o"
+    },
+    {
+      "id": "E",
+      "file": "HN3",
+      "place": "Hanoi",
+      "title": "A quiet Hanoi alley",
+      "credit": "GVZ 42",
+      "url": "https://unsplash.com/photos/narrow-alleyway-with-vietnamese-flag-and-shops-8TFVKRr-ngQ"
+    },
+    {
+      "id": "F",
+      "file": "HN4",
+      "place": "Hanoi",
+      "title": "Hoan Kiem Lake at night",
+      "credit": "Giang Nguyen",
+      "url": "https://unsplash.com/photos/a-night-view-of-a-city-with-a-lake-in-front-of-it-Pem-EwQYeD4"
+    }
+  ]
+}

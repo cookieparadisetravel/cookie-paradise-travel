@@ -29,6 +29,24 @@ const photographs = {
     place: "Hoi An", detail: "A little lantern magic",
     photographer: "Kyle Thacker", source: "https://unsplash.com/photos/IeCSFQLc-Fs",
   },
+  fitBay: {
+    file: "fit-ha-long-bay", width: 1800, height: 1218,
+    alt: "Small boats on misty Ha Long Bay between towering limestone islands",
+    place: "Ha Long Bay", detail: "Into the mist",
+    photographer: "Warren", source: "https://unsplash.com/photos/boat-surrounder-by-islands--HtfdIHSbsE",
+  },
+  fitTerraces: {
+    file: "fit-mu-cang-chai", width: 1800, height: 1201,
+    alt: "Golden terraced rice fields in Mu Cang Chai with morning mist drifting over the hills",
+    place: "Mu Cang Chai", detail: "Golden curves, quiet mornings",
+    photographer: "Hoach Le Dinh", source: "https://unsplash.com/photos/rice-terraces-in-mu-cang-chai-PeRt3uMmjYM",
+  },
+  fitCafe: {
+    file: "fit-hanoi-cafe", width: 1800, height: 2400,
+    alt: "A Hanoi street café with warm lights, flower-covered balconies and parked scooters in the evening",
+    place: "Hanoi", detail: "An evening pause",
+    photographer: "Florian Schmid", source: "https://unsplash.com/photos/a-coffee-shop-with-flowers-and-lights-on-a-street-0sTDZrJ72i8",
+  },
 } as const;
 
 export function JourneyPhoto({ photo, className = "", sizes = "(min-width: 1024px) 45vw, 100vw", priority = false }: {

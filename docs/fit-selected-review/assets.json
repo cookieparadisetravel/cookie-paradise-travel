@@ -1,0 +1,56 @@
+[
+  {
+    "path": "public/travel/fit-ha-long-bay-640.webp",
+    "width": 640,
+    "height": 433,
+    "bytes": 23688
+  },
+  {
+    "path": "public/travel/fit-ha-long-bay-1280.webp",
+    "width": 1280,
+    "height": 866,
+    "bytes": 93520
+  },
+  {
+    "path": "public/travel/fit-ha-long-bay-1800.webp",
+    "width": 1800,
+    "height": 1218,
+    "bytes": 179606
+  },
+  {
+    "path": "public/travel/fit-mu-cang-chai-640.webp",
+    "width": 640,
+    "height": 427,
+    "bytes": 28806
+  },
+  {
+    "path": "public/travel/fit-mu-cang-chai-1280.webp",
+    "width": 1280,
+    "height": 854,
+    "bytes": 111852
+  },
+  {
+    "path": "public/travel/fit-mu-cang-chai-1800.webp",
+    "width": 1800,
+    "height": 1201,
+    "bytes": 217416
+  },
+  {
+    "path": "public/travel/fit-hanoi-cafe-640.webp",
+    "width": 640,
+    "height": 853,
+    "bytes": 130142
+  },
+  {
+    "path": "public/travel/fit-hanoi-cafe-1280.webp",
+    "width": 1280,
+    "height": 1707,
+    "bytes": 405410
+  },
+  {
+    "path": "public/travel/fit-hanoi-cafe-1800.webp",
+    "width": 1800,
+    "height": 2400,
+    "bytes": 655588
+  }
+]
