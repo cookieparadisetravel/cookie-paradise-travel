@@ -46,6 +46,8 @@ a { text-underline-offset: 4px; }
 .field-input:focus { border-color: var(--orange); box-shadow: 0 0 0 3px rgb(247 182 88 / 24%); }
 
 .company-logo { display: block; width: 14rem; max-width: 100%; height: auto; flex-shrink: 0; }
+.company-logo-part { display: block; width: 100%; height: auto; }
+.company-logo-part svg { display: block; width: 100%; height: auto; }
 .company-logo--footer { width: 18rem; }
 @media (max-width: 639px) {
   .company-logo { width: 9rem; }
