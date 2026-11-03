@@ -13,7 +13,7 @@ Production build, TypeScript, affected-page ESLint, and `git diff --check` passe
 
 ## Photo shortlist
 
-These are proposed replacements for the private-trip page only. No website photos, photo captions, trip-idea copy, or social-preview image have been replaced. The homepage imagery remains unchanged. Once selections are approved, the chosen photos and corresponding captions/copy should be integrated together into the existing magazine layout, including the FIT social-preview image where appropriate.
+The owner selected **C, M1 and H6** from this board and the [second round](round-two/README.md). Those selections are now implemented in the private-trip page draft, with matching captions, trip ideas and a new social-preview image. The group-trip homepage imagery remains unchanged. See the [selected-photo review](../fit-selected-review/README.md) for the final placement and validation.
 
 | ID | Destination | Photo | Photographer | Source |
 | --- | --- | --- | --- | --- |
@@ -26,6 +26,6 @@ These are proposed replacements for the private-trip page only. No website photo
 
 Each source page was opened and lists the image as **Download free** and free under the standard [Unsplash License](https://unsplash.com/license), which permits commercial use. Photographer names, location descriptions, and original source URLs are recorded in `options.json`. The board shows the actual downloaded photos in full composition, resized for comparison. All are distinct from the photos currently used on the group-trip homepage.
 
-Recommended starting set: **B, C, E** for a mountain canyon, a wide bay scene, and a portrait street detail. Final selection is pending. The live website has not been changed by this branch.
+The initial recommendation was B, C and E; the final owner selections are **C, M1 and H6**. This board is retained as the original reference. The live website has not been changed by this branch; deployment approval is pending.
 
 ![Six stock-photo options](photo-options.jpg)

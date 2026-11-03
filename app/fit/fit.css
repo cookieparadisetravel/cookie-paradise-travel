@@ -30,7 +30,7 @@
 .fit-hero-art::before { position: absolute; content: ""; inset: 2rem 1.7rem 4rem 0; background: var(--gold); }
 .fit-hero-photo { position: relative; }
 .fit-hero-photo .journey-photo-frame { aspect-ratio: 4 / 5; border-radius: 9rem 0 0 0; }
-.fit-hero-photo img { object-position: center 64%; }
+.fit-hero-photo img { object-position: center; }
 .fit-margin-note { position: absolute; right: -1.1rem; top: 3rem; writing-mode: vertical-rl; font-size: .6rem; font-weight: 600; letter-spacing: .15em; text-transform: uppercase; }
 .fit-promises { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; padding-block: 1.7rem; border-block: 1px solid var(--line); }
 .fit-promises > div { padding-inline: 2rem; border-left: 1px solid var(--line); }
@@ -46,20 +46,17 @@
 .fit-ideas-heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 3rem; }
 .fit-ideas-heading > .fit-body { max-width: 24rem; }
 .fit-editorial-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5rem; align-items: start; margin-top: 4rem; }
-.fit-mekong-photo { margin-right: 2rem; }
-.fit-mekong-photo .journey-photo-frame { aspect-ratio: 4 / 5; border-radius: 0 4rem 0 0; }
+.fit-bay-photo { margin-right: 2rem; }
+.fit-bay-photo .journey-photo-frame { aspect-ratio: 4 / 3; border-radius: 0 4rem 0 0; }
 .fit-story-copy { margin-top: 1.6rem; }
 .fit-story-copy .fit-kicker { margin-bottom: .7rem; }
 .fit-story-copy .fit-body { margin-top: .9rem; font-size: 1.02rem; }
 .fit-stories-right { padding-top: 1rem; }
-.fit-hue-story .fit-story-copy { margin-top: 0; }
-.fit-hue-photo { margin-top: 1.8rem; }
-.fit-hue-photo .journey-photo-frame { aspect-ratio: 16 / 9; }
-.fit-lantern-story { display: grid; grid-template-columns: .9fr 1fr; align-items: center; gap: 1.6rem; margin-top: 3.8rem; }
-.fit-lantern-story .fit-story-copy { margin-top: 0; }
-.fit-lantern-photo .journey-photo-frame { aspect-ratio: 4 / 5; border: .4rem solid white; box-shadow: 0 .5rem 1rem #59341215; transform: rotate(-3deg); }
-.fit-lantern-photo figcaption { margin-top: 1.3rem; }
-.fit-lantern-photo .journey-photo-detail { font-size: .85rem; }
+.fit-terrace-story .fit-story-copy { margin-top: 0; }
+.fit-terrace-photo { margin-top: 1.8rem; }
+.fit-terrace-photo .journey-photo-frame { aspect-ratio: 16 / 9; }
+.fit-city-story { margin-top: 2.8rem; padding-left: 1.5rem; border-left: 2px solid #b08e60; }
+.fit-city-story .fit-story-copy { margin-top: 0; }
 .fit-ideas-note { margin: 3rem 0 0; max-width: 44rem; }
 .fit-process-heading { max-width: 44rem; }
 .fit-process { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 3rem; list-style: none; margin: 3rem 0 0; padding: 0; }
@@ -100,8 +97,6 @@
 @media (max-width: 1023px) {
   .fit-hero { gap: 2.5rem; }
   .fit-editorial-grid, .fit-planner-grid, .fit-plan-grid { gap: 3rem; }
-  .fit-lantern-story { grid-template-columns: 1fr; }
-  .fit-lantern-photo { width: 62%; max-width: 16rem; margin-left: 1rem; }
   .fit-faq { grid-template-columns: 1fr; gap: 2rem; }
 }
 @media (max-width: 767px) {
@@ -125,13 +120,9 @@
   .fit-ideas-heading { display: block; }
   .fit-ideas-heading > .fit-body { max-width: none; }
   .fit-editorial-grid { margin-top: 2.5rem; gap: 2.5rem; }
-  .fit-mekong-photo { margin-right: 1rem; }
+  .fit-bay-photo { margin-right: 1rem; }
   .fit-stories-right { padding-top: 0; }
-  .fit-lantern-story { grid-template-columns: .9fr 1fr; gap: 1.25rem; margin-top: 2.5rem; }
-  .fit-lantern-photo { width: 100%; margin-left: 0; }
-  .fit-lantern-story h3 { font-size: 1.6rem; }
-  .fit-lantern-story .fit-body { font-size: .95rem; }
-  .fit-lantern-story .fit-kicker { font-size: .6rem; letter-spacing: .12em; }
+  .fit-city-story { margin-top: 2.5rem; padding-left: 1.1rem; }
   .fit-process { grid-template-columns: 1fr; gap: 1.8rem; margin-top: 2rem; }
   .fit-step-number { margin-bottom: .8rem; font-size: 2rem; }
   .fit-planner-image { width: 78%; margin-inline: auto; }
@@ -148,7 +139,5 @@
 @media (max-width: 359px) {
   .fit-page h1 { font-size: 3.05rem; }
   .fit-page h2 { font-size: 2.15rem; }
-  .fit-lantern-story { grid-template-columns: 1fr; }
-  .fit-lantern-photo { width: 72%; max-width: 16rem; margin-left: .5rem; }
   .fit-plan-actions > a { max-width: 100%; }
 }
