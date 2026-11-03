@@ -30,7 +30,7 @@ export const metadata: Metadata = {
 };
 
 const questions = [
-  ["What is FIT travel?", "Here, FIT means a custom, independent journey for you and your travel companions. You work with Trung on the route and arrangements, rather than joining a scheduled group departure. Independent travel can still include prearranged hotels, transfers, experiences and local guides, as agreed in your proposal."],
+  ["What is FIT travel?", "Here, FIT (Free Independent Travel) means a custom, independent journey for you and your travel companions. You work with Trung on the route and arrangements, rather than joining a scheduled group departure. Independent travel can still include prearranged hotels, transfers, experiences and local guides, as agreed in your proposal."],
   ["Can you help with just one part of my trip?", "Absolutely. Ask for help with a hotel, a transfer, a local guide, an experience, or whatever is missing from your plans. You can book other parts yourself and ask Trung to bring the rest together. We will confirm the arrangements and any fees with you before proceeding."],
   ["What if I have an unusual or very specific request?", "Tell Trung what you have in mind. A family visit, a special occasion, a restaurant reservation, a particular place you want to see, or a different kind of travel experience can all be the starting point. We will explore the possibilities with you and confirm what can be arranged, availability and cost."],
   ["Is this the June 2027 group trip?", "This is a separate service. Your private journey is planned around your preferred dates, party and interests, subject to availability. The dates, group-size requirements and published prices for Discover Southern Vietnam do not automatically apply to a custom trip."],
