@@ -1,0 +1,77 @@
+{
+  "reviewed": "2026-11-03",
+  "license": "https://unsplash.com/license",
+  "status": "Additional options only; no website image or copy changes in this round.",
+  "options": [
+    {
+      "id": "M1",
+      "place": "Mu Cang Chai",
+      "title": "Golden terraces in morning mist",
+      "credit": "Hoach Le Dinh",
+      "url": "https://unsplash.com/photos/rice-terraces-in-mu-cang-chai-PeRt3uMmjYM"
+    },
+    {
+      "id": "M2",
+      "place": "Mu Cang Chai",
+      "title": "Green terraces and a river valley",
+      "credit": "Tom De Decker",
+      "url": "https://unsplash.com/photos/rice-terraces-cascade-down-a-lush-green-valley-LrprN_omc7s"
+    },
+    {
+      "id": "M3",
+      "place": "Mu Cang Chai",
+      "title": "Terraces at sunset — portrait view",
+      "credit": "Lukáš Konvica",
+      "url": "https://unsplash.com/photos/terraced-rice-fields-with-mountains-and-clouds-at-sunset-cgmvDZnIHAI"
+    },
+    {
+      "id": "M4",
+      "place": "Mu Cang Chai",
+      "title": "Water-filled terraces and winding road",
+      "credit": "Ahmet Yüksek",
+      "url": "https://unsplash.com/photos/winding-road-through-terraced-rice-paddies-4ZhrI6gLJMA"
+    },
+    {
+      "id": "H1",
+      "place": "Hanoi",
+      "title": "Old Quarter architecture",
+      "credit": "Paul Bill",
+      "url": "https://unsplash.com/photos/an-old-building-with-lots-of-wires-and-wires-hanging-from-it-yD6J3ETko_Y"
+    },
+    {
+      "id": "H2",
+      "place": "Hanoi",
+      "title": "A bicycle passing through the Old Quarter",
+      "credit": "Adrià Sánchez Roqué",
+      "url": "https://unsplash.com/photos/woman-in-conical-hat-rides-bicycle-down-street-rKKCccIPNaQ"
+    },
+    {
+      "id": "H3",
+      "place": "Hanoi",
+      "title": "Long Bien Bridge at sunrise",
+      "credit": "Giang Nguyen",
+      "url": "https://unsplash.com/photos/a-bridge-over-a-river-OJ4GIDdINF0"
+    },
+    {
+      "id": "H4",
+      "place": "Hanoi",
+      "title": "The red bridge at Hoan Kiem Lake",
+      "credit": "Trần Minh Khôi",
+      "url": "https://unsplash.com/photos/a-red-bridge-over-a-body-of-water-HV6Q5-lonX4"
+    },
+    {
+      "id": "H5",
+      "place": "Hanoi",
+      "title": "St. Joseph’s Cathedral",
+      "credit": "Anh Bui",
+      "url": "https://unsplash.com/photos/a-large-cathedral-with-a-clock-on-the-front-of-it-LVzyM-cPcWQ"
+    },
+    {
+      "id": "H6",
+      "place": "Hanoi",
+      "title": "A street café glowing in the evening",
+      "credit": "Florian Schmid",
+      "url": "https://unsplash.com/photos/a-coffee-shop-with-flowers-and-lights-on-a-street-0sTDZrJ72i8"
+    }
+  ]
+}
