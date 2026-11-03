@@ -147,11 +147,16 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
             <a className="hover:text-[var(--gold)]" href="#journey">The trip</a>
+            <Link className="hover:text-[var(--gold)]" href="/fit">Private Vietnam Trips</Link>
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
             <a className="hover:text-[var(--gold)]" href="#faq">Questions</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
+        <nav className="flex items-center justify-center gap-6 border-t border-white/15 bg-[var(--navy)]/35 px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
+          <a className="hover:text-[var(--gold)]" href="#journey">Group Trip</a>
+          <Link className="text-[var(--gold)] hover:text-white" href="/fit">Private Vietnam Trips</Link>
+        </nav>
       </header>
 
       <section id="top" className="relative isolate overflow-hidden bg-[var(--navy)] text-white">
