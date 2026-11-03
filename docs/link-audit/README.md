@@ -42,7 +42,15 @@ No broken public link destination was found. Terminal HTTP probes returned acces
 - Static visual proofs generated from the actual page components and built CSS were checked at 320, 375, 430, 768, and 1280 pixels. The checked layouts have no horizontal overflow or header/hero-text overlap. The private-trip menu link was clicked successfully in the phone preview.
 - The visual preview stubs server cookies/availability and does not run form submissions. Referral layouts were rendered explicitly for visual review.
 - Protected admin pages, issued traveler/agreement/payment URLs, email delivery, submissions, and payments were not exercised. This was a public navigation audit, not an end-to-end transaction test.
-- Production was not changed or deployed by this work.
+- This audit was initially prepared before deployment. See the follow-up below for an issue caught by live click testing.
+
+## Deployment follow-up: public-page navigation
+
+After PR #15 deployed successfully, an actual click on the new desktop menu link stayed on the homepage. The browser reported a vinext client-routing exception (`TypeError: e is not a function`) in its link chunk, along with an RSC-prefetch setup error. The URL and destination page were valid, but the hydrated framework link intercepted the click and failed to navigate.
+
+The fix replaces the ten `next/link` instances on the four public pages with native anchors. This covers the new desktop/mobile menu links, existing public-page logos, footer links, and the privacy page's return link. Destinations, wording, styling, and referral cookies are unchanged. A normal page load also lets each destination read the existing referral cookie on the server. Protected admin and issued booking/payment flows are outside this focused change.
+
+The production build, TypeScript, and public-page ESLint checks must pass before release. Live release verification must click from the homepage menu to `/fit`, return through its logo/footer, and exercise the Vietnam/privacy return links; URL existence alone is insufficient to verify client-side click behavior.
 
 ![Desktop referral menu](desktop-menu.jpg)
 

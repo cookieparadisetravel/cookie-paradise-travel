@@ -1,4 +1,3 @@
-import Link from "next/link";
 import {
   ArrowRight, Check, ChevronDown, Clock3, Compass, MapPin, Plane,
   ShieldCheck, Sparkles, Users, Utensils,
@@ -147,7 +146,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
             <a className="hover:text-[var(--gold)]" href="#journey">The trip</a>
-            <Link className="hover:text-[var(--gold)]" href="/fit">Private Vietnam Trips</Link>
+            <a className="hover:text-[var(--gold)]" href="/fit">Private Vietnam Trips</a>
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
             <a className="hover:text-[var(--gold)]" href="#faq">Questions</a>
           </nav>
@@ -155,7 +154,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
         <nav className="flex items-center justify-center gap-6 border-t border-white/15 bg-[var(--navy)]/35 px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
           <a className="hover:text-[var(--gold)]" href="#journey">Group Trip</a>
-          <Link className="text-[var(--gold)] hover:text-white" href="/fit">Private Vietnam Trips</Link>
+          <a className="text-[var(--gold)] hover:text-white" href="/fit">Private Vietnam Trips</a>
         </nav>
       </header>
 
@@ -406,7 +405,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <BrandLogo footer surface="dark" />
             <p className="mt-3 text-sm">Hosted small-group journeys from Columbus, Indiana.</p>
           </div>
-          <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><Link className="underline hover:text-white" href="/fit">Private Vietnam trips</Link></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
+          <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><a className="underline hover:text-white" href="/fit">Private Vietnam trips</a></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
         </div>
       </footer>
       <MobileBookBar availability={availability} />

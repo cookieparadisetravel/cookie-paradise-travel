@@ -1,5 +1,5 @@
+/* eslint-disable @next/next/no-html-link-for-pages -- Native navigation avoids the vinext client-router failure observed in production. */
 import type { Metadata } from "next";
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, MapPin } from "lucide-react";
 import { ConsultationLink } from "../components/consultation-link";
@@ -57,9 +57,9 @@ export default async function FitTravelPage() {
     <header className="fit-header text-white">
       <div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5 sm:px-8">
         <div className="site-header-brand flex min-w-0 items-center gap-4">
-          <Link href="/" className="site-header-home flex shrink-0 items-center gap-3" aria-label="Cookie Paradise Travel Company home">
+          <a href="/" className="site-header-home flex shrink-0 items-center gap-3" aria-label="Cookie Paradise Travel Company home">
             <BrandLogo surface="dark" />
-          </Link>
+          </a>
           <ReferralBrand header />
         </div>
         <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Private travel navigation">
@@ -155,6 +155,6 @@ export default async function FitTravelPage() {
       </div>
     </section>
 
-    <footer className="fit-wrap fit-footer"><div><p className="fit-footer-name">Cookie Paradise Travel Company</p><p>Private journeys. Personal connections.</p></div><div><Link href="/">Discover Southern Vietnam group trip <ArrowUpRight size={14} aria-hidden="true" /></Link><Link href="/privacy">Privacy policy</Link><p>© {new Date().getFullYear()} Cookie Paradise Travel Company LLC · Columbus, Indiana</p></div></footer>
+    <footer className="fit-wrap fit-footer"><div><p className="fit-footer-name">Cookie Paradise Travel Company</p><p>Private journeys. Personal connections.</p></div><div><a href="/">Discover Southern Vietnam group trip <ArrowUpRight size={14} aria-hidden="true" /></a><a href="/privacy">Privacy policy</a><p>© {new Date().getFullYear()} Cookie Paradise Travel Company LLC · Columbus, Indiana</p></div></footer>
   </main></ReferralProvider>;
 }
