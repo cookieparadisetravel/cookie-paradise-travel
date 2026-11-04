@@ -12,8 +12,8 @@ const numericId = z.string().regex(/^\d{1,32}$/);
 export const metaPayloadSchema = z.object({ object: z.literal("page"), entry: z.array(z.object({
   id: numericId, changes: z.array(z.object({ field: z.string(), value: z.unknown() })).max(50),
 })).max(20) });
-export const metaNotificationSchema = z.object({ leadgen_id: numericId, page_id: numericId, form_id: numericId, ad_id: numericId.optional() });
-const metaLeadSchema = z.object({ id: numericId, form_id: numericId, created_time: z.string(), ad_id: numericId.optional(),
+export const metaNotificationSchema = z.object({ leadgen_id: numericId, page_id: numericId, form_id: numericId, ad_id: numericId.nullish() });
+const metaLeadSchema = z.object({ id: numericId, form_id: numericId, created_time: z.string(), ad_id: numericId.nullish(),
   field_data: z.array(z.object({ name: z.string().max(300), values: z.array(z.string().max(2000)).max(20) })).max(50),
 });
 

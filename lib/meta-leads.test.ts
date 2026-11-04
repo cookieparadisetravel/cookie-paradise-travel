@@ -90,3 +90,15 @@ test("signed No submissions are captured for dashboard review with permission fa
     assert.equal((f.saved[0] as {contactConsent:boolean}).contactConsent,false);
   } finally {globalThis.fetch=original;}
 });
+test("Meta preview leads accept null ad IDs in both signed notification and retrieved lead",async()=>{
+  const f=await fixture(),original=globalThis.fetch;
+  try {
+    globalThis.fetch=async()=>Response.json({...lead(),ad_id:null});
+    const entry=f.payload.entry[0],change=entry.changes[0];
+    const payload={...f.payload,entry:[{...entry,changes:[{...change,value:{...change.value,ad_id:null}}]}]};
+    assert.equal((await f.send(payload)).status,200);
+    assert.equal(f.saved.length,1);
+    assert.equal((f.saved[0] as {attribution:{adId:string}}).attribution.adId,"");
+    assert.equal((f.saved[0] as {contactConsent:boolean}).contactConsent,true);
+  } finally {globalThis.fetch=original;}
+});
