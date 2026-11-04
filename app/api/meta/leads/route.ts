@@ -1,7 +1,7 @@
 import { env } from "cloudflare:workers";
 import { boundedBody } from "@/lib/lead-request";
 import { mapMetaLead, metaNotificationSchema, metaPayloadSchema, verifyMetaSignature } from "@/lib/meta-leads";
-import { saveTripGuideLead } from "@/lib/trip-guide-service";
+import { saveMetaDashboardLead } from "@/lib/trip-guide-service";
 
 function config() { return env as unknown as Record<string, string | undefined>; }
 export async function GET(request: Request) {
@@ -34,14 +34,13 @@ export async function POST(request: Request) {
         const response = await fetch(url, { headers: { Authorization: `Bearer ${cfg.META_PAGE_ACCESS_TOKEN}` }, signal: AbortSignal.timeout(10_000) });
         if (!response.ok) throw new Error("Lead retrieval failed.");
         const input = mapMetaLead(await response.json(), { id: notification.leadgen_id, formId: notification.form_id, consentField: cfg.META_CONTACT_CONSENT_FIELD, timingField: cfg.META_TRAVEL_TIMING_FIELD });
-        if (!input) continue;
         input.attribution.adId ||= notification.ad_id ?? "";
-        await saveTripGuideLead(input);
+        await saveMetaDashboardLead(input);
       }
     }
     return new Response("EVENT_RECEIVED", { headers: { "Cache-Control": "no-store" } });
   } catch {
-    // Returning an error lets Meta retry. Stored submission IDs prevent duplicate guide emails.
+    // Returning an error lets Meta retry. Submission IDs prevent duplicate dashboard entries.
     console.error("Meta lead intake needs attention; check Page access, form fields and lead inbox.");
     return new Response("Lead could not be processed.", { status: 503 });
   }

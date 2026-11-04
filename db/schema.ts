@@ -22,6 +22,12 @@ export const tripGuideSubmissions = sqliteTable("trip_guide_submissions", {
   marketingConsent: integer("marketing_consent", { mode: "boolean" }).notNull().default(false), createdAt: text("created_at").notNull(),
 }, table => [index("trip_guide_submissions_lead_idx").on(table.leadId)]);
 
+export const tripGuideSubmissionPreferences = sqliteTable("trip_guide_submission_preferences", {
+  submissionId: text("submission_id").primaryKey().references(() => tripGuideSubmissions.id, { onDelete: "cascade" }),
+  contactConsent: integer("contact_consent", { mode: "boolean" }).notNull(),
+  followupMode: text("followup_mode").notNull(),
+});
+
 // One sales process can begin with a guide and continue into an existing booking record.
 export const inquirySales = sqliteTable("inquiry_sales", {
   id: text("id").primaryKey(),

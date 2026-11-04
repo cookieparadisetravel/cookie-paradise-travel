@@ -10,13 +10,20 @@ type Candidate = { id: string; email: string; first_name: string; stop_token: st
 const candidatesSql = `WITH latest AS (
   SELECT l.*, h.cycle_id, coalesce(h.created_at,l.created_at) AS cycle_at,
     coalesce(json_extract(h.details_json,'$.firstName'),l.first_name) AS current_name,
-    coalesce(json_extract(h.details_json,'$.timing'),l.travel_timing) AS current_timing
+    coalesce(json_extract(h.details_json,'$.timing'),l.travel_timing) AS current_timing,
+    coalesce(p.followup_mode,CASE WHEN coalesce(json_extract(h.details_json,'$.source'),l.source)='meta' THEN 'manual' ELSE 'automatic' END) AS followup_mode,
+    coalesce((SELECT pref.contact_consent FROM trip_guide_submissions s
+      JOIN trip_guide_submission_preferences pref ON pref.submission_id=s.id
+      WHERE s.lead_id=l.id ORDER BY julianday(s.created_at) DESC,s.rowid DESC LIMIT 1),1) AS current_contact_consent
   FROM trip_guide_leads l LEFT JOIN inquiry_followup_history h ON h.id=(
     SELECT id FROM inquiry_followup_history WHERE guide_lead_id=l.id AND event='reopened'
     ORDER BY julianday(created_at) DESC,rowid DESC LIMIT 1)
+  LEFT JOIN trip_guide_submission_preferences p ON p.submission_id=coalesce(h.cycle_id,
+    (SELECT id FROM trip_guide_submissions WHERE lead_id=l.id ORDER BY julianday(created_at),rowid LIMIT 1))
 ), eligible AS (SELECT l.*, CASE WHEN julianday(?) - julianday(l.cycle_at) >= 7 THEN 7 ELSE 3 END AS reminder_day
   FROM latest l WHERE julianday(?) - julianday(l.cycle_at) >= 3
   AND l.status IN ('new','contacted','considering') AND l.current_timing!='future' AND l.consultation_booked_at IS NULL
+  AND l.followup_mode='automatic' AND l.current_contact_consent=1
   AND substr(?,1,10) < '2027-06-01'
   AND NOT EXISTS (SELECT 1 FROM booking_requests b WHERE lower(trim(b.email))=l.email AND b.square_environment='production'
     AND (b.status!='closed' OR julianday(coalesce((SELECT max(created_at) FROM inquiry_followup_history

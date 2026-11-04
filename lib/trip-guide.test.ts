@@ -23,7 +23,9 @@ async function fixture() {
   let emailFails = false, calendarFails = false;
   const booked = new Set<string>();
   let onCalendar: (() => void) | undefined;
-  const service = await loadModule<{ saveTripGuideLead(input: ReturnType<typeof leadInput> & { submittedAt?: string }): Promise<{ created: boolean; emailStatus: string }> }>("lib/trip-guide-service.ts", {
+  type Input = ReturnType<typeof leadInput> & { submittedAt?: string; contactConsent?: boolean };
+  type Save = (input: Input) => Promise<{ created: boolean; emailStatus: string }>;
+  const service = await loadModule<{ saveTripGuideLead: Save; saveMetaDashboardLead: Save }>("lib/trip-guide-service.ts", {
     "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./followup-history": history, "./trip-guide": guide,
     "./trip-guide-email": { sendTripGuideEmail: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: new Date().toISOString(), messageId: "test" }; } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: unknown) => { ownerEmails.push(input); return { sentAt: new Date().toISOString(), messageId: "owner-test" }; } },
@@ -35,7 +37,7 @@ async function fixture() {
     "./consultation-calendar": { hasBookedConsultation: async (email: string) => { onCalendar?.(); if (calendarFails) throw new Error("Unavailable"); return booked.has(email); } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: "2026-11-03T17:00:00Z", messageId: "test" }; } },
   });
-  return { ...f, runtime, storage, history, sales,salesStorage, emails, ownerEmails, subscriptions, booked, save: service.saveTripGuideLead, run: reminders.sendDueTripGuideReminders,
+  return { ...f, runtime, storage, history, sales,salesStorage, emails, ownerEmails, subscriptions, booked, save: service.saveTripGuideLead, saveMeta: service.saveMetaDashboardLead, run: reminders.sendDueTripGuideReminders,
     failEmail: () => { emailFails = true; }, failCalendar: (value: boolean) => { calendarFails = value; }, onCalendar: (fn: () => void) => { onCalendar = fn; } };
 }
 const DAY3 = new Date("2026-11-03T17:00:00Z"), DAY7 = new Date("2026-11-07T17:00:00Z");
@@ -57,6 +59,52 @@ test("guide intake deduplicates normalized email across website and Meta without
   assert.equal(f.sqlite.prepare("SELECT first_name FROM trip_guide_leads").get()!.first_name, "Traveler");
   assert.equal(f.sqlite.prepare("SELECT count(*) n FROM booking_requests").get()!.n, 0);
   assert.equal(f.sqlite.prepare("SELECT count(*) n FROM travelers").get()!.n, 0);
+});
+test("Facebook dashboard intake saves Yes and No without sending any messages or subscribing anyone", async () => {
+  for (const consent of [true,false]) {
+    const f = await fixture(); f.runtime.ADMIN_OWNER_EMAIL="owner@example.test";
+    f.runtime.OWNER_NOTIFICATION_WEBHOOK_URL="https://example.test/owner-alert";
+    const input = {...leadInput(),source:"meta" as const,contactConsent:consent,marketingConsent:true,
+      submittedAt:"2026-10-31T17:00:00Z",submissionId:"meta:dashboard",formId:"222"};
+    assert.equal((await f.saveMeta(input)).emailStatus,"manual_follow_up");
+    await f.saveMeta(input);
+    await f.run(DAY3); await f.run(DAY7);
+    assert.equal(f.emails.length,0); assert.equal(f.ownerEmails.length,0); assert.equal(f.subscriptions.length,0);
+    assert.equal(f.sqlite.prepare("SELECT count(*) n FROM trip_guide_leads").get()!.n,1);
+    assert.equal(f.sqlite.prepare("SELECT count(*) n FROM trip_guide_submissions").get()!.n,1);
+    const row=f.sqlite.prepare("SELECT * FROM trip_guide_submission_preferences").get()!;
+    assert.equal(row.contact_consent,consent ? 1 : 0); assert.equal(row.followup_mode,"manual");
+    assert.equal(f.sqlite.prepare("SELECT contact_consented_at FROM trip_guide_leads").get()!.contact_consented_at,consent ? new Date(input.submittedAt).toISOString() : "");
+    assert.equal(f.sqlite.prepare("SELECT count(*) n FROM booking_requests").get()!.n,0);
+    assert.equal(f.sqlite.prepare("SELECT count(*) n FROM trip_guide_reminders").get()!.n,0);
+    const inbox=await loadModule<{loadLeadInbox():Promise<{leads:{contact_permission:number;followup_mode:string}[]}>}>("lib/lead-inbox.ts",{
+      "cloudflare:workers":{env:f.runtime},"./trip-guide-storage":f.storage,"./followup-history":f.history,"./inquiry-sales-storage":f.salesStorage});
+    const saved=(await inbox.loadLeadInbox()).leads[0];
+    assert.equal(saved.contact_permission,consent ? 1 : 0); assert.equal(saved.followup_mode,"manual");
+  }
+});
+test("a returning Facebook lead reopens in manual mode and a later No stops an earlier website reminder",async()=>{
+  const f=await ready(); f.runtime.ADMIN_OWNER_EMAIL="owner@example.test";
+  f.sqlite.exec("UPDATE trip_guide_leads SET status='closed'");
+  const input={...leadInput(),source:"meta" as const,contactConsent:false,submittedAt:"2026-12-01T12:00:00Z",submissionId:"meta:manual-renewal"};
+  assert.equal((await f.saveMeta(input)).emailStatus,"manual_follow_up");
+  await f.saveMeta(input); await f.run(new Date("2026-12-08T12:00:00Z"));
+  assert.equal(f.emails.length,0);assert.equal(f.ownerEmails.length,0);
+  assert.equal(f.sqlite.prepare("SELECT count(*) n FROM inquiry_followup_history WHERE event='reopened'").get()!.n,1);
+  const g=await ready();
+  await g.saveMeta({...input,submissionId:"meta:declined-existing"});
+  await g.run(new Date("2026-12-08T12:00:00Z"));assert.equal(g.emails.length,0);
+  assert.equal(g.sqlite.prepare("SELECT count(*) n FROM trip_guide_leads").get()!.n,1);
+});
+test("permission replay cannot rewrite a stored No and additive permission storage is repeatable",async()=>{
+  const f=await fixture();
+  const input={...leadInput(),source:"meta" as const,contactConsent:false,submissionId:"meta:immutable"};
+  await f.saveMeta(input);await f.saveMeta({...input,contactConsent:true});
+  assert.equal(f.sqlite.prepare("SELECT contact_consent FROM trip_guide_submission_preferences").get()!.contact_consent,0);
+  const migration=readFileSync(new URL("../drizzle/0027_facebook_dashboard_permissions.sql",import.meta.url),"utf8");
+  f.sqlite.exec(migration);f.sqlite.exec(migration);
+  for(const sql of f.storage.tripGuideStorageStatements) f.sqlite.exec(sql);
+  assert.deepEqual(f.sqlite.prepare("PRAGMA foreign_key_check").all(),[]);
 });
 test("submission replay cannot target another email, add consent or reopen a closed lead", async () => {
   const f = await fixture(), input = leadInput();
