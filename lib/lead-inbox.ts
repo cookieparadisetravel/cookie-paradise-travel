@@ -10,6 +10,8 @@ export type GuideLeadRow = {
   campaign: string | null; audience: string | null; ad_id: string | null; submission_count: number; booking_id: number | null;
   reminder_days_sent: string | null; reminder_failures: number;
   mailerlite_status: string;
+  contact_permission?: number | null;
+  followup_mode?: string;
   renewed_at?: string | null;
   renewed_email_status?: string | null;
   renewed_reminder_days_sent?: string | null;
@@ -36,6 +38,11 @@ export async function loadLeadInbox(page: number | null = 1, filter?: { id?: str
     (SELECT json_group_array(json_object('event',event,'status',status,'createdAt',created_at,'sentAt',sent_at))
       FROM (SELECT event,status,created_at,sent_at FROM inquiry_followup_history WHERE guide_lead_id=l.id ORDER BY julianday(created_at) DESC,rowid DESC)) AS followup_history,
     l.guide_email_status,l.guide_email_sent_at,l.contacted_at,l.consultation_booked_at,l.created_at,l.marketing_consent,l.mailerlite_status,
+    (SELECT pref.contact_consent FROM trip_guide_submissions s JOIN trip_guide_submission_preferences pref ON pref.submission_id=s.id
+      WHERE s.lead_id=l.id ORDER BY julianday(s.created_at) DESC,s.rowid DESC LIMIT 1) AS contact_permission,
+    coalesce((SELECT pref.followup_mode FROM trip_guide_submission_preferences pref WHERE pref.submission_id=coalesce(h.cycle_id,
+      (SELECT id FROM trip_guide_submissions WHERE lead_id=l.id ORDER BY julianday(created_at),rowid LIMIT 1))),
+      CASE WHEN coalesce(json_extract(h.details_json,'$.source'),l.source)='meta' THEN 'manual' ELSE 'automatic' END) AS followup_mode,
     (SELECT group_concat(DISTINCT source) FROM trip_guide_submissions WHERE lead_id=l.id) AS sources,
     (SELECT utm_campaign FROM trip_guide_submissions WHERE lead_id=l.id AND utm_campaign!='' ORDER BY created_at DESC LIMIT 1) AS campaign,
     (SELECT audience FROM trip_guide_submissions WHERE lead_id=l.id AND audience!='' ORDER BY created_at DESC LIMIT 1) AS audience,

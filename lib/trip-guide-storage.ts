@@ -24,6 +24,10 @@ export const tripGuideStorageStatements = [
     created_at text NOT NULL
   )`,
   `CREATE INDEX IF NOT EXISTS trip_guide_submissions_lead_idx ON trip_guide_submissions(lead_id)`,
+  `CREATE TABLE IF NOT EXISTS trip_guide_submission_preferences (
+    submission_id text PRIMARY KEY NOT NULL REFERENCES trip_guide_submissions(id) ON DELETE cascade,
+    contact_consent integer NOT NULL, followup_mode text NOT NULL
+  )`,
   `CREATE TABLE IF NOT EXISTS trip_guide_reminders (
     lead_id text NOT NULL REFERENCES trip_guide_leads(id) ON DELETE cascade, reminder_day integer NOT NULL,
     status text NOT NULL, claimed_at text NOT NULL, sent_at text, message_id text,

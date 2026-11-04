@@ -10,7 +10,13 @@ export type TripGuideInput = {
   firstName: string; email: string; phone: string; city: string; timing: LeadTiming;
   marketingConsent: boolean; referralCode: string | null; source: LeadSource;
   submissionId: string; formId?: string; submittedAt?: string; attribution: CampaignAttribution;
+  contactConsent?: boolean; followupMode?: "manual";
 };
+// This is the only entry point used by the Meta webhook. Capturing a lead never
+// opts them into a newsletter or starts customer/owner email delivery.
+export async function saveMetaDashboardLead(input: TripGuideInput) {
+  return saveTripGuideLead({ ...input, source: "meta", contactConsent: input.contactConsent === true, marketingConsent: false, followupMode: "manual" });
+}
 export async function saveTripGuideLead(input: TripGuideInput) {
   if (env.SQUARE_ENV !== "production") throw new Error("Lead intake is available on the production website only.");
   await ensureTripGuideStorage();
@@ -22,17 +28,23 @@ export async function saveTripGuideLead(input: TripGuideInput) {
   let stopToken = crypto.randomUUID();
   const email = input.email.trim().toLowerCase();
   const attribution = campaignAttribution(input.attribution);
+  const contactConsent = input.contactConsent ?? true;
+  const followupMode = input.followupMode === "manual" || !contactConsent ? "manual" : "automatic";
   // One lead per normalized email, with an immutable record of each source submission.
   // Only a distinct new submission can reopen a closed lead; delivery replays remain inert.
   const batch = await db.batch([
-    db.prepare(`INSERT INTO trip_guide_leads (id,first_name,email,phone,city,travel_timing,referral_code,source,contact_consented_at,stop_token,created_at)
-      SELECT ?,?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM trip_guide_submissions WHERE id=?)
+    db.prepare(`INSERT INTO trip_guide_leads (id,first_name,email,phone,city,travel_timing,referral_code,source,contact_consented_at,stop_token,created_at,guide_email_status,owner_notification_status)
+      SELECT ?,?,?,?,?,?,?,?,?,?,?,?,? WHERE NOT EXISTS (SELECT 1 FROM trip_guide_submissions WHERE id=?)
       ON CONFLICT(email) DO NOTHING RETURNING id`)
-      .bind(id,input.firstName,email,input.phone,input.city,input.timing,input.referralCode,input.source,submittedAt,stopToken,submittedAt,input.submissionId),
+      .bind(id,input.firstName,email,input.phone,input.city,input.timing,input.referralCode,input.source,contactConsent ? submittedAt : "",stopToken,submittedAt,followupMode === "manual" ? "manual_follow_up" : "pending",followupMode === "manual" ? "not_requested" : "pending",input.submissionId),
     db.prepare(`INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,utm_source,utm_medium,utm_campaign,utm_content,utm_term,audience,campaign_id,ad_set_id,ad_id,marketing_consent,created_at)
       SELECT ?,id,?,?,?,?,?,?,?,?,?,?,?,?,? FROM trip_guide_leads WHERE email=?
       ON CONFLICT(id) DO NOTHING RETURNING id`)
       .bind(input.submissionId,input.source,input.formId ?? "",attribution.utmSource,attribution.utmMedium,attribution.utmCampaign,attribution.utmContent,attribution.utmTerm,attribution.audience,attribution.campaignId,attribution.adSetId,attribution.adId,input.marketingConsent ? 1 : 0,submittedAt,email),
+    db.prepare(`INSERT INTO trip_guide_submission_preferences (submission_id,contact_consent,followup_mode)
+      SELECT s.id,?,? FROM trip_guide_submissions s JOIN trip_guide_leads l ON l.id=s.lead_id
+      WHERE s.id=? AND l.email=? ON CONFLICT(submission_id) DO NOTHING`)
+      .bind(contactConsent ? 1 : 0,followupMode,input.submissionId,email),
   ]);
   const created = Boolean(batch[0].results?.length);
   const submission = await db.prepare(`SELECT l.id,l.email,l.stop_token FROM trip_guide_submissions s JOIN trip_guide_leads l ON l.id=s.lead_id WHERE s.id=?`).bind(input.submissionId).first<{ id: string; email: string; stop_token: string }>();
@@ -59,7 +71,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
     ]);
     reopened = Boolean(renewal[0].results?.length);
   }
-  if (input.marketingConsent && batch[1].results?.length) {
+  if (input.marketingConsent && followupMode === "automatic" && batch[1].results?.length) {
     const consent = await db.prepare(`UPDATE trip_guide_leads SET marketing_consent=1,marketing_consented_at=?,mailerlite_status='pending'
       WHERE email=? AND marketing_consent=0 AND status!='closed' RETURNING id`).bind(now,email).first();
     if (consent) {
@@ -69,6 +81,13 @@ export async function saveTripGuideLead(input: TripGuideInput) {
     }
   }
   if (!created && !reopened) return { created: false, emailStatus: "already_requested", eventId: input.submissionId };
+  if (followupMode === "manual") {
+    if (reopened) {
+      const claim = await claimFollowupEvent({ guideId: id, cycle: input.submissionId, event: "guide_email", at: now });
+      if (claim) await finishFollowupEvent(claim, "manual_follow_up");
+    }
+    return { created, reopened, emailStatus: "manual_follow_up", eventId: input.submissionId };
+  }
   let emailStatus = "not_configured";
   if (env.MAILERSEND_API_TOKEN?.trim() && env.MAILERSEND_FROM_EMAIL?.trim()) {
     // Claim before contacting the mail provider. Ambiguous failures are never resent automatically.

@@ -1,5 +1,7 @@
 # Vietnam lead campaign setup
 
+> **Current Facebook behavior:** use [Facebook dashboard sync](./facebook-dashboard-sync.md). The Meta webhook imports both Yes and No permission answers for manual review without sending any email, reminder, owner notification or newsletter subscription. The email-delivery setup and test expectations below describe the earlier workflow and must not be used to enable Facebook email automation. Website requests retain their separate existing workflow.
+
 Website landing page: https://cookieparadisetravel.com/vietnam
 
 Protected lead inbox: https://cookieparadisetravel.com/admin/inquiries

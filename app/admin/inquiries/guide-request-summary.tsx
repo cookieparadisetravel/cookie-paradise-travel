@@ -35,6 +35,8 @@ export function GuideRequestSummary({ lead, showContact = true, manageStage = tr
       <div><dt>First requested</dt><dd>{date(lead.created_at)} · Indiana time</dd></div>
       {lead.renewed_at && <div><dt>Renewed request</dt><dd>{date(lead.renewed_at)} · Indiana time</dd></div>}
       <div><dt>Source</dt><dd>{(lead.sources || lead.source).split(",").map(value => value === "meta" ? "Facebook" : "Website").join(", ")} · {lead.submission_count} request(s)</dd></div>
+      <div><dt>Permission to email guide and reminders</dt><dd>{lead.contact_permission === 0 ? "No — do not send these emails" : lead.contact_permission === 1 ? "Yes" : "See original request"}</dd></div>
+      <div><dt>Follow-up</dt><dd>{lead.followup_mode === "manual" ? "Manual — automatic emails are on hold" : "Website email workflow"}</dd></div>
       <div><dt>{lead.renewed_at ? "Original guide email" : "Guide email"}</dt><dd>{lead.guide_email_status.replaceAll("_", " ")}{lead.guide_email_sent_at && ` · ${date(lead.guide_email_sent_at)}`}</dd></div>
       <div><dt>{lead.renewed_at ? "Original consultation reminders" : "Consultation reminders"}</dt><dd>{lead.reminder_days_sent ? `Sent: day ${lead.reminder_days_sent.replaceAll(",", ", day ")}` : "None sent"}{lead.reminder_failures > 0 && " · Delivery needs review"}</dd></div>
       <div><dt>Consultation booked</dt><dd>{date(lead.consultation_booked_at)}</dd></div>
@@ -44,10 +46,11 @@ export function GuideRequestSummary({ lead, showContact = true, manageStage = tr
       {lead.city !== "Not provided" && <div><dt>City</dt><dd>{lead.city}</dd></div>}
       {lead.campaign && <div><dt>Campaign</dt><dd>{lead.campaign}</dd></div>}
       {lead.audience && <div><dt>Ad audience</dt><dd>{lead.audience}</dd></div>}
+      {lead.ad_id && <div><dt>Facebook ad ID</dt><dd>{lead.ad_id}</dd></div>}
     </dl>
     {history.length > 0 && <div className="mt-6 border-t border-[var(--line)] pt-5"><h3 className="text-sm font-bold">Follow-up history · Indiana time</h3><ul className="mt-3 space-y-2 text-sm">{history.map((event,index) => <li key={index}>{date(event.sentAt || event.createdAt)} · {historyLabel[event.event] || event.event} · {event.status.replaceAll("_", " ")}</li>)}</ul></div>}
     {["failed", "not_configured", "sending"].includes(lead.guide_email_status) && <p className="mt-5 rounded-xl bg-amber-50 p-3 text-sm leading-6 text-amber-950">Guide email delivery needs review. Check the delivery record before resending; the provider may already have accepted the email.</p>}
-    <p className="mt-5 text-sm leading-6 text-[var(--muted-ink)]">Use “Mark consultation booked” above or close this inquiry to stop its guide reminders. A matching active booking inquiry also stops them automatically. A fresh guide request can reopen a closed inquiry; its earlier history stays here.</p>
+    <p className="mt-5 text-sm leading-6 text-[var(--muted-ink)]">{lead.followup_mode === "manual" ? "This request is saved for manual review. No automatic guide email or consultation reminders will be sent. Review the permission answer before contacting this person." : "Use “Mark consultation booked” above or close this inquiry to stop its guide reminders. A matching active booking inquiry also stops them automatically. A fresh guide request can reopen a closed inquiry; its earlier history stays here."}</p>
     {showContact && lead.booking_id !== null && <a className="mt-5 inline-flex min-h-11 items-center rounded-full bg-[var(--gold)] px-5 text-sm font-bold" href={`/admin/inquiries/${lead.booking_id}`}>Open booking inquiry →</a>}
   </section>;
 }

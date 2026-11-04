@@ -27,15 +27,19 @@ test("Meta mapping requires exact ID/form/contact permission and never assumes n
   assert.equal(result.email,"traveler@example.test"); assert.equal(result.marketingConsent,false); assert.equal(result.source,"meta");
   assert.equal(result.attribution.adId,"444"); assert.equal(result.city,"Bloomington"); assert.equal(result.timing,"june_2027");
   assert.equal(result.submittedAt,"2026-10-30T17:00:00.000Z");
+  assert.equal(result.contactConsent,true);
   for (const value of [{ ...lead(), id: "555" },{ ...lead(), form_id: "555" },{ ...lead(), created_time: "invalid" },{ ...lead(), created_time: "2099-01-01" },{ ...lead(), field_data: lead().field_data.filter(field => field.name !== expected.consentField) }]) assert.throws(() => meta.mapMetaLead(value,expected));
-  assert.equal(meta.mapMetaLead({ ...lead(), field_data: lead().field_data.map(field => field.name === expected.consentField ? { ...field, values: ["No"] } : field) }, expected),null);
+  const declined = meta.mapMetaLead({ ...lead(), field_data: lead().field_data.map(field => field.name === expected.consentField ? { ...field, values: ["No"] } : field) }, expected);
+  assert.equal(declined.contactConsent,false);
+  assert.equal(declined.marketingConsent,false);
+  assert.equal(meta.mapMetaLead({...lead(),field_data:[...lead().field_data,{name:"full_name",values:["Alex Morgan Lee"]}]},expected).firstName,"Alex Morgan Lee");
 });
 async function fixture() {
   const cfg: Record<string,string> = { SQUARE_ENV: "production", META_APP_SECRET: secret, META_PAGE_ACCESS_TOKEN: "test-page-token", META_PAGE_ID: "333", META_FORM_IDS: "222", META_GRAPH_API_VERSION: "v99.0", META_WEBHOOK_VERIFY_TOKEN: "test-verify", META_CONTACT_CONSENT_FIELD: "trip_contact_permission" };
   const saved: unknown[] = [];
   const route = await loadModule<{ GET(request: Request): Promise<Response>; POST(request: Request): Promise<Response> }>("app/api/meta/leads/route.ts", {
     "cloudflare:workers": { env: cfg }, "@/lib/lead-request": requests, "@/lib/meta-leads": meta,
-    "@/lib/trip-guide-service": { saveTripGuideLead: async (input: unknown) => { saved.push(input); return { created: true, emailStatus: "sent" }; } },
+    "@/lib/trip-guide-service": { saveMetaDashboardLead: async (input: unknown) => { saved.push(input); return { created: true, emailStatus: "manual_follow_up" }; } },
   });
   const payload = { object: "page", entry: [{ id: "333", changes: [{ field: "leadgen", value: { leadgen_id: "111", page_id: "333", form_id: "222", ad_id: "444" } }] }] };
   async function send(value: unknown = payload, signed = true) {
@@ -76,4 +80,13 @@ test("Meta retrieves only the signed lead with a bearer header and retries retri
     globalThis.fetch = async () => Response.json({ ...lead(), form_id: "999" }); assert.equal((await f.send()).status,503);
     assert.equal(f.saved.length,1);
   } finally { globalThis.fetch = original; }
+});
+test("signed No submissions are captured for dashboard review with permission false", async () => {
+  const f=await fixture(),original=globalThis.fetch;
+  try {
+    globalThis.fetch=async()=>Response.json({...lead(),field_data:lead().field_data.map(field=>field.name===expected.consentField?{...field,values:["No"]}:field)});
+    assert.equal((await f.send()).status,200);
+    assert.equal(f.saved.length,1);
+    assert.equal((f.saved[0] as {contactConsent:boolean}).contactConsent,false);
+  } finally {globalThis.fetch=original;}
 });

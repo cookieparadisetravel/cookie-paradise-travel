@@ -24,15 +24,14 @@ export function mapMetaLead(raw: unknown, expected: { id: string; formId: string
   // This must be a required custom question on every approved form. Facebook submission
   // is never treated as consent to the separate newsletter marketing list.
   const permission = fields.get(expected.consentField)?.trim().toLowerCase();
-  if (permission === "no") return null;
-  if (permission !== "yes") throw new Error("Trip contact permission is missing.");
-  const firstName = boundedText(fields.get("first_name") || fields.get("full_name")?.split(/\s+/)[0], 60);
+  if (permission !== "yes" && permission !== "no") throw new Error("Trip contact permission is missing.");
+  const firstName = boundedText(fields.get("full_name") || fields.get("first_name"), 60);
   const email = z.string().trim().toLowerCase().email().max(180).parse(fields.get("email"));
   if (!firstName) throw new Error("A first name is required.");
   const selected = fields.get(expected.timingField ?? "travel_interest")?.toLowerCase() ?? "";
   const timing: LeadTiming = selected.includes("future") ? "future" : selected.includes("june") ? "june_2027" : "not_sure";
   const city = boundedText(fields.get("city"), 80) || "Not provided";
-  return { firstName, email, phone: boundedText(fields.get("phone_number"), 40), city, timing, marketingConsent: false,
+  return { firstName, email, phone: boundedText(fields.get("phone_number"), 40), city, timing, contactConsent: permission === "yes", marketingConsent: false,
     source: "meta" as const, submissionId: `meta:${lead.id}`, formId: lead.form_id, submittedAt: new Date(lead.created_time).toISOString(), referralCode: null,
     attribution: { ...emptyAttribution, utmSource: "facebook", utmMedium: "paid_social", adId: lead.ad_id ?? "" } };
 }
