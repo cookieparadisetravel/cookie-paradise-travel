@@ -9,3 +9,9 @@
 - QR codes: generated locally for the matching `https://cookieparadisetravel.com/r/{code}` URL. PNG versions were decoded to verify each destination. Each SVG uses the same QR matrix as its PNG.
 
 All four partners use the existing `directReferrer` commission plan and its existing qualification and review rules.
+
+## Stephen Clark - November 4, 2026
+
+- Text name label; no external logo or website was supplied.
+- QR SVG generated locally for `https://cookieparadisetravel.com/r/stephen-clark`, with a four-module quiet zone. The matching QR and final flyer are decoded to verify the destination.
+- Uses the existing `directReferrer` commission plan, attribution, qualification and owner-review rules. No pilot start date or earned commission is created by adding the partner.
