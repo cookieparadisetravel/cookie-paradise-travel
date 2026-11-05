@@ -35,6 +35,21 @@ export async function sendTripGuideEmailMessage(input: SendEmailInput) {
   return sendEmail(input);
 }
 
+export async function sendOwnerInquiryEmail(input: {
+  toEmail: string; inquiryId: number; fullName: string; partySize: number; readyToBook: boolean;
+}) {
+  const dashboardUrl = `https://cookieparadisetravel.com/admin/inquiries/${input.inquiryId}`;
+  const subject = input.readyToBook ? "New Vietnam trip booking request" : "New Vietnam trip inquiry";
+  const summary = `${input.fullName} submitted a website request for ${input.partySize} ${input.partySize === 1 ? "traveler" : "travelers"}.`;
+  return sendEmail({
+    toEmail: input.toEmail,
+    toName: "Trung",
+    subject,
+    text: `${summary}\n\nOpen inquiry #${input.inquiryId}: ${dashboardUrl}`,
+    html: `<p>${escapeHtml(summary)}</p><p><a href="${dashboardUrl}">Open inquiry #${input.inquiryId}</a></p>`,
+  });
+}
+
 export type TransactionalEmailResult = {
   messageId: string | null;
   sentAt: string;

@@ -1,4 +1,5 @@
 import { env } from "cloudflare:workers";
+import { sendOwnerInquiryEmail } from "./mailersend-transactional";
 
 type InquiryNotification = {
   id: number;
@@ -44,6 +45,25 @@ export type OwnerNotificationStatus = "sent" | "not_configured" | "error";
 
 export async function sendOwnerInquiryNotification(input: InquiryNotification): Promise<OwnerNotificationStatus> {
   const runtimeEnv = env as unknown as Record<string, string | undefined>;
+  const ownerEmail = runtimeEnv.ADMIN_OWNER_EMAIL?.trim();
+  if (runtimeEnv.SQUARE_ENV === "production" && ownerEmail
+    && runtimeEnv.MAILERSEND_API_TOKEN?.trim() && runtimeEnv.MAILERSEND_FROM_EMAIL?.trim()) {
+    try {
+      await sendOwnerInquiryEmail({
+        toEmail: ownerEmail,
+        inquiryId: input.id,
+        fullName: input.fullName,
+        partySize: input.partySize,
+        readyToBook: input.bookingIntent === "ready_to_book",
+      });
+      return "sent";
+    } catch {
+      // An ambiguous provider failure might already have queued the email.
+      console.error("Owner inquiry email could not be confirmed", { inquiryId: input.id });
+      return "error";
+    }
+  }
+
   const webhookUrl = runtimeEnv.OWNER_NOTIFICATION_WEBHOOK_URL;
   if (!webhookUrl) return "not_configured";
 
