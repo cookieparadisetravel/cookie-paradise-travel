@@ -18,6 +18,6 @@ All four partners use the existing `directReferrer` commission plan and its exis
 
 ## Chumley’s Dog House - November 5, 2026
 
-- Header logo from https://www.chumleysdoghouse.com/, composited on a dark background to retain contrast.
+- Original transparent white header logo from https://www.chumleysdoghouse.com/. The site renders it black on light surfaces using CSS.
 - QR SVG encodes https://cookieparadisetravel.com/r/chumleys-dog-house. The QR on the rendered letter-size poster was decoded to verify the destination.
 - Uses the existing direct-referrer plan and owner review. This entry does not set a pilot start date.
