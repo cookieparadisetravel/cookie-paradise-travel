@@ -15,3 +15,9 @@ All four partners use the existing `directReferrer` commission plan and its exis
 - Text name label; no external logo or website was supplied.
 - QR SVG generated locally for `https://cookieparadisetravel.com/r/stephen-clark`, with a four-module quiet zone. The matching QR and final flyer are decoded to verify the destination.
 - Uses the existing `directReferrer` commission plan, attribution, qualification and owner-review rules. No pilot start date or earned commission is created by adding the partner.
+
+## Chumley’s Dog House - November 5, 2026
+
+- Header logo from https://www.chumleysdoghouse.com/, composited on a dark background to retain contrast.
+- QR SVG encodes https://cookieparadisetravel.com/r/chumleys-dog-house. The QR on the rendered letter-size poster was decoded to verify the destination.
+- Uses the existing direct-referrer plan and owner review. This entry does not set a pilot start date.
