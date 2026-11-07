@@ -13,6 +13,7 @@ test("new website inquiries email the owner directly and preserve the webhook fa
   const runtime = {
     SQUARE_ENV: "production",
     ADMIN_OWNER_EMAIL: "owner@example.test",
+    OWNER_NOTIFICATION_EMAIL: " business@example.test ",
     MAILERSEND_API_TOKEN: "test",
     MAILERSEND_FROM_EMAIL: "travel@example.test",
     OWNER_NOTIFICATION_WEBHOOK_URL: "https://example.test/owner-alert",
@@ -35,7 +36,7 @@ test("new website inquiries email the owner directly and preserve the webhook fa
   assert.equal(await sendOwnerInquiryNotification(inquiry), "sent");
   assert.equal(deliveries.length, 1);
   assert.equal(deliveries[0].url, "https://api.mailersend.com/v1/email");
-  assert.deepEqual(deliveries[0].body.to, [{ email: "owner@example.test", name: "Trung" }]);
+  assert.deepEqual(deliveries[0].body.to, [{ email: "business@example.test", name: "Trung" }]);
   assert.equal(deliveries[0].body.subject, "New Vietnam trip inquiry");
   assert.match(String(deliveries[0].body.html), /Travel &amp; Friends/);
   assert.match(String(deliveries[0].body.html), /cookieparadisetravel\.com\/admin\/inquiries\/42/);

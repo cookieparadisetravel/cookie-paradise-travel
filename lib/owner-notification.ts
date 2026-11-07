@@ -45,7 +45,7 @@ export type OwnerNotificationStatus = "sent" | "not_configured" | "error";
 
 export async function sendOwnerInquiryNotification(input: InquiryNotification): Promise<OwnerNotificationStatus> {
   const runtimeEnv = env as unknown as Record<string, string | undefined>;
-  const ownerEmail = runtimeEnv.ADMIN_OWNER_EMAIL?.trim();
+  const ownerEmail = runtimeEnv.OWNER_NOTIFICATION_EMAIL?.trim() || runtimeEnv.ADMIN_OWNER_EMAIL?.trim();
   if (runtimeEnv.SQUARE_ENV === "production" && ownerEmail
     && runtimeEnv.MAILERSEND_API_TOKEN?.trim() && runtimeEnv.MAILERSEND_FROM_EMAIL?.trim()) {
     try {
