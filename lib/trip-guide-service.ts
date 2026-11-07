@@ -114,13 +114,14 @@ export async function saveTripGuideLead(input: TripGuideInput) {
     await db.prepare("UPDATE trip_guide_leads SET guide_email_status='not_configured' WHERE id=?").bind(id).run();
   }
   const runtime = env as unknown as Record<string, string | undefined>;
+  const ownerEmail = runtime.OWNER_NOTIFICATION_EMAIL?.trim() || runtime.ADMIN_OWNER_EMAIL?.trim();
   let ownerStatus = "not_configured";
   const ownerClaim = reopened ? await claimFollowupEvent({ guideId: id, cycle: input.submissionId, event: "owner_notification", at: now }) : null;
-  if ((!reopened || ownerClaim) && env.ADMIN_OWNER_EMAIL && env.MAILERSEND_API_TOKEN?.trim() && env.MAILERSEND_FROM_EMAIL?.trim()) {
+  if ((!reopened || ownerClaim) && ownerEmail && env.MAILERSEND_API_TOKEN?.trim() && env.MAILERSEND_FROM_EMAIL?.trim()) {
     try {
       const text = [reopened ? "Returning Vietnam trip guide inquiry (reopened)" : "New Vietnam trip guide request", `Name: ${input.firstName}`, `Email: ${email}`, `Phone: ${input.phone || "Not provided"}`, `City: ${input.city}`, `Interest: ${input.timing}`, `Source: ${input.source}`, `Campaign: ${boundedText(attribution.utmCampaign) || "Not provided"}`, `Guide email: ${emailStatus}`, "", "Review this inquiry:", `https://cookieparadisetravel.com/admin/inquiries/guide/${id}`].join("\n");
       const escaped = text.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-      await sendTripGuideEmailMessage({ toEmail: env.ADMIN_OWNER_EMAIL.trim(), toName: "Trung", subject: reopened ? "Returning Vietnam trip guide inquiry" : "New Vietnam trip guide inquiry", text, html: `<pre style="font:15px/1.7 Arial,sans-serif;white-space:pre-wrap">${escaped}</pre><p><a href="https://cookieparadisetravel.com/admin/inquiries/guide/${id}">Open inquiry</a></p>` });
+      await sendTripGuideEmailMessage({ toEmail: ownerEmail, toName: "Trung", subject: reopened ? "Returning Vietnam trip guide inquiry" : "New Vietnam trip guide inquiry", text, html: `<pre style="font:15px/1.7 Arial,sans-serif;white-space:pre-wrap">${escaped}</pre><p><a href="https://cookieparadisetravel.com/admin/inquiries/guide/${id}">Open inquiry</a></p>` });
       ownerStatus = "sent";
     } catch { ownerStatus = "error"; }
   } else if ((!reopened || ownerClaim) && runtime.OWNER_NOTIFICATION_WEBHOOK_URL) {

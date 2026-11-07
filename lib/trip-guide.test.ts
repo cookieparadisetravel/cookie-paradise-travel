@@ -124,6 +124,14 @@ test("marketing is separate, opt-in only and idempotent; owner alert uses the co
   assert.equal(f.subscriptions.length, 1); assert.equal(f.ownerEmails.length, 1);
   assert.equal((f.ownerEmails[0] as { toEmail: string }).toEmail, "owner@example.test");
 });
+test("guide owner alerts use the notification inbox separately from the admin identity", async () => {
+  const f = await fixture();
+  f.runtime.ADMIN_OWNER_EMAIL = "owner@example.test";
+  f.runtime.OWNER_NOTIFICATION_EMAIL = " business@example.test ";
+  await f.save(leadInput());
+  assert.equal((f.ownerEmails[0] as { toEmail: string }).toEmail, "business@example.test");
+  assert.equal(f.runtime.ADMIN_OWNER_EMAIL, "owner@example.test");
+});
 test("provider failure preserves the lead and is never automatically resent; Sandbox intake is refused", async () => {
   const f = await fixture(), input = leadInput(); f.failEmail();
   assert.equal((await f.save(input)).emailStatus, "failed"); await f.save(input);
