@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/app/components/brand-logo";
 import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 import { requireOwner } from "@/lib/owner-auth";
@@ -20,6 +21,7 @@ export default async function GuideInquiryPage({ params }: { params: Promise<{ i
   const sale=await getSalesForGuide(id);
   if (sale?.bookingId) redirect(`/admin/inquiries/${sale.bookingId}?section=overview`);
   return <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)]"><div className="mx-auto max-w-[1500px]">
+    <div className="mb-6"><BrandLogo /></div>
     {/* eslint-disable-next-line @next/next/no-html-link-for-pages -- Native navigation avoids the deployed vinext Link failure. */}
     <a className="inline-flex min-h-11 items-center rounded-full border border-[var(--line)] bg-white px-4 text-sm font-bold" href="/admin/inquiries">← Back to inquiries</a>
     <p className="mt-7 text-xs font-extrabold uppercase tracking-widest text-[var(--orange)]">Owner dashboard</p><h1 className="mt-2 mb-6 font-serif text-3xl font-bold">{lead.first_name}</h1>

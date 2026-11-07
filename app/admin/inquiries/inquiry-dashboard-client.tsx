@@ -1,6 +1,7 @@
 "use client";
 
 import { getSalonPartner } from "@/lib/salon-referrals";
+import { BrandLogo } from "@/app/components/brand-logo";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -261,9 +262,9 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
   return (
     <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
       <header className="border-b border-[var(--line)] bg-white">
-        <div className="mx-auto flex max-w-[1500px] items-center justify-between gap-4 px-4 py-4 sm:px-7">
-          <div className="flex items-center gap-4">
-            <div className="hidden rounded-xl bg-[var(--gold)] px-3 py-2 font-black text-[var(--ink)] sm:block">Cookie Paradise</div>
+        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-7">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+            <BrandLogo />
             <div>
               <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.2em] text-[var(--orange)]">Owner dashboard</p>
               <h1 className="font-serif text-2xl font-bold sm:text-3xl">{selectedInquiry ? "Inquiry details" : "Inquiries"}</h1>

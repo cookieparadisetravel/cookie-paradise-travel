@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowUpRight, Globe2, Plus, RefreshCw, Search, Settings2, X } from "lucide-react";
+import { BrandLogo } from "@/app/components/brand-logo";
 import { defaultQueries, fitLabels, PAGE_SIZE, prospectFits, prospectStatuses, statusLabels, type Prospect, type ProspectDashboard, type ProspectSettings } from "@/lib/web-prospects";
 
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50";
@@ -66,7 +67,10 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
   return <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
     <header className="border-b border-[var(--line)] bg-white">
       <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-7">
-        <div><p className="text-xs font-bold uppercase tracking-[.2em]">Cookie Paradise · Owner dashboard</p><h1 className="mt-1 font-serif text-3xl font-bold">Web prospects</h1></div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
+          <BrandLogo />
+          <div><p className="text-xs font-bold uppercase tracking-[.2em]">Owner dashboard</p><h1 className="mt-1 font-serif text-3xl font-bold">Web prospects</h1></div>
+        </div>
         <a href="/admin/inquiries" className={button}><ArrowLeft size={16} /> Inquiries</a>
       </div>
     </header>
