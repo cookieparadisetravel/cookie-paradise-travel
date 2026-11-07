@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/app/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, isNotNull } from "drizzle-orm";
@@ -26,6 +27,7 @@ export default async function ReferralDashboard() {
   ]);
   const today = todayInIndiana();
   return <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)] sm:px-8"><div className="mx-auto max-w-6xl">
+    <div className="mb-6"><BrandLogo /></div>
     <Link href="/admin/inquiries" className="text-sm font-bold underline">← Inquiries</Link>
     <h1 className="mt-5 font-serif text-4xl">Partner referral pilot</h1>
     <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-ink)]">Commission recipients and bonuses depend on the partner’s program below. Start each 90-day pilot when its promotional materials are received. One successful referral means one qualifying traveler, reviewed after full payment and trip completion. Record the person who made each referral so earnings and nail-tech bonuses are calculated separately. Totals are calculated commissions; record actual payments separately in your accounting.</p>

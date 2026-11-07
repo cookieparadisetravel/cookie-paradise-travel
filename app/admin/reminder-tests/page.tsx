@@ -1,3 +1,4 @@
+import { BrandLogo } from "@/app/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { env } from "cloudflare:workers";
@@ -13,6 +14,7 @@ export default async function ReminderTestsPage() {
   const remindersEnabled = env.INQUIRY_REMINDERS_ENABLED === "true" && env.SQUARE_ENV === "production";
   return <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)] sm:px-8">
     <div className="mx-auto max-w-3xl">
+      <div className="mb-6"><BrandLogo /></div>
       <Link href="/admin/inquiries" className="text-sm font-bold underline">← Inquiries</Link>
       <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--ink)]">Owner dashboard</p>
       <h1 className="mt-2 font-serif text-4xl font-bold">Test inquiry reminders</h1>
