@@ -3,6 +3,7 @@ import { sendDueAgreementReminders } from "./lib/agreement-reminders";
 import { sendDueInquiryReminders } from "./lib/inquiry-reminders";
 import { synchronizeInquiryConsultations } from "./lib/inquiry-sales-calendar";
 import { sendDueTripGuideReminders } from "./lib/trip-guide-reminders";
+import { discoverWebProspects } from "./lib/web-prospect-service";
 
 type AssetBinding = { fetch(request: Request): Promise<Response> };
 
@@ -68,7 +69,7 @@ const worker = {
       return heroVideoResponse(request, env.ASSETS);
     }
     const response=await handler.fetch(request, env, ctx);
-    if (path.startsWith("/start-booking/")) {
+    if (path.startsWith("/start-booking/") || path === "/admin/prospects" || path.startsWith("/api/admin/prospects")) {
       const headers=new Headers(response.headers);
       headers.set("Cache-Control","private, no-store");
       headers.set("Referrer-Policy","no-referrer");
@@ -78,10 +79,10 @@ const worker = {
     return response;
   },
   async scheduled() {
-    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations()];
+    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations(), discoverWebProspects(true)];
     const results = await Promise.allSettled(jobs);
     for (const [index, result] of results.entries()) {
-      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations"][index];
+      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations", "Web prospect discovery"][index];
       if (result.status === "fulfilled") console.log(job, result.value);
       else console.error(`${job} failed; check configuration and service availability.`);
     }
