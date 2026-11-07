@@ -1,6 +1,25 @@
 import { sql } from "drizzle-orm";
 import { index, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
+export const webProspects = sqliteTable("web_prospects", {
+  id: text("id").primaryKey().notNull(), sourceUrl: text("source_url").notNull().unique(), sourceHost: text("source_host").notNull(),
+  title: text("title").notNull(), excerpt: text("excerpt").notNull(), sourceDate: text("source_date"),
+  discoveredAt: text("discovered_at").notNull(), lastSeenAt: text("last_seen_at").notNull(), origin: text("origin").notNull(),
+  matchReason: text("match_reason").notNull().default(""), searchQuery: text("search_query").notNull().default(""), targetYear: integer("target_year").notNull(),
+  personName: text("person_name").notNull().default(""), travelTiming: text("travel_timing").notNull().default(""), partySize: text("party_size").notNull().default(""),
+  contactChannel: text("contact_channel").notNull().default(""), fit: text("fit").notNull().default("review"), status: text("status").notNull().default("new"),
+  notes: text("notes").notNull().default(""), nextAction: text("next_action").notNull().default(""), followUpDate: text("follow_up_date"),
+  updatedAt: text("updated_at").notNull(), version: integer("version").notNull().default(0),
+}, table => [index("web_prospects_status_idx").on(table.status, table.discoveredAt)]);
+export const webProspectConfig = sqliteTable("web_prospect_config", {
+  id: integer("id").primaryKey(), settingsJson: text("settings_json").notNull(), lastAttemptAt: text("last_attempt_at"), leaseId: text("lease_id"), leaseUntil: text("lease_until"),
+});
+export const webProspectRuns = sqliteTable("web_prospect_runs", {
+  id: text("id").primaryKey().notNull(), startedAt: text("started_at").notNull(), finishedAt: text("finished_at"), status: text("status").notNull(),
+  queriesCompleted: integer("queries_completed").notNull().default(0), resultsChecked: integer("results_checked").notNull().default(0), candidates: integer("candidates").notNull().default(0),
+  added: integer("added").notNull().default(0), error: text("error"),
+}, table => [index("web_prospect_runs_started_idx").on(table.startedAt)]);
+
 export const tripGuideLeads = sqliteTable("trip_guide_leads", {
   id: text("id").primaryKey(), firstName: text("first_name").notNull(), email: text("email").notNull(),
   phone: text("phone").notNull().default(""), city: text("city").notNull(), travelTiming: text("travel_timing").notNull(),
