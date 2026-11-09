@@ -70,7 +70,7 @@ const worker = {
       return heroVideoResponse(request, env.ASSETS);
     }
     const response=await handler.fetch(request, env, ctx);
-    if (path.startsWith("/start-booking/") || path === "/admin/prospects" || path.startsWith("/api/admin/prospects")) {
+    if (path.startsWith("/start-booking/") || (path === "/admin/prospects" || path.startsWith("/admin/prospects/")) || path.startsWith("/api/admin/prospects")) {
       const headers=new Headers(response.headers);
       headers.set("Cache-Control","private, no-store");
       headers.set("Referrer-Policy","no-referrer");
@@ -80,10 +80,10 @@ const worker = {
     return response;
   },
   async scheduled() {
-    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations(), discoverWebProspects(true), synchronizeMetaLeads()];
+    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations(), discoverWebProspects(true), synchronizeMetaLeads(), discoverWebProspects(true, "tavily")];
     const results = await Promise.allSettled(jobs);
     for (const [index, result] of results.entries()) {
-      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations", "Web prospect discovery", "Facebook lead recovery"][index];
+      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations", "Web prospect discovery", "Facebook lead recovery", "Tavily prospect discovery"][index];
       if (result.status === "fulfilled") console.log(job, result.value);
       else console.error(`${job} failed; check configuration and service availability.`);
     }

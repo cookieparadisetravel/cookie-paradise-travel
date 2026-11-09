@@ -6,9 +6,14 @@ export const statusLabels: Record<ProspectStatus, string> = { new: "Needs review
 export const fitLabels: Record<ProspectFit, string> = { review: "Fit to review", group: "Group tour", fit: "Private / FIT", either: "Either service" };
 export type ProspectStatus = typeof prospectStatuses[number];
 export type ProspectFit = typeof prospectFits[number];
+export type DiscoveryProvider = "brave" | "tavily";
+export const discoveryProviders = {
+  brave: { label: "Brave", path: "/admin/prospects", apiPath: "/api/admin/prospects", secret: "BRAVE_SEARCH_API_KEY", signup: "https://api-dashboard.search.brave.com" },
+  tavily: { label: "Tavily", path: "/admin/prospects/tavily", apiPath: "/api/admin/prospects/tavily", secret: "TAVILY_API_KEY", signup: "https://app.tavily.com" },
+} as const;
 export type Prospect = {
   id: string; source_url: string; source_host: string; title: string; excerpt: string;
-  source_date: string | null; discovered_at: string; last_seen_at: string; origin: "search" | "manual";
+  source_date: string | null; discovered_at: string; last_seen_at: string; origin: "search" | "tavily" | "manual";
   match_reason: string; search_query: string; target_year: number; person_name: string;
   travel_timing: string; party_size: string; contact_channel: string; fit: ProspectFit;
   status: ProspectStatus; notes: string; next_action: string; follow_up_date: string | null;
@@ -20,12 +25,21 @@ export const defaultQueries = [
   'Vietnam {year} site:tripadvisor.com/ShowTopic (tour OR itinerary)',
   'Vietnam "next year" ("planning" OR "looking for") (tour OR trip)',
 ];
+export const tavilyQueries = [
+  'Vietnam {year} trip planning questions tour recommendations',
+  'Vietnam {year} travel itinerary advice site:reddit.com',
+  'Vietnam {year} guided tour or independent travel advice site:tripadvisor.com',
+  'Vietnam {year} private family trip looking for recommendations',
+];
 export const settingsSchema = z.object({
   enabled: z.boolean(), targetYear: z.number().int().min(2027).max(2100),
   queries: z.array(z.string().trim().min(3).max(450).refine(s => s.split(/\s+/).length <= 65, "Use at most 65 words per search.")).min(1).max(6),
 }).strict();
 export type ProspectSettings = z.infer<typeof settingsSchema>;
 export const defaultSettings: ProspectSettings = { enabled: false, targetYear: 2027, queries: defaultQueries };
+export function discoveryDefaults(provider: DiscoveryProvider): ProspectSettings {
+  return { ...defaultSettings, queries: provider === "tavily" ? tavilyQueries : defaultQueries };
+}
 
 // Sources are links only; the server never fetches arbitrary user-supplied URLs.
 export function canonicalSource(value: string): string | null {

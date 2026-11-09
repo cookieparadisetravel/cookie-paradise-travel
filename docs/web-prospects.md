@@ -5,7 +5,44 @@ review and tracks personal outreach. It is linked from the Inquiries header.
 Records live in separate D1 tables and never enter booking, MailerLite, MailerSend,
 or customer follow-up workflows automatically.
 
-## Connect discovery
+## Tavily discovery (independent option)
+
+Open `/admin/prospects/tavily` or choose **Tavily discovery** in Web prospects.
+It has its own settings, run history, lease, and limits; it never falls back to
+Brave. Both tools share the source-post review list and URL deduplication so
+owner notes and suppression apply across tools. New Tavily records carry the
+`tavily` origin; existing Brave and manual origins are preserved on duplicates.
+
+1. Create a free Researcher account/key at https://app.tavily.com.
+2. Add `TAVILY_API_KEY` as a secret to the existing Cloudflare Worker and deploy.
+3. Refresh the Tavily page, choose **Search now**, and review the actual run and
+   original sources. Presence of a key is not a successful connection test.
+4. Enable **Search daily** only after a successful trial. It defaults to off.
+
+Basic search is explicitly selected with auto-parameters disabled: one credit
+per query, four default queries, approximately 120 credits per 30 daily runs.
+Tavily documents 1,000 monthly free credits, without a credit card:
+https://docs.tavily.com/documentation/api-credits.
+The manual/automatic limit is three runs per UTC day per tool, with up to six
+queries per run. There is no automatic account upgrade or paid-plan activation.
+
+Tavily explicitly allows retaining URLs, titles and snippets in internal systems:
+https://help.tavily.com/articles/1612400809-storing-caching-retaining-output
+Publisher rights and source-site terms still apply. We request excerpts only,
+not full pages, AI-generated answers, or images. Original posts must be reviewed;
+this is discovery of public discussions, not verified or consented sales leads.
+
+Tavily uses a past-month date filter and returns available publication dates.
+Undated results can still appear, and publication metadata may be inaccurate.
+Searches use English and focus on 2027 travel questions and private/group trips.
+No private Facebook groups, email enrichment, or outbound messages are included.
+
+`0031_tavily_discovery.sql` and runtime bootstrap add only the two Tavily config
+and run tables; the shared prospect schema is unchanged. Bootstrap and migration
+are idempotent in either order. The existing hourly cron checks each tool's
+independent once-per-24-hours eligibility. No ChatGPT automation is needed.
+
+## Connect Brave discovery
 
 1. Create a Brave Search API key on a plan that includes **storage rights**.
    Provider documentation: https://brave.com/search/api/ and

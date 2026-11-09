@@ -20,6 +20,15 @@ export const webProspectRuns = sqliteTable("web_prospect_runs", {
   added: integer("added").notNull().default(0), error: text("error"),
 }, table => [index("web_prospect_runs_started_idx").on(table.startedAt)]);
 
+export const tavilyProspectConfig = sqliteTable("tavily_prospect_config", {
+  id: integer("id").primaryKey(), settingsJson: text("settings_json").notNull(), lastAttemptAt: text("last_attempt_at"), leaseId: text("lease_id"), leaseUntil: text("lease_until"),
+});
+export const tavilyProspectRuns = sqliteTable("tavily_prospect_runs", {
+  id: text("id").primaryKey().notNull(), startedAt: text("started_at").notNull(), finishedAt: text("finished_at"), status: text("status").notNull(),
+  queriesCompleted: integer("queries_completed").notNull().default(0), resultsChecked: integer("results_checked").notNull().default(0), candidates: integer("candidates").notNull().default(0),
+  added: integer("added").notNull().default(0), error: text("error"),
+}, table => [index("tavily_prospect_runs_started_idx").on(table.startedAt)]);
+
 export const tripGuideLeads = sqliteTable("trip_guide_leads", {
   id: text("id").primaryKey(), firstName: text("first_name").notNull(), email: text("email").notNull(),
   phone: text("phone").notNull().default(""), city: text("city").notNull(), travelTiming: text("travel_timing").notNull(),

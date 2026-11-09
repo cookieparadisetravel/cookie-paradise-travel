@@ -24,6 +24,7 @@ declare namespace Cloudflare {
     ADMIN_OWNER_EMAIL?: string;
     OWNER_NOTIFICATION_EMAIL?: string;
     BRAVE_SEARCH_API_KEY?: string;
+    TAVILY_API_KEY?: string;
     TURNSTILE_SECRET_KEY?: string;
     ACCEPTANCE_IP_HASH_KEY?: string;
   }
