@@ -4,6 +4,7 @@ import { sendDueInquiryReminders } from "./lib/inquiry-reminders";
 import { synchronizeInquiryConsultations } from "./lib/inquiry-sales-calendar";
 import { sendDueTripGuideReminders } from "./lib/trip-guide-reminders";
 import { discoverWebProspects } from "./lib/web-prospect-service";
+import { synchronizeMetaLeads } from "./lib/meta-sync";
 
 type AssetBinding = { fetch(request: Request): Promise<Response> };
 
@@ -79,10 +80,10 @@ const worker = {
     return response;
   },
   async scheduled() {
-    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations(), discoverWebProspects(true)];
+    const jobs = [sendDueAgreementReminders(), sendDueInquiryReminders(), sendDueTripGuideReminders(), synchronizeInquiryConsultations(), discoverWebProspects(true), synchronizeMetaLeads()];
     const results = await Promise.allSettled(jobs);
     for (const [index, result] of results.entries()) {
-      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations", "Web prospect discovery"][index];
+      const job = ["Agreement reminders", "Inquiry reminders", "Trip guide reminders", "Inquiry consultations", "Web prospect discovery", "Facebook lead recovery"][index];
       if (result.status === "fulfilled") console.log(job, result.value);
       else console.error(`${job} failed; check configuration and service availability.`);
     }

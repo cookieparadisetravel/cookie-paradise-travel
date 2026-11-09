@@ -2,6 +2,7 @@
 
 import { getSalonPartner } from "@/lib/salon-referrals";
 import { BrandLogo } from "@/app/components/brand-logo";
+import { MetaSyncPanel } from "./meta-sync-panel";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -315,6 +316,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
           <p className="text-xs font-semibold text-[var(--muted-ink)]">Signed in as {ownerEmail}</p>
         </div>
 
+        <MetaSyncPanel />
         <div className="mt-6"><SalesOverview processes={salesProcesses} /></div>
         <section aria-label="Attention filters" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           <AttentionCard active={attentionFilter === "new"} count={attentionCounts.new} icon={Inbox} label="New inquiries" onClick={() => selectAttention("new")} />
