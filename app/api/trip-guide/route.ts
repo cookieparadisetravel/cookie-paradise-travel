@@ -13,6 +13,7 @@ export async function POST(request: Request) {
   if (raw && typeof raw === "object" && "website" in raw && raw.website) return Response.json({ ok: true, emailStatus: "not_sent" });
   const parsed = guideRequestSchema.safeParse(raw);
   if (!parsed.success) return Response.json({ error: "Please complete your full name, email and travel interest, and review your request." }, { status: 400 });
+  if (!parsed.data.marketingConsent) return Response.json({ error: "Please check the email signup consent box to request the guide and travel updates. You can also contact Trung directly for the guide." }, { status: 400 });
   const secret = env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret || env.SQUARE_ENV !== "production") return Response.json({ error: "The request form is temporarily unavailable. Please book a consultation or try again later." }, { status: 503 });
   try {

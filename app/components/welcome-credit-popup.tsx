@@ -11,7 +11,7 @@ function remember(days:number){try{localStorage.setItem(key,String(Math.max(Numb
 export function WelcomeCreditPopup(){
   const pathname=usePathname();
   const [open,setOpen]=useState(false);
-  const eligible=["/","/vietnam","/fit"].includes(pathname);
+  const eligible=pathname === "/fit";
   useEffect(()=>{
     setOpen(false);
     if(!eligible||remembered())return;
