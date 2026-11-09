@@ -1,5 +1,12 @@
 import { env } from "cloudflare:workers";
-import { defaultSettings } from "./web-prospects";
+import { discoveryDefaults, type DiscoveryProvider } from "./web-prospects";
+
+// Table names are fixed server constants, never interpolated from request input.
+export function discoveryTables(provider: DiscoveryProvider) {
+  return provider === "tavily"
+    ? { config: "tavily_prospect_config", runs: "tavily_prospect_runs" }
+    : { config: "web_prospect_config", runs: "web_prospect_runs" };
+}
 
 export const prospectStorageStatements = [
   `CREATE TABLE IF NOT EXISTS web_prospects (
@@ -26,13 +33,15 @@ export const prospectStorageStatements = [
   )`,
   `CREATE INDEX IF NOT EXISTS web_prospect_runs_started_idx ON web_prospect_runs(started_at)`,
 ];
-let initialized: Promise<void> | undefined;
-export async function ensureProspectStorage() {
+const initialized = new Map<DiscoveryProvider, Promise<void>>();
+export async function ensureProspectStorage(provider: DiscoveryProvider = "brave") {
   if (!env.DB) throw new Error("Prospect storage is unavailable.");
-  if (!initialized) initialized = (async () => {
-    await env.DB!.batch(prospectStorageStatements.map(sql => env.DB!.prepare(sql)));
-    await env.DB!.prepare("INSERT INTO web_prospect_config (id, settings_json) VALUES (1, ?) ON CONFLICT DO NOTHING").bind(JSON.stringify(defaultSettings)).run();
-  })();
-  try { await initialized; } catch (error) { initialized = undefined; throw error; }
+  const tables = discoveryTables(provider);
+  if (!initialized.has(provider)) initialized.set(provider, (async () => {
+    const statements = prospectStorageStatements.map(sql => sql.replaceAll("web_prospect_config", tables.config).replaceAll("web_prospect_runs", tables.runs));
+    await env.DB!.batch(statements.map(sql => env.DB!.prepare(sql)));
+    await env.DB!.prepare(`INSERT INTO ${tables.config} (id, settings_json) VALUES (1, ?) ON CONFLICT DO NOTHING`).bind(JSON.stringify(discoveryDefaults(provider))).run();
+  })());
+  try { await initialized.get(provider); } catch (error) { initialized.delete(provider); throw error; }
   return env.DB;
 }

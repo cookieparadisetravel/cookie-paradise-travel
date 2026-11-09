@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowUpRight, Globe2, Plus, RefreshCw, Search, Settings2, X } from "lucide-react";
 import { BrandLogo } from "@/app/components/brand-logo";
-import { defaultQueries, fitLabels, PAGE_SIZE, prospectFits, prospectStatuses, statusLabels, type Prospect, type ProspectDashboard, type ProspectSettings } from "@/lib/web-prospects";
+import { discoveryProviders, discoveryDefaults, type DiscoveryProvider, fitLabels, PAGE_SIZE, prospectFits, prospectStatuses, statusLabels, type Prospect, type ProspectDashboard, type ProspectSettings } from "@/lib/web-prospects";
 
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50";
 const primary = `${button} !border-[var(--gold)] !bg-[var(--gold)]`;
@@ -11,7 +11,8 @@ const card = "rounded-2xl border border-[var(--line)] bg-white p-5 sm:p-6";
 const dateLabel = (value: string | null) => value ? new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" }).format(new Date(value)) : "Never";
 const todayIndiana = () => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Indiana/Indianapolis", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
 
-export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
+export function ProspectsClient({ initial, provider = "brave" }: { initial: ProspectDashboard; provider?: DiscoveryProvider }) {
+  const discovery = discoveryProviders[provider];
   const [data, setData] = useState(initial);
   const [filters, setFilters] = useState({ q: "", status: "active", fit: "", page: 1 });
   const [search, setSearch] = useState("");
@@ -30,7 +31,7 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
     const revision = ++generation.current;
     setLoading(true);
     try {
-      const response = await fetch(`/api/admin/prospects?${query}`, { cache: "no-store" });
+      const response = await fetch(`${discovery.apiPath}?${query}`, { cache: "no-store" });
       if (!response.ok) throw new Error("Prospects could not be loaded. Refresh or sign in again.");
       const next = await response.json() as ProspectDashboard;
       if (revision === generation.current) setData(next);
@@ -42,12 +43,12 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
     void reload();
     // The query string is the complete dependency for the paginated request.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query]);
+  }, [query, discovery.apiPath]);
 
   async function mutate(action: string, payload?: unknown) {
     setBusy(true); setError(""); setMessage("");
     try {
-      const response = await fetch("/api/admin/prospects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, data: payload }) });
+      const response = await fetch(discovery.apiPath, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, data: payload }) });
       const result = await response.json() as { error?: string; result?: { error?: string; added: number; checked: number } };
       if (!response.ok) throw new Error(result.error || "The update could not be completed.");
       if (action === "scan" && result.result) {
@@ -69,12 +70,14 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
       <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-7">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
           <BrandLogo />
-          <div><p className="text-xs font-bold uppercase tracking-[.2em]">Owner dashboard</p><h1 className="mt-1 font-serif text-3xl font-bold">Web prospects</h1></div>
+          <div><p className="text-xs font-bold uppercase tracking-[.2em]">Owner dashboard</p><h1 className="mt-1 font-serif text-3xl font-bold">Web prospects · {discovery.label}</h1></div>
         </div>
         <a href="/admin/inquiries" className={button}><ArrowLeft size={16} /> Inquiries</a>
       </div>
     </header>
     <div className="mx-auto max-w-[1500px] space-y-5 px-4 py-6 sm:px-7">
+      <nav aria-label="Discovery providers" className="flex flex-wrap gap-2">{Object.entries(discoveryProviders).map(([key, option]) => <a key={key} href={option.path} aria-current={key === provider ? "page" : undefined} className={key === provider ? primary : button}>{option.label} discovery</a>)}</nav>
+      <p className="text-sm text-[var(--muted-ink)]">Each search tool has its own settings and history. Both use the same saved prospect list, notes, and contact status to avoid duplicate outreach.</p>
       <section className="flex flex-wrap items-end justify-between gap-5">
         <div className="max-w-2xl"><p className="text-xs font-extrabold uppercase tracking-[.18em] text-[var(--muted-ink)]">Vietnam · {data.settings.targetYear}</p>
           <h2 className="mt-2 font-serif text-2xl font-bold sm:text-3xl">Find the next travel conversation.</h2>
@@ -94,7 +97,7 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
       </section>
       <div aria-live="polite">{message && <p className="rounded-xl bg-emerald-50 p-3 text-emerald-900">{message}</p>}</div>
       {error && <p role="alert" className="rounded-xl bg-red-50 p-3 text-red-900">{error}</p>}
-      {settingsOpen && <DiscoverySettings key={JSON.stringify(data.settings)} settings={data.settings} configured={data.configured} busy={busy} onSave={s => mutate("settings", s)} />}
+      {settingsOpen && <DiscoverySettings key={JSON.stringify(data.settings)} provider={provider} settings={data.settings} configured={data.configured} busy={busy} onSave={s => mutate("settings", s)} />}
       {adding && <AddProspect year={data.settings.targetYear} busy={busy} onSave={p => mutate("create", p)} onClose={() => setAdding(false)} />}
       {selected && <ProspectEditor key={`${selected.id}:${selected.version}`} prospect={selected} busy={busy} onClose={() => setSelected(null)} onSave={p => mutate("update", p)} />}
       <section className={card} aria-busy={loading}>
@@ -107,7 +110,7 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
         <p className="mt-5 text-sm text-[var(--muted-ink)]">{loading ? "Loading prospects…" : `${data.total} matching source posts`} · Review the original post before contacting anyone. Email permission is not inferred.</p>
         {!data.prospects.length ? <div className="py-14 text-center"><Globe2 className="mx-auto mb-4 text-[var(--muted-ink)]" size={36} /><h3 className="font-serif text-2xl font-bold">{data.total ? "No prospects on this page" : "No matching prospects yet"}</h3><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[var(--muted-ink)]">{!data.configured ? "Connect the search API to discover public posts, or add a source link you have found." : "Run a search or adjust your filters. Posts are saved only when the excerpt contains Vietnam, travel intent, and the target year or “next year.”"}</p></div> :
           <div className="mt-4 divide-y divide-[var(--line)]">{data.prospects.map(p => <article key={p.id} className="grid gap-4 py-5 lg:grid-cols-[1fr_240px]">
-            <div className="min-w-0"><div className="mb-2 flex flex-wrap items-center gap-2 text-xs"><span className="font-bold uppercase tracking-wide">{p.source_host}</span><span className="text-[var(--muted-ink)]">· Found {dateLabel(p.discovered_at)}</span></div>
+            <div className="min-w-0"><div className="mb-2 flex flex-wrap items-center gap-2 text-xs"><span className="font-bold uppercase tracking-wide">{p.source_host}</span><span className="text-[var(--muted-ink)]">· {p.origin === "tavily" ? "Tavily" : p.origin === "search" ? "Brave" : "Manual"} · Found {dateLabel(p.discovered_at)}</span></div>
               <h3 className="break-words font-serif text-xl font-bold">{p.person_name ? `${p.person_name} · ` : ""}{p.title}</h3>
               <p className="mt-2 line-clamp-3 text-sm leading-6 text-[var(--muted-ink)]">{p.excerpt || "No excerpt saved. Open the source to review the request."}</p>
               {p.travel_timing && <p className="mt-2 text-sm"><strong>Travel timing:</strong> {p.travel_timing}</p>}
@@ -124,15 +127,18 @@ export function ProspectsClient({ initial }: { initial: ProspectDashboard }) {
   </main>;
 }
 
-function DiscoverySettings({ settings, configured, busy, onSave }: { settings: ProspectSettings; configured: boolean; busy: boolean; onSave: (s: ProspectSettings) => Promise<boolean> }) {
+function DiscoverySettings({ provider, settings, configured, busy, onSave }: { provider: DiscoveryProvider; settings: ProspectSettings; configured: boolean; busy: boolean; onSave: (s: ProspectSettings) => Promise<boolean> }) {
+  const discovery = discoveryProviders[provider];
   const [year, setYear] = useState(settings.targetYear), [queries, setQueries] = useState(settings.queries.join("\n")), [enabled, setEnabled] = useState(settings.enabled);
   return <section className={card}><h3 className="font-serif text-xl font-bold">Discovery settings</h3>
-    {!configured && <div className="mt-3 rounded-xl bg-amber-50 p-4 text-sm leading-6"><p className="font-bold">Connect Brave Search to turn on automatic discovery.</p><ol className="ml-5 mt-2 list-decimal space-y-1"><li>Create a <a className="font-bold underline" href="https://api-dashboard.search.brave.com" target="_blank" rel="noopener noreferrer">Brave Search API key</a> with a plan that includes storing results.</li><li>In Cloudflare, open the <strong>cookie-paradise-travel</strong> Worker → Settings → Variables and Secrets. Add a secret named <code>BRAVE_SEARCH_API_KEY</code>, paste the key, and deploy the setting.</li><li>Refresh this page, run a search, and enable daily discovery when ready.</li></ol><p className="mt-2">Keep the API key in Cloudflare. Do not put it in a prospect note.</p></div>}
+    {!configured && <div className="mt-3 rounded-xl bg-amber-50 p-4 text-sm leading-6"><p className="font-bold">Connect {discovery.label} to turn on automatic discovery.</p><ol className="ml-5 mt-2 list-decimal space-y-1"><li>Create a <a className="font-bold underline" href={discovery.signup} target="_blank" rel="noopener noreferrer">{discovery.label} API key</a>{provider === "brave" ? " with a plan that includes storing results." : " using the free Researcher plan."}</li><li>In Cloudflare, open the <strong>cookie-paradise-travel</strong> Worker → Settings → Variables and Secrets. Add a secret named <code>{discovery.secret}</code>, paste the key, and deploy the setting.</li><li>Refresh this page, run a search, and enable daily discovery when ready.</li></ol><p className="mt-2">Keep the API key in Cloudflare. Do not put it in a prospect note.</p></div>}
+    {provider === "tavily" && <p className="mt-3 text-sm leading-6 text-[var(--muted-ink)]">Uses Basic Search: one credit per query, about 120 credits per 30 days with the four default searches run daily. Tavily currently includes 1,000 free credits per month. <a className="underline" href="https://help.tavily.com/articles/1612400809-storing-caching-retaining-output" target="_blank" rel="noopener noreferrer">Tavily permits saving URLs and excerpts</a>; original publishers’ rights still apply.</p>}
+    {provider === "brave" && <p className="mt-3 text-sm text-[var(--muted-ink)]">Only run Brave searches on a plan with explicit storage rights. Tavily discovery works independently while you confirm your Brave plan.</p>}
     <form className="mt-4 space-y-4" onSubmit={e => { e.preventDefault(); void onSave({ enabled, targetYear: year, queries: queries.split("\n").map(s => s.trim()).filter(Boolean) }); }}>
       <div className="flex flex-wrap items-end gap-5"><label className="field-label max-w-40">Target travel year<input type="number" className="field-input" min={2027} max={2100} value={year} onChange={e => setYear(Number(e.target.value))} required /></label><label className="flex min-h-12 items-center gap-3 text-sm font-bold"><input type="checkbox" checked={enabled} disabled={!configured} onChange={e => setEnabled(e.target.checked)} /> Search daily</label></div>
-      <label className="field-label">Searches, one per line<textarea className="field-input !min-h-36 py-3" rows={4} value={queries} onChange={e => setQueries(e.target.value)} required /><span className="font-normal text-[var(--muted-ink)]">Use {"{year}"} for the target year. Up to six searches per run. Each checks up to 20 results from pages dated or updated within the past month.</span></label>
+      <label className="field-label">Searches, one per line<textarea className="field-input !min-h-36 py-3" rows={4} value={queries} onChange={e => setQueries(e.target.value)} required /><span className="font-normal text-[var(--muted-ink)]">Use {"{year}"} for the target year. Up to six searches per run. Each checks up to 20 results with a past-month filter. Search dates can be incomplete or reflect updates; verify the original post.</span></label>
       <p className="text-xs leading-5 text-[var(--muted-ink)]">Automatic discovery runs at most once every 24 hours. Search now allows one run per hour, up to three total runs per UTC day. Search provider charges depend on your plan.</p>
-      <div className="flex gap-2"><button className={primary} disabled={busy}>Save settings</button><button type="button" className={button} disabled={busy} onClick={() => setQueries(defaultQueries.join("\n"))}>Restore default searches</button></div>
+      <div className="flex gap-2"><button className={primary} disabled={busy}>Save settings</button><button type="button" className={button} disabled={busy} onClick={() => setQueries(discoveryDefaults(provider).queries.join("\n"))}>Restore default searches</button></div>
     </form>
   </section>;
 }

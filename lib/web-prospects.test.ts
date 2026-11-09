@@ -36,7 +36,7 @@ async function fixture() {
       async all() { return { results: sqlite.prepare(sql).all(...args) }; },
     };
   }
-  const env = { DB: { prepare, batch: async (statements: ReturnType<typeof prepare>[]) => Promise.all(statements.map(s => s.run())) }, BRAVE_SEARCH_API_KEY: "test-only-key" };
+  const env = { DB: { prepare, batch: async (statements: ReturnType<typeof prepare>[]) => Promise.all(statements.map(s => s.run())) }, BRAVE_SEARCH_API_KEY: "test-only-key", TAVILY_API_KEY: "" };
   const storage = await loadModule("./web-prospect-storage.ts", { "cloudflare:workers": { env }, "./web-prospects": prospects });
   const service = await loadModule("./web-prospect-service.ts", { "cloudflare:workers": { env }, "./web-prospect-storage": storage, "./web-prospects": prospects });
   await service.saveProspectSettings({ ...prospects.defaultSettings, enabled: true, queries: ["Vietnam {year} planning tour"] });
@@ -45,7 +45,11 @@ async function fixture() {
     "@/lib/owner-auth": { requireOwner: async () => access.owner ? { email: "owner@example.com" } : null },
     "@/lib/lead-request": { sameOrigin, boundedBody }, "@/lib/web-prospects": prospects, "@/lib/web-prospect-service": service,
   });
-  return { sqlite, env, service, storage, route, access };
+  const tavilyRoute = await loadModule("../app/api/admin/prospects/tavily/route.ts", {
+    "@/lib/owner-auth": { requireOwner: async () => access.owner ? { email: "owner@example.com" } : null },
+    "@/lib/lead-request": { sameOrigin, boundedBody }, "@/lib/web-prospects": prospects, "@/lib/web-prospect-service": service,
+  });
+  return { sqlite, env, service, storage, route, tavilyRoute, access };
 }
 const sourceResult = { title: "Planning a Vietnam trip in 2027", description: "We are looking for a private tour for our family trip to Vietnam in 2027. Any recommendations?", url: "https://www.reddit.com/r/travel/comments/abc123/vietnam/?utm_source=test", page_age: "2026-11-05T12:00:00Z" };
 const request = (action: string, data?: unknown, origin = "https://example.com") => new Request("https://example.com/api/admin/prospects", { method: "POST", headers: { origin, "Content-Type": "application/json" }, body: JSON.stringify({ action, data }) });
@@ -199,6 +203,118 @@ test("runtime bootstrap and migration can run in either order without changing s
       for (const statement of f.storage.prospectStorageStatements) other.exec(statement);
       other.prepare("INSERT INTO web_prospect_config(id,settings_json) VALUES (1,?)").run(JSON.stringify(prospects.defaultSettings));
       assert.equal(other.prepare("SELECT count(*) AS n FROM web_prospect_config").get()!.n, 1);
+    } finally { other.close(); }
+  } finally { f.sqlite.close(); }
+});
+
+test("Tavily has independent configuration and never falls back to Brave", async () => {
+  const f = await fixture(); const original = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => { throw new Error("No provider request expected"); };
+    const initial = await f.service.loadProspectDashboard(new URLSearchParams(), "tavily");
+    assert.equal(initial.configured, false);
+    assert.equal(initial.settings.enabled, false);
+    assert.deepEqual(initial.settings.queries, prospects.tavilyQueries);
+    assert.deepEqual(await f.service.discoverWebProspects(true, "tavily"), { skipped: "not_configured" });
+    await assert.rejects(f.service.discoverWebProspects(false, "tavily"), /Connect/);
+    await assert.rejects(f.service.saveProspectSettings({ ...initial.settings, enabled: true }, "tavily"), /Connect/);
+    f.env.TAVILY_API_KEY = "test-tavily-key";
+    assert.deepEqual(await f.service.discoverWebProspects(true, "tavily"), { skipped: "paused" });
+    await f.service.saveProspectSettings({ ...initial.settings, targetYear: 2028, queries: ["Vietnam {year} tour"] }, "tavily");
+    assert.equal((await f.service.loadProspectDashboard()).settings.targetYear, 2027);
+    assert.equal((await f.service.loadProspectDashboard()).settings.enabled, true);
+    assert.equal((await f.service.loadProspectDashboard(new URLSearchParams(), "tavily")).settings.targetYear, 2028);
+  } finally { globalThis.fetch = original; f.sqlite.close(); }
+});
+
+test("Tavily uses bounded basic search and preserves suppressed posts across providers", async () => {
+  const f = await fixture(); const original = globalThis.fetch;
+  try {
+    f.env.TAVILY_API_KEY = " test-tavily-key ";
+    await f.service.saveProspectSettings({ ...prospects.defaultSettings, queries: ["Vietnam {year} private trip"] }, "tavily");
+    let calls = 0;
+    globalThis.fetch = async (input, init) => {
+      calls++;
+      assert.equal(String(input), "https://api.tavily.com/search");
+      assert.equal(init?.method, "POST");
+      assert.equal(init?.redirect, "error");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-tavily-key");
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.search_depth, "basic"); assert.equal(body.auto_parameters, false);
+      assert.equal(body.max_results, 20); assert.equal(body.include_answer, false);
+      assert.equal(body.include_raw_content, false); assert.equal(body.time_range, "month");
+      assert.match(body.query, /2027/);
+      return Response.json({ results: [{ title: sourceResult.title, url: sourceResult.url, content: sourceResult.description, published_date: "Thu, 05 Nov 2026 12:00:00 GMT" }, null] });
+    };
+    assert.equal((await f.service.discoverWebProspects(false, "tavily")).added, 1);
+    const tavily = await f.service.loadProspectDashboard(new URLSearchParams(), "tavily");
+    assert.equal(tavily.runs.length, 1);
+    assert.equal(tavily.prospects[0].origin, "tavily");
+    assert.equal(tavily.prospects[0].source_date, "2026-11-05T12:00:00.000Z");
+    assert.equal(JSON.stringify(tavily).includes("test-tavily-key"), false);
+    const p = tavily.prospects[0];
+    await f.service.updateProspect({ id: p.id, version: 0, personName: "Traveler", travelTiming: "", partySize: "", contactChannel: "", fit: "fit", status: "do_not_contact", notes: "No outreach", nextAction: "", followUpDate: null });
+    // Brave is immediately eligible: Tavily's lease and cooldown are independent.
+    globalThis.fetch = async () => Response.json({ web: { results: [sourceResult] } });
+    assert.equal((await f.service.discoverWebProspects()).added, 0);
+    const saved = (await f.service.loadProspectDashboard(new URLSearchParams({ status: "all" }))).prospects[0];
+    assert.equal(saved.status, "do_not_contact"); assert.equal(saved.notes, "No outreach");
+    assert.equal(saved.origin, "tavily"); assert.equal(saved.version, 1);
+    assert.equal((await f.service.loadProspectDashboard()).runs.length, 1);
+    await assert.rejects(f.service.discoverWebProspects(false, "tavily"), /running|limit/);
+    assert.equal(calls, 1);
+  } finally { globalThis.fetch = original; f.sqlite.close(); }
+});
+
+test("Tavily failures are recorded without leaking provider responses or keys", async () => {
+  const f = await fixture(); const original = globalThis.fetch;
+  try {
+    f.env.TAVILY_API_KEY = "private-tavily-key";
+    await f.service.saveProspectSettings({ ...prospects.defaultSettings, queries: ["Vietnam {year} trip"] }, "tavily");
+    const responses = [new Response("private-tavily-key", { status: 401 }), new Response("sensitive credit details", { status: 432 }), Response.json({ unexpected: "sensitive payload" })];
+    for (const [index, response] of responses.entries()) {
+      f.sqlite.exec("UPDATE tavily_prospect_config SET last_attempt_at=NULL");
+      globalThis.fetch = async () => response;
+      const run = await f.service.discoverWebProspects(false, "tavily");
+      assert.equal(run.added, 0);
+      assert.match(run.error, index === 0 ? /rejected/ : index === 1 ? /credit limit/ : /unexpected response/);
+      assert.doesNotMatch(JSON.stringify(await f.service.loadProspectDashboard(new URLSearchParams(), "tavily")), /private-tavily-key|sensitive/);
+      assert.equal(f.sqlite.prepare("SELECT lease_id FROM tavily_prospect_config").get()!.lease_id, null);
+    }
+    await assert.rejects(f.service.discoverWebProspects(false, "tavily"), /limit/);
+  } finally { globalThis.fetch = original; f.sqlite.close(); }
+});
+
+test("Tavily routes enforce owner access, same origin and the separate settings target", async () => {
+  const f = await fixture();
+  try {
+    f.access.owner = false;
+    assert.equal((await f.tavilyRoute.GET(request(""))).status, 403);
+    assert.equal((await f.tavilyRoute.POST(request("scan"))).status, 403);
+    f.access.owner = true;
+    assert.equal((await f.tavilyRoute.POST(request("scan", undefined, "https://attacker.example"))).status, 403);
+    assert.equal((await f.tavilyRoute.POST(request("settings", { ...prospects.defaultSettings, enabled: true }))).status, 409);
+    assert.equal((await f.tavilyRoute.POST(request("settings", { ...prospects.defaultSettings, targetYear: 2028 }))).status, 200);
+    const response = await f.tavilyRoute.GET(request(""));
+    assert.equal(response.headers.get("Cache-Control"), "private, no-store");
+    assert.equal((await response.json()).settings.targetYear, 2028);
+    assert.equal((await f.service.loadProspectDashboard()).settings.targetYear, 2027);
+  } finally { f.sqlite.close(); }
+});
+
+test("Tavily migration and runtime bootstrap are additive and repeatable", async () => {
+  const migration = readFileSync(new URL("../drizzle/0031_tavily_discovery.sql", import.meta.url), "utf8");
+  const f = await fixture();
+  try {
+    await f.service.createProspect({ sourceUrl: "https://example.com/keep", title: "Saved request", excerpt: "", personName: "", targetYear: 2027 });
+    await f.service.loadProspectDashboard(new URLSearchParams(), "tavily");
+    f.sqlite.exec(migration); f.sqlite.exec(migration);
+    assert.equal((await f.service.loadProspectDashboard()).total, 1);
+    const other = new DatabaseSync(":memory:");
+    try {
+      other.exec(migration);
+      for (const statement of f.storage.prospectStorageStatements) other.exec(statement.replaceAll("web_prospect_config", "tavily_prospect_config").replaceAll("web_prospect_runs", "tavily_prospect_runs"));
+      assert.equal(other.prepare("SELECT count(*) AS n FROM tavily_prospect_runs").get()!.n, 0);
     } finally { other.close(); }
   } finally { f.sqlite.close(); }
 });
