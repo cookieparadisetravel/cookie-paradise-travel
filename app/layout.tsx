@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { WelcomeCreditPopup } from "./components/welcome-credit-popup";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cookieparadisetravel.com"),
@@ -48,7 +49,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">{children}<WelcomeCreditPopup /></body>
     </html>
   );
 }
