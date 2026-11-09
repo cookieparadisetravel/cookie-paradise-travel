@@ -38,13 +38,13 @@ async function fixture() {
   const publicRoute=await loadModule("../app/api/welcome-credit/route.ts",{"cloudflare:workers":{env},"@/lib/lead-request":{sameOrigin,boundedBody},"@/lib/welcome-credit":credit,"@/lib/welcome-credit-service":service});
   return{sqlite,service,storage,admin,publicRoute,access};
 }
-const input={name:"Test Traveler",email:"TEST@example.com",source:"/vietnam"};
+const input={name:"Test Traveler",email:"TEST@example.com",source:"/fit"};
 function request(path:string,body:unknown,origin="https://example.com"){return new Request(`https://example.com${path}`,{method:"POST",headers:{origin,"Content-Type":"application/json"},body:JSON.stringify(body)});}
 test("credit signup requires explicit consent and a permitted source",()=>{
   const data={...input,turnstileToken:"verified",consent:true};
   assert.equal(credit.signupSchema.parse(data).email,"test@example.com");
   assert.equal(credit.signupSchema.safeParse({...data,consent:false}).success,false);
-  assert.equal(credit.signupSchema.safeParse({...data,source:"/admin/inquiries"}).success,false);
+  assert.equal(credit.signupSchema.safeParse({...data,source:"/vietnam"}).success,false);
 });
 test("concurrent repeated signups keep one credit, preserve consent and trigger one upsert",async()=>{
   const f=await fixture(),original=globalThis.fetch;let calls=0;

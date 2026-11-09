@@ -73,7 +73,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
   }
   if (input.marketingConsent && followupMode === "automatic" && batch[1].results?.length) {
     const consent = await db.prepare(`UPDATE trip_guide_leads SET marketing_consent=1,marketing_consented_at=?,mailerlite_status='pending'
-      WHERE email=? AND marketing_consent=0 AND status!='closed' RETURNING id`).bind(now,email).first();
+      WHERE email=? AND (marketing_consent=0 OR mailerlite_status IN ('error','not_configured')) AND status!='closed' RETURNING id`).bind(now,email).first();
     if (consent) {
       const [firstName, ...lastName] = input.firstName.trim().split(/\s+/);
       const status = await addConsentedSubscriber({ firstName, lastName: lastName.join(" "), email }, { groupName: "Interest List" });

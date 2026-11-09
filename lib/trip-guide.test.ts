@@ -210,10 +210,11 @@ test("public intake enforces origin, bounded bodies, explicit contact consent an
     "cloudflare:workers": { env: runtime }, "@/lib/lead-request": requests, "@/lib/trip-guide": guide, "@/lib/salon-referrals": referrals,
     "@/lib/trip-guide-service": { saveTripGuideLead: async (input: unknown) => { saved.push(input); return { created: true, emailStatus: "sent" }; } },
   });
-  const body = { firstName: "Traveler", email: "test@example.test", city: "Columbus", timing: "not_sure", contactConsent: true, marketingConsent: false, submissionId: uuid(), turnstileToken: "test" };
+  const body = { firstName: "Traveler", email: "test@example.test", city: "Columbus", timing: "not_sure", contactConsent: true, marketingConsent: true, submissionId: uuid(), turnstileToken: "test" };
   const request = (payload: unknown, origin = "https://example.test") => new Request("https://example.test/api/trip-guide", { method: "POST", headers: { Origin: origin, "Content-Type": "application/json", cookie: "cp_travel_referral=columbus-uppercuts" }, body: JSON.stringify(payload) });
   assert.equal((await route.POST(request(body,"https://other.test"))).status, 403);
   assert.equal((await route.POST(request({ ...body, contactConsent: false }))).status, 400);
+  assert.equal((await route.POST(request({ ...body, marketingConsent: false }))).status, 400);
   assert.equal((await route.POST(request({ ...body, extra: "x".repeat(17000) }))).status, 400);
   const original = globalThis.fetch;
   try {
@@ -387,4 +388,18 @@ test("closing a production booking also closes its guide follow-up; a later fres
   await f.run(new Date("2026-12-04T12:00:00Z")); assert.equal(f.emails.length,1);
   f.onCalendar(()=>{f.sqlite.exec("UPDATE trip_guide_leads SET status='closed'");});
   await f.run(new Date("2026-12-08T12:00:00Z")); assert.equal(f.emails.length,1);
+});
+
+ test("guide requests retry prior failed marketing sync without duplicate guide delivery or extra credits", async () => {
+  for (const status of ["error", "not_configured"]) {
+    const f=await fixture(); const input={...leadInput(),marketingConsent:true};
+    await f.save(input);
+    f.sqlite.prepare("UPDATE trip_guide_leads SET mailerlite_status=?").run(status);
+    await f.save({...input,submissionId:`website:${uuid()}`});
+    assert.equal(f.subscriptions.length,2);
+    assert.equal(f.emails.length,1);
+    assert.equal(f.sqlite.prepare("SELECT mailerlite_status FROM trip_guide_leads").get()!.mailerlite_status,"synced");
+    await f.save({...input,submissionId:`website:${uuid()}`});
+    assert.equal(f.subscriptions.length,2);
+  }
 });
