@@ -48,7 +48,7 @@ function CreditForm({source}:{source:string}){
     event.preventDefault();if(busy||!token)return;
     const data=new FormData(event.currentTarget);setBusy(true);setError("");
     try{
-      const response=await fetch("/api/welcome-credit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:data.get("name"),email:data.get("email"),consent:data.get("consent")==="on",source,website:data.get("website"),turnstileToken:token})});
+      const response=await fetch("/api/welcome-credit",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:data.get("name"),email:data.get("email"),consent:true,source,website:data.get("website"),turnstileToken:token})});
       const result=await response.json() as {error?:string};
       if(!response.ok)throw new Error(result.error||"Please try again.");
       remember(365);setDone(true);
@@ -61,7 +61,7 @@ function CreditForm({source}:{source:string}){
     <label className="block text-sm font-semibold">Name<input className={input} name="name" autoComplete="name" required maxLength={100}/></label>
     <label className="block text-sm font-semibold">Email<input className={input} name="email" type="email" autoComplete="email" required maxLength={180}/></label>
     <div hidden aria-hidden="true"><input name="website" tabIndex={-1} autoComplete="off" aria-label="Website"/></div>
-    <label className="flex items-start gap-3 text-sm leading-5"><input className="mt-1 size-4 shrink-0" name="consent" type="checkbox" required/><span>{welcomeConsent}</span></label>
+    <p className="text-sm leading-5">By clicking “Get my $50 travel credit,” you agree: {welcomeConsent}</p>
     <div ref={widget} className="min-h-[140px]"/>
     {error&&<p role="alert" className="text-sm text-red-800">{error}</p>}
     <button disabled={busy||!token} className="min-h-12 w-full rounded-full bg-[#f7b658] px-4 py-3 font-bold disabled:opacity-50">{busy?"Saving your signup…":"Get my $50 travel credit"}</button>

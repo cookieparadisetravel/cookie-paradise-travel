@@ -39,7 +39,7 @@ export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
     try {
       const response = await fetch("/api/trip-guide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         fullName: data.get("fullName"), email: data.get("email"), phone: data.get("phone") || "", ...(showCity ? { city: data.get("city") } : {}), timing: data.get("timing"),
-        contactConsent: true, marketingConsent: data.get("marketingConsent") === "on", website: data.get("website") || "",
+        contactConsent: true, marketingConsent: true, website: data.get("website") || "",
         turnstileToken: token, submissionId: submissionId.current, attribution: attributionFromSearch(window.location.search),
       }) });
       const result = await response.json() as { error?: string; emailStatus?: string };
@@ -70,7 +70,7 @@ export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
         <div className={`grid gap-4 ${showCity ? "sm:grid-cols-2" : ""}`}>{showCity && <label className="text-sm font-semibold">Your city<select className={inputClass} name="city" defaultValue="" required><option value="" disabled>Select a city</option>{leadCities.map(city => <option key={city}>{city}</option>)}</select></label>}<label className="text-sm font-semibold">Travel interest<select className={inputClass} name="timing" defaultValue="not_sure" required><option value="june_2027">June 1-8, 2027</option><option value="not_sure">I&apos;m still deciding</option><option value="future">A future departure</option></select></label></div>
         <label className="block text-sm font-semibold">Phone <span className="font-normal text-[#6c6055]">(optional; no automated texts)</span><input className={inputClass} name="phone" type="tel" autoComplete="tel" maxLength={40} /></label>
         <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-        <label className="flex gap-3 text-sm leading-6"><input className="mt-1 h-4 w-4 shrink-0 accent-[#593412]" type="checkbox" name="marketingConsent" required /><span>Email me the free Vietnam trip guide and occasional Vietnam travel inspiration and trip updates from Cookie Paradise Travel Company. I can unsubscribe anytime.</span></label>
+        <p className="text-sm leading-6">By clicking “Send my free guide,” you sign up for the guide and occasional Vietnam travel inspiration and trip updates from Cookie Paradise Travel Company. You can unsubscribe anytime.</p>
         <div ref={widget} className="min-h-[140px] max-w-full overflow-hidden min-[401px]:min-h-[65px]" />
         {(error || verificationError) && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm leading-6 text-red-900">{error || verificationError}</p>}
         <button disabled={status === "saving" || !token} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#593412] px-4 py-3 font-bold text-white transition hover:bg-[#75481b] disabled:cursor-wait disabled:opacity-60">{status === "saving" ? <><Loader2 className="animate-spin" size={18} /> Saving your request...</> : <>Send my free guide <ArrowRight size={18} /></>}</button>

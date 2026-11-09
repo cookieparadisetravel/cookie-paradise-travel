@@ -9,7 +9,7 @@ export async function POST(request: Request) {
   let raw: unknown;
   try { raw=JSON.parse(await boundedBody(request,8192)); } catch { return reply({error:"Please review your details."},400); }
   const parsed=signupSchema.safeParse(raw);
-  if (!parsed.success) return reply({error:"Please enter your name and email, and check the email signup consent box."},400);
+  if (!parsed.success) return reply({error:"Please enter your name and email and review the signup notice before submitting."},400);
   if (parsed.data.website) return reply({ok:true});
   try {
     if (!env.TURNSTILE_SECRET_KEY || env.SQUARE_ENV!=="production") throw new Error("Unavailable");
