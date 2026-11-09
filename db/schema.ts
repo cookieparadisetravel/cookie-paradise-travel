@@ -394,3 +394,13 @@ export const consultationBookings = sqliteTable("consultation_bookings", {
   email: text("email").primaryKey(),
   observedAt: text("observed_at").notNull(),
 });
+
+export const welcomeCredits = sqliteTable("welcome_credits", {
+  id: text("id").primaryKey().notNull(), email: text("email").notNull().unique(), name: text("name").notNull(),
+  source: text("source").notNull(), createdAt: text("created_at").notNull(), consentText: text("consent_text").notNull(), termsText: text("terms_text").notNull(),
+  syncStatus: text("sync_status").notNull().default("pending"), syncAttemptAt: text("sync_attempt_at"), syncLease: text("sync_lease"),
+  redeemedAt: text("redeemed_at"), bookingReference: text("booking_reference").unique(), redeemedBy: text("redeemed_by"),
+});
+export const welcomeCreditLimits = sqliteTable("welcome_credit_limits", {
+  key: text("key").primaryKey().notNull(), attempts: integer("attempts").notNull(), expiresAt: integer("expires_at").notNull(),
+});

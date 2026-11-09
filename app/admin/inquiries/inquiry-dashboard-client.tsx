@@ -275,6 +275,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
               Square {squareMode === "sandbox" ? "Sandbox" : "Production"}
             </span>
             <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/prospects">Web prospects</a>
+            <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/welcome-credits">$50 credits</a>
             <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/referrals">Referrals</a>
             <a className="min-h-10 rounded-full bg-[var(--gold)] px-3 py-2 text-sm font-bold text-[var(--ink)]" href="/admin/reminder-tests">Test reminders</a>
             <button aria-label="Refresh inquiries" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--line)] px-3 text-sm font-bold hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={refresh} type="button">
