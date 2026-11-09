@@ -28,3 +28,15 @@ Only a successful signed test-to-dashboard round trip establishes that the conne
 ## Validation
 
 The tests exercise signed Yes/No intake, rejected signatures/unapproved forms, duplicate delivery, immutable permission, reopening, reminder suppression, unchanged website workflows, and additive migration/runtime storage. No live customer submissions or emails are needed for these tests.
+
+## Missed-delivery recovery
+
+The existing hourly Worker job also reads the leads edge for each approved `META_FORM_IDS` form. The owner dashboard's **Facebook lead connection** panel offers **Sync Facebook leads** for immediate recovery and reports the last check, newly added contacts, existing contacts, and sanitized connection errors. This is separate from webhook verification: a working verification URL does not prove lead retrieval works.
+
+Recovery uses the same `saveMetaDashboardLead` path as signed delivery. Replaying records neither duplicates submissions nor sends guide emails, owner notifications, reminders, or MailerLite subscriptions. Both Yes and No remain visible; a malformed answer fails that record without blocking later valid records. Guide emails previously sent manually through Gmail are not inferred to have been sent by MailerSend.
+
+`meta_lead_sync` is created additively at runtime (matching migration `0030_meta_lead_sync.sql`). A 15-minute lease prevents overlapping manual and scheduled syncs. Results and health contain aggregate counts and fixed messages only, never raw provider errors, access tokens, or customer answers. Manual sync requires verified owner access and a same-origin POST. Reading status does not fetch leads.
+
+Recovery reads at most ten pages of 100 records per approved form per run. An incomplete page sequence is reported, not silently marked successful. Pagination is rebuilt against the fixed Graph API origin with cursor parameters and a Bearer header; token-bearing `paging.next` URLs are never followed. For forms beyond this bound, perform a separate bounded export/backfill before declaring recovery complete.
+
+If the panel reports an expired token, refresh `META_PAGE_ACCESS_TOKEN`. For denied access, verify the existing app's `leads_retrieval` permission, Page Leads Access assignment, live mode, and the configured form IDs. A successful catch-up recovers missed records even if real-time push remains unavailable; a signed new submission test is still needed to verify real-time delivery.
