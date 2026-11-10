@@ -67,6 +67,7 @@ test("referral cookies accept only the configured partners and do not trust arbi
   assert.equal(referrals.referralFromCookie("cp_travel_referral=bon-gout")?.name, "Bon Gout");
   assert.equal(referrals.referralFromCookie("cp_travel_referral=jason-anderson")?.name, "Jason Anderson");
   assert.equal(referrals.referralFromCookie("cp_travel_referral=gameday")?.name, "Gameday Men's Health");
+  assert.equal(referrals.referralFromCookie("cp_travel_referral=monica-salazar")?.name, "Monica Salazar");
   for (const cookie of [null, "cp_travel_referral=<script>", "fake_cp_travel_referral=gossip-nails", "cp_travel_referral=missing"]) assert.equal(referrals.referralFromCookie(cookie), null);
 });
 test("ninety-day pilot includes its first and last day, including leap years", () => {
@@ -80,16 +81,28 @@ test("direct-referrer pilots save independently and use the same commission qual
   const { sqlite, stubs } = await fixture();
   try {
     const route = await loadModule("app/api/admin/referrals/route.ts", stubs);
-    for (const code of ["cisco-barbershop", "columbus-uppercuts", "dorothys-playhouse", "taqueria-ramirez", "bon-gout", "jason-anderson", "gameday"]) {
+    for (const code of ["cisco-barbershop", "columbus-uppercuts", "dorothys-playhouse", "taqueria-ramirez", "bon-gout", "jason-anderson", "gameday", "monica-salazar"]) {
       assert.equal((await route.PATCH(request({ action: "pilot", code, materialsReceivedOn: "2026-10-13" }) as never)).status, 200);
       sqlite.prepare("UPDATE booking_requests SET referral_code=? WHERE id=1").run(code);
       assert.equal((await route.PATCH(request(body) as never)).status, 200);
       sqlite.exec("DELETE FROM salon_referral_completions");
     }
     assert.deepEqual(sqlite.prepare("SELECT code, materials_received_on FROM salon_referral_pilots ORDER BY code").all().map((row) => [row.code, row.materials_received_on]), [
-      ["bon-gout", "2026-10-13"], ["cisco-barbershop", "2026-10-13"], ["columbus-uppercuts", "2026-10-13"], ["dorothys-playhouse", "2026-10-13"], ["gameday", "2026-10-13"], ["gossip-nails", "2026-10-13"], ["jason-anderson", "2026-10-13"], ["taqueria-ramirez", "2026-10-13"],
+      ["bon-gout", "2026-10-13"], ["cisco-barbershop", "2026-10-13"], ["columbus-uppercuts", "2026-10-13"], ["dorothys-playhouse", "2026-10-13"], ["gameday", "2026-10-13"], ["gossip-nails", "2026-10-13"], ["jason-anderson", "2026-10-13"], ["monica-salazar", "2026-10-13"], ["taqueria-ramirez", "2026-10-13"],
     ]);
   } finally { sqlite.close(); }
+});
+test("Monica has a unique referral code, complete assets and the approved direct-referrer plan", () => {
+  const partner = referrals.getSalonPartner("monica-salazar")!;
+  assert.equal(referrals.salonPartners.filter((item) => item.code === partner.code).length, 1);
+  assert.equal(partner.name, "Monica Salazar");
+  assert.equal(partner.commissionPlan, "directReferrer");
+  const earnings = referrals.referralEarnings(partner, ["Monica Salazar"]);
+  assert.equal(earnings.referrerBaseCents, 20000);
+  assert.equal(earnings.shopOwnerCents, 0);
+  assert.equal(earnings.bonusCents, 0);
+  assert.match(readFileSync(new URL(`../public${partner.logo}`, import.meta.url), "utf8"), /Monica Salazar/);
+  assert.match(readFileSync(new URL(`../public/referrals/${partner.code}-qr.svg`, import.meta.url), "utf8"), /<svg/);
 });
 test("each partner applies its exact commission split and bonus rules without a cap", () => {
   for (const partner of referrals.salonPartners) {

@@ -21,3 +21,9 @@ All four partners use the existing `directReferrer` commission plan and its exis
 - Original transparent white header logo from https://www.chumleysdoghouse.com/. The site renders it black on light surfaces using CSS.
 - QR SVG encodes https://cookieparadisetravel.com/r/chumleys-dog-house. The QR on the rendered letter-size poster was decoded to verify the destination.
 - Uses the existing direct-referrer plan and owner review. This entry does not set a pilot start date.
+
+## Monica Salazar - November 10, 2026
+
+- Text name label following the existing individual-referrer design; no external logo was copied. Website supplied in Monica's correspondence: https://salazarmonica.com/.
+- QR SVG encodes https://cookieparadisetravel.com/r/monica-salazar with a four-module quiet zone. The rendered SVG was decoded to verify the exact destination.
+- Uses the existing `directReferrer` plan of $200 per successful traveler, as approved by the owner. Existing attribution, qualification and owner-review rules are unchanged. Adding this entry does not set a pilot start date, confirm a successful traveler or initiate a payout.

@@ -26,6 +26,7 @@ export const salonPartners = [
   { code: "gameday", name: "Gameday Men's Health", logo: "/referrals/gameday-logo.svg", website: "https://gamedaymenshealth.com/bloomington-in", creamSurface: false, commissionPlan: "directReferrer" },
   { code: "stephen-clark", name: "Stephen Clark", logo: "/referrals/stephen-clark-name.svg", website: "", creamSurface: false, commissionPlan: "directReferrer" },
   { code: "chumleys-dog-house", name: "Chumley’s Dog House", logo: "/referrals/chumleys-dog-house-logo-white.png", website: "https://www.chumleysdoghouse.com/", creamSurface: false, commissionPlan: "directReferrer" },
+  { code: "monica-salazar", name: "Monica Salazar", logo: "/referrals/monica-salazar-name.svg", website: "https://salazarmonica.com/", creamSurface: false, commissionPlan: "directReferrer" },
 ] as const;
 export type SalonPartner = typeof salonPartners[number];
 export function getSalonPartner(code: unknown): SalonPartner | null {
