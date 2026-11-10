@@ -22,3 +22,9 @@ test('closed and declined requests are not email tasks, unknown permissions need
 test('uncertain sends require review before retry', () => {
   for (const status of ['sending','failed','not_configured','unknown']) assert.equal(guideEmailState(lead({guide_email_status:status})).bucket,'guide_review');
 });
+test('Facebook No answers still show requested guide delivery and errors', () => {
+  assert.equal(guideEmailState(lead({source:'meta', contact_permission:0})).bucket,'needs_guide');
+  assert.equal(guideEmailState(lead({source:'meta', contact_permission:0, guide_email_status:'failed'})).bucket,'guide_review');
+  assert.equal(guideEmailState(lead({source:'meta', contact_permission:0, guide_email_status:'sent'})).bucket,'guide_sent');
+  assert.equal(guideEmailState(lead({source:'meta', contact_permission:0, status:'closed'})).bucket,'guide_inactive');
+});

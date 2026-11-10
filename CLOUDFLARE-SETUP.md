@@ -165,6 +165,8 @@ Open `/admin/reminder-tests` or select **Test reminders** in the inquiry dashboa
 
 ### Facebook guide-only delivery (November 10, 2026)
 
-Approved Facebook form requests submitted at or after `2026-11-10T20:06:16Z` with an explicit Yes to the configured contact-permission question receive the existing trip-guide email through MailerSend. Both webhook intake and hourly/manual recovery use the same deduplicating service. Historical requests, missing submission dates, declined permission, and existing active leads do not trigger a bulk send. A distinct new request can reopen a closed lead and send a new guide.
+Approved Facebook form requests submitted at or after `2026-11-10T20:06:16Z` with either Yes or No to the configured follow-up contact question receive the existing trip-guide email through MailerSend. Both webhook intake and hourly/manual recovery use the same deduplicating service. Historical requests, missing submission dates and existing active leads do not trigger a bulk send. A distinct new request can reopen a closed lead and send a new guide.
 
 These Facebook requests use `guide_only` follow-up mode: no marketing subscription or day-3/day-7 reminders. Existing website behavior is unchanged. `MAILERSEND_API_TOKEN` and `MAILERSEND_FROM_EMAIL` are required. Missing configuration and ambiguous send failures appear in the dashboard for review; do not blindly retry them. A Sent status means the provider accepted the request, not verified inbox delivery.
+
+A No answer is retained as contact_consent=0: it does not block fulfillment of the explicitly requested guide, but it continues to block later contact/reminders. No marketing subscription is added.

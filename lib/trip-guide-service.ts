@@ -15,7 +15,7 @@ export type TripGuideInput = {
 // Cutover prevents historical recovery from emailing an old, previously unseen lead.
 export const metaGuideAutomationStartsAt = "2026-11-10T20:06:16Z";
 export async function saveMetaDashboardLead(input: TripGuideInput) {
-  const eligible = input.contactConsent === true && Boolean(input.submittedAt)
+  const eligible = Boolean(input.submittedAt)
     && Date.parse(input.submittedAt!) >= Date.parse(metaGuideAutomationStartsAt);
   return saveTripGuideLead({ ...input, source: "meta", contactConsent: input.contactConsent === true,
     marketingConsent: false, followupMode: eligible ? "guide_only" : "manual" });
@@ -32,7 +32,10 @@ export async function saveTripGuideLead(input: TripGuideInput) {
   const email = input.email.trim().toLowerCase();
   const attribution = campaignAttribution(input.attribution);
   const contactConsent = input.contactConsent ?? true;
-  const followupMode = !contactConsent ? "manual" : input.followupMode ?? "automatic";
+  // A requested guide is fulfilled separately from permission for later contact.
+  // Restrict this exception to the approved Meta guide intake, not other forms.
+  const followupMode = input.source === "meta" && input.followupMode === "guide_only"
+    ? "guide_only" : !contactConsent ? "manual" : input.followupMode ?? "automatic";
   // One lead per normalized email, with an immutable record of each source submission.
   // Only a distinct new submission can reopen a closed lead; delivery replays remain inert.
   const batch = await db.batch([
