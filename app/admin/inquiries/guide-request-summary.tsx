@@ -1,5 +1,6 @@
 "use client";
 
+import { guideEmailState } from "@/lib/guide-email-state";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { GuideLeadRow } from "@/lib/lead-inbox";
@@ -10,11 +11,22 @@ import { getSalonPartner } from "@/lib/salon-referrals";
 const date = (value: string | null) => value ? new Date(value).toLocaleString("en-US", { timeZone: "America/Indiana/Indianapolis", dateStyle: "medium", timeStyle: "short" }) : "Not recorded";
 export function GuideRequestSummary({ lead, showContact = true, manageStage = true }: { lead: GuideLeadRow; showContact?: boolean; manageStage?: boolean }) {
   const router = useRouter();
+  const emailState = guideEmailState(lead);
+  const [confirmSent, setConfirmSent] = useState(false);
   const history: { event: string; status: string; createdAt: string; sentAt: string | null }[] = JSON.parse(lead.followup_history || "[]");
-  const historyLabel: Record<string,string> = { reopened: "New request reopened this inquiry", closed: "Request closed", guide_email: "Guide email", owner_notification: "Owner notification", reminder_3: "Day 3 consultation reminder", reminder_7: "Day 7 consultation reminder", stage_changed:"Inquiry stage updated", follow_up_saved:"Follow-up action saved", consultation_booked:"Consultation booked", consultation_completed:"Consultation completed", booking_invitation:"Booking invitation email", booking_started:"Booking started" };
+  const historyLabel: Record<string,string> = { manual_guide_sent: "Guide sent externally (owner recorded)", reopened: "New request reopened this inquiry", closed: "Request closed", guide_email: "Guide email", owner_notification: "Owner notification", reminder_3: "Day 3 consultation reminder", reminder_7: "Day 7 consultation reminder", stage_changed:"Inquiry stage updated", follow_up_saved:"Follow-up action saved", consultation_booked:"Consultation booked", consultation_completed:"Consultation completed", booking_invitation:"Booking invitation email", booking_started:"Booking started" };
   const [status, setStatus] = useState(normalizeInquiryStage(lead.status));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  async function recordEmail(action: 'record' | 'undo') {
+    setBusy(true); setError('');
+    try {
+      const response = await fetch(`/api/admin/inquiries/guide/${lead.id}/email-record`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action, renewedAt: lead.renewed_at ?? null }) });
+      if (!response.ok) { const result = await response.json() as { error?: string }; throw new Error(result.error || 'Could not save email record.'); }
+      setConfirmSent(false); router.refresh();
+    } catch (failure) { setError(failure instanceof Error ? failure.message : 'Could not save email record.'); }
+    finally { setBusy(false); }
+  }
   async function changeStatus(next: string) {
     setBusy(true); setError("");
     try {
@@ -29,6 +41,16 @@ export function GuideRequestSummary({ lead, showContact = true, manageStage = tr
       {showContact && manageStage && <label className="text-sm font-bold">Inquiry stage<select className="mt-2 block min-h-11 rounded-xl border border-[var(--line)] bg-white px-3 font-normal" value={status} disabled={busy} onChange={event => { void changeStatus(event.target.value); }}>{inquiryStageOptions.map(([value,label]) => <option key={value} value={value} disabled={value==="reserved" && !lead.booking_id}>{label}</option>)}</select></label>}
     </div>
     {error && <p role="alert" className="mt-4 rounded-xl bg-red-50 p-3 text-sm text-red-900">{error}</p>}
+    <div className="mt-5 rounded-xl border border-[var(--line)] p-4">
+      <span className={`inline-flex rounded-full px-3 py-1 text-sm font-bold ${emailState.tone}`}>{emailState.label}</span>
+      <p className="mt-2 text-sm">{emailState.detail}</p>
+      {lead.manual_guide_sent_at ? <div className="mt-3 text-sm"><p>Recorded {date(lead.manual_guide_sent_at)} · Indiana time</p><button type="button" disabled={busy} className="mt-2 underline disabled:opacity-50" onClick={() => void recordEmail('undo')}>Undo manual record</button></div>
+        : emailState.bucket !== 'guide_sent' && <div className="mt-3">
+          <p className="text-sm text-[var(--muted-ink)]">Already sent the requested guide from your email account? Record it here. This does not send an email or change consent or reminders.</p>
+          <label className="mt-3 flex items-start gap-2 text-sm"><input type="checkbox" checked={confirmSent} onChange={event => setConfirmSent(event.target.checked)} className="mt-1" />I confirm I already sent the guide for this request.</label>
+          <button type="button" disabled={busy || !confirmSent} onClick={() => void recordEmail('record')} className="mt-3 min-h-11 rounded-full bg-[var(--gold)] px-5 text-sm font-bold disabled:opacity-40">{busy ? 'Saving…' : 'Mark guide sent'}</button>
+        </div>}
+    </div>
     <dl className="mt-6 grid gap-5 text-sm sm:grid-cols-2 lg:grid-cols-3 [&_dt]:font-bold [&_dd]:mt-1 [&_dd]:break-words">
       {showContact && <><div><dt>Email</dt><dd><a className="underline" href={`mailto:${lead.email}`}>{lead.email}</a></dd></div><div><dt>Phone</dt><dd>{lead.phone ? <a className="underline" href={`tel:${lead.phone}`}>{lead.phone}</a> : "Not provided"}</dd></div></>}
       <div><dt>Travel interest</dt><dd>{guideTimingLabel(lead.travel_timing)}</dd></div>

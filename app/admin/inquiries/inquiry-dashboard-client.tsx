@@ -35,6 +35,7 @@ import type { DashboardInquiry, GeneratedInvitationDraft, PaymentPreferenceGener
 import { isPaymentPreferenceDraftUsable } from "./payment-preference-state";
 import { getSquareInvoiceStatusPresentation } from "./square-invoice-status";
 import type { GuideLeadRow } from "@/lib/lead-inbox";
+import { guideEmailState, type GuideEmailBucket } from "@/lib/guide-email-state";
 import { guideTimingLabel, leadStageLabel } from "@/lib/trip-guide";
 import { SalesOverview } from "./sales-overview";
 import { InquirySalesPanel } from "./inquiry-sales-panel";
@@ -60,7 +61,7 @@ type Props = {
 };
 
 type MainTab = "active" | "all" | "waitlist" | "closed";
-type AttentionFilter = "new" | "missing_travelers" | "agreements" | "invoice_issues" | null;
+type AttentionFilter = GuideEmailBucket | "new" | "missing_travelers" | "agreements" | "invoice_issues" | null;
 type DetailSection = "overview" | "travelers" | "payments" | "activity";
 type SortOption = "attention" | "newest" | "oldest" | "departure" | "name";
 type ChecklistState = "complete" | "pending" | "error";
@@ -200,6 +201,9 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
       if (mainTab === "closed" && feedStage(entry) !== "closed") return false;
       if (stage !== "all" && feedStage(entry) !== stage) return false;
       if (departure !== "all" && feedDeparture(entry) !== departure) return false;
+      if (attentionFilter?.startsWith('guide_') || attentionFilter === 'needs_guide') {
+        if (!entry.guide || guideEmailState(entry.guide).bucket !== attentionFilter) return false;
+      }
       if (attentionFilter === "new" && !feedIsNew(entry)) return false;
       if (attentionFilter === "missing_travelers" && (entry.kind !== "booking" || !hasMissingTravelerDetails(entry.inquiry))) return false;
       if (attentionFilter === "agreements" && (entry.kind !== "booking" || !hasIncompleteAgreements(entry.inquiry))) return false;
@@ -212,7 +216,8 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
   }, [attentionFilter, departure, feed, mainTab, search, sort, stage]);
 
   function selectAttention(next: Exclude<AttentionFilter, null>) {
-    setMainTab("active");
+    setMainTab(next.startsWith("guide_") || next === "needs_guide" ? "all" : "active");
+    setSearch(""); setDeparture("all");
     setStage("all");
     setAttentionFilter((current) => current === next ? null : next);
   }
@@ -316,6 +321,14 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
           <p className="text-xs font-semibold text-[var(--muted-ink)]">Signed in as {ownerEmail}</p>
         </div>
 
+        <section aria-label="Guide email work queue" className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-5">
+          <h3 className="font-serif text-2xl font-bold">Trip guide emails</h3>
+          <p className="mt-1 text-sm text-[var(--muted-ink)]">Start here to see who needs a guide. Emails sent outside this dashboard must be recorded manually.</p>
+          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+            {([['needs_guide', 'Needs guide'], ['guide_sent', 'Sent'], ['guide_review', 'Check status'], ['guide_inactive', 'No email action']] as const).map(([key,label]) =>
+              <AttentionCard key={key} active={attentionFilter === key} count={feed.filter(entry => entry.guide && guideEmailState(entry.guide).bucket === key).length} icon={key === 'guide_sent' ? CheckCircle2 : key === 'guide_review' ? AlertCircle : Inbox} label={label} onClick={() => selectAttention(key)} />)}
+          </div>
+        </section>
         <MetaSyncPanel />
         <div className="mt-6"><SalesOverview processes={salesProcesses} /></div>
         <section aria-label="Attention filters" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -416,7 +429,7 @@ function InquiryList({ entries, onOpen, onOpenGuide }: { entries: InquiryFeedEnt
               <div className="min-w-0">
                 <div className="flex items-center gap-2"><span className="truncate font-bold text-[var(--ink)]">{inquiry.fullName}</span><span className="text-xs font-semibold text-[var(--muted-ink)]">#{inquiry.id}</span></div>
                 <p className="truncate text-sm text-[var(--muted-ink)]">{inquiry.email}</p>
-                {entry.guide && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide requested · {(entry.guide.renewed_email_status ?? entry.guide.guide_email_status).replaceAll("_", " ")}</p>}
+                {entry.guide && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide requested · {guideEmailState(entry.guide).label}</p>}
                 {inquiry.referralCode && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Referred by {getSalonPartner(inquiry.referralCode)?.name ?? inquiry.referralCode}</p>}
                 {inquiry.sellerOfTravelStateResident && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[0.68rem] font-extrabold text-red-800"><ShieldAlert className="h-3 w-3" /> Review {inquiry.residenceState ?? "state"} residency</p>}
               </div>
@@ -816,8 +829,15 @@ function readableValue(value: string) { return value.replaceAll("_", " ").replac
 function formatCurrency(cents: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100); }
 function formatTimestamp(value: string | null) { if (!value) return "Not recorded"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Not recorded"; return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" }); }
 function detailSectionLabel(section: DetailSection) { return section[0].toUpperCase() + section.slice(1); }
-function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) { return filter === "new" ? "New inquiries" : filter === "missing_travelers" ? "Missing traveler details" : filter === "agreements" ? "Agreements incomplete" : "Invoice issues"; }
+function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) {
+  const guideLabels: Record<string,string> = { needs_guide: 'Needs guide · no send recorded', guide_sent: 'Guide sent', guide_review: 'Check email status or permission', guide_inactive: 'No email action' };
+  if (guideLabels[filter]) return guideLabels[filter];
+  return filter === "new" ? "New inquiries" : filter === "missing_travelers" ? "Missing traveler details" : filter === "agreements" ? "Agreements incomplete" : "Invoice issues"; }
 function compareFeedEntries(a: InquiryFeedEntry, b: InquiryFeedEntry, sort: SortOption) {
+  if (sort === "attention") {
+    const priority = (entry: InquiryFeedEntry) => entry.guide ? ({ needs_guide: 2, guide_review: 1, guide_sent: 0, guide_inactive: 0 }[guideEmailState(entry.guide).bucket]) : 0;
+    if (priority(a) !== priority(b)) return priority(b) - priority(a);
+  }
   if (a.kind === "booking" && b.kind === "booking" && !a.guide?.renewed_at && !b.guide?.renewed_at) return compareInquiries(a.inquiry, b.inquiry, sort);
   if (sort === "newest") return feedCreatedAt(b).localeCompare(feedCreatedAt(a));
   if (sort === "oldest") return feedCreatedAt(a).localeCompare(feedCreatedAt(b));
@@ -829,15 +849,15 @@ function compareFeedEntries(a: InquiryFeedEntry, b: InquiryFeedEntry, sort: Sort
 }
 
 function GuideRequestRow({ lead, onOpen }: { lead: GuideLeadRow; onOpen: (lead: GuideLeadRow) => void }) {
-  const emailStatus = lead.renewed_email_status ?? lead.guide_email_status;
-  const reminderDays = lead.renewed_at ? lead.renewed_reminder_days_sent : lead.reminder_days_sent;
+  const email = guideEmailState(lead);
+
   return <a id={`inquiry-row-guide-${lead.id}`} className="group grid w-full gap-3 px-4 py-4 text-left hover:bg-[var(--gold)]/8 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-inset focus-visible:ring-[var(--gold)]/45 sm:px-5 xl:grid-cols-[minmax(210px,1.35fr)_minmax(145px,.8fr)_130px_minmax(175px,1fr)_155px_minmax(190px,1fr)] xl:items-center xl:gap-4" href={`/admin/inquiries/guide/${lead.id}`} onClick={() => onOpen(lead)}>
-    <div className="min-w-0"><p className="truncate font-bold">{lead.first_name}</p><p className="truncate text-sm text-[var(--muted-ink)]">{lead.email}</p><p className="mt-1 text-xs font-bold text-[var(--orange)]">{lead.renewed_at ? "Renewed guide request" : "Guide request"} · {(lead.sources || lead.source).includes("meta") ? "Facebook" : "Website"}</p></div>
+    <div className="min-w-0"><p className="truncate font-bold">{lead.first_name}</p><p className="truncate text-sm text-[var(--muted-ink)]">{lead.email}</p><p className="mt-1 text-xs text-[var(--muted-ink)]">Requested {formatTimestamp(lead.renewed_at || lead.created_at)}</p><p className="mt-1 text-xs font-bold text-[var(--orange)]">{lead.renewed_at ? "Renewed guide request" : "Guide request"} · {(lead.sources || lead.source).includes("meta") ? "Facebook" : "Website"}</p></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Departure / party</MobileLabel><p className="text-sm font-semibold">{guideTimingLabel(lead.travel_timing)}</p></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Stage</MobileLabel><span className="inline-flex rounded-full bg-[var(--cream)] px-3 py-1 text-xs font-bold">{leadStageLabel(lead.status)}</span></div>
-    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Progress</MobileLabel><div className="text-xs leading-6"><p>Guide email: {emailStatus.replaceAll("_", " ")}</p><p>{reminderDays ? `Reminders: day ${reminderDays.replaceAll(",", ", day ")}` : "No reminders sent"}</p></div></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Progress</MobileLabel><div className="text-xs leading-6"><span className={`inline-flex rounded-full px-3 py-1 font-bold ${email.tone}`}>{email.label}</span><p className="mt-1 leading-5">{email.detail}</p>{(lead.manual_guide_sent_at || (!lead.renewed_at && lead.guide_email_sent_at)) && <p>{formatTimestamp(lead.manual_guide_sent_at || lead.guide_email_sent_at)}</p>}</div></div>
     <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Payment</MobileLabel><p className="text-xs text-[var(--muted-ink)]">Not requested</p></div>
-    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Next step</MobileLabel><span className="inline-flex rounded-lg bg-[var(--gold)] px-3 py-2 text-xs font-extrabold">Review guide request</span></div>
+    <div className="grid grid-cols-2 gap-3 xl:block"><MobileLabel>Next step</MobileLabel><span className="inline-flex rounded-lg bg-[var(--gold)] px-3 py-2 text-xs font-extrabold">{email.action}</span></div>
   </a>;
 }
 
@@ -899,7 +919,7 @@ function isDashboardListState(value: unknown): value is DashboardListState {
   if (!value || typeof value !== "object") return false;
   const state = value as Record<string, unknown>;
   const validMainTabs: MainTab[] = ["active", "all", "waitlist", "closed"];
-  const validAttentionFilters: AttentionFilter[] = [null, "new", "missing_travelers", "agreements", "invoice_issues"];
+  const validAttentionFilters: AttentionFilter[] = [null, "new", "missing_travelers", "agreements", "invoice_issues", "needs_guide", "guide_sent", "guide_review", "guide_inactive"];
   const validSortOptions: SortOption[] = ["attention", "newest", "oldest", "departure", "name"];
   return validMainTabs.includes(state.mainTab as MainTab)
     && validAttentionFilters.includes(state.attentionFilter as AttentionFilter)
