@@ -10,12 +10,15 @@ export type TripGuideInput = {
   firstName: string; email: string; phone: string; city: string; timing: LeadTiming;
   marketingConsent: boolean; referralCode: string | null; source: LeadSource;
   submissionId: string; formId?: string; submittedAt?: string; attribution: CampaignAttribution;
-  contactConsent?: boolean; followupMode?: "manual";
+  contactConsent?: boolean; followupMode?: "manual" | "guide_only";
 };
-// This is the only entry point used by the Meta webhook. Capturing a lead never
-// opts them into a newsletter or starts customer/owner email delivery.
+// Cutover prevents historical recovery from emailing an old, previously unseen lead.
+export const metaGuideAutomationStartsAt = "2026-11-10T20:06:16Z";
 export async function saveMetaDashboardLead(input: TripGuideInput) {
-  return saveTripGuideLead({ ...input, source: "meta", contactConsent: input.contactConsent === true, marketingConsent: false, followupMode: "manual" });
+  const eligible = input.contactConsent === true && Boolean(input.submittedAt)
+    && Date.parse(input.submittedAt!) >= Date.parse(metaGuideAutomationStartsAt);
+  return saveTripGuideLead({ ...input, source: "meta", contactConsent: input.contactConsent === true,
+    marketingConsent: false, followupMode: eligible ? "guide_only" : "manual" });
 }
 export async function saveTripGuideLead(input: TripGuideInput) {
   if (env.SQUARE_ENV !== "production") throw new Error("Lead intake is available on the production website only.");
@@ -29,7 +32,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
   const email = input.email.trim().toLowerCase();
   const attribution = campaignAttribution(input.attribution);
   const contactConsent = input.contactConsent ?? true;
-  const followupMode = input.followupMode === "manual" || !contactConsent ? "manual" : "automatic";
+  const followupMode = !contactConsent ? "manual" : input.followupMode ?? "automatic";
   // One lead per normalized email, with an immutable record of each source submission.
   // Only a distinct new submission can reopen a closed lead; delivery replays remain inert.
   const batch = await db.batch([
@@ -96,7 +99,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
       WHERE id=? AND guide_email_status='pending' RETURNING id`).bind(now,id).first();
     if (claim) {
       try {
-        const sent = await sendTripGuideEmail({ toEmail: email, firstName: input.firstName, timing: input.timing, stopToken });
+        const sent = await sendTripGuideEmail({ toEmail: email, firstName: input.firstName, timing: input.timing, stopToken, includeReminders: followupMode === "automatic" });
         emailStatus = "sent";
         if (historyClaim) await finishFollowupEvent(historyClaim, "sent", sent);
         else await db.prepare(`UPDATE trip_guide_leads SET guide_email_status='sent',guide_email_sent_at=?,guide_email_message_id=? WHERE id=?`)
