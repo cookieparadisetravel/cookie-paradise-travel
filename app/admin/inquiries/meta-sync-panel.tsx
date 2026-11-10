@@ -34,6 +34,6 @@ export function MetaSyncPanel() {
     </div>
     <p role="status" className="mt-2 text-sm">{error || status?.message || "Checking connection status…"}</p>
     {status?.checkedAt && <p className="mt-1 text-sm">Last check: {new Date(status.checkedAt).toLocaleString("en-US", { timeZone: "America/Indiana/Indianapolis" })} (Indiana)</p>}
-    <p className="mt-2 text-sm opacity-75">Checks hourly for missed submissions. Syncing adds dashboard records only; it does not send emails or subscribe anyone to marketing.</p>
+    <p className="mt-2 text-sm opacity-75">Checks hourly for missed submissions. New Facebook requests with contact permission receive the guide automatically. Older requests stay for manual review. No marketing subscription or reminder emails are started for Facebook requests.</p>
   </section>;
 }

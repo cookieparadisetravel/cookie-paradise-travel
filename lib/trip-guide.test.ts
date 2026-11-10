@@ -424,3 +424,31 @@ test('owner can record and undo an external guide email without sending or chang
   assert.equal((await call('undo')).status,200);
   assert.equal(f.sqlite.prepare("SELECT count(*) AS n FROM inquiry_followup_history WHERE event='manual_guide_sent'").get()!.n,0);
 });
+
+test("new eligible Facebook requests send one guide, without marketing or reminders", async () => {
+  const f=await fixture(); const input={...leadInput(),source:"meta" as const, contactConsent:true, submittedAt:"2026-11-11T12:00:00Z",submissionId:"meta:auto-new"};
+  assert.equal((await f.saveMeta(input)).emailStatus,"sent");
+  await f.saveMeta(input); await f.saveMeta({...input,submissionId:"meta:duplicate-email"});
+  await f.run(new Date("2026-11-18T12:00:00Z"));
+  assert.equal(f.emails.length,1); assert.equal(f.emails[0].includeReminders,false);
+  assert.equal(f.subscriptions.length,0);
+  assert.equal(f.sqlite.prepare("SELECT guide_email_status FROM trip_guide_leads").get()!.guide_email_status,"sent");
+  assert.equal(f.sqlite.prepare("SELECT followup_mode FROM trip_guide_submission_preferences LIMIT 1").get()!.followup_mode,"guide_only");
+});
+test("Facebook automation excludes old requests, missing dates, and declined permission", async () => {
+  for (const change of [{submittedAt:"2026-11-10T20:00:00Z"},{submittedAt:undefined},{contactConsent:false}]) {
+    const f=await fixture(); await f.saveMeta({...leadInput(),source:"meta",contactConsent:true,submittedAt:"2026-11-11T12:00:00Z",submissionId:"meta:excluded",...change});
+    assert.equal(f.emails.length,0);
+  }
+});
+test("failed Facebook guide sends are recorded for review and are not blindly retried", async () => {
+  const f=await fixture(); f.failEmail();
+  const input={...leadInput(),source:"meta" as const,contactConsent:true,submittedAt:"2026-11-11T12:00:00Z",submissionId:"meta:failed"};
+  assert.equal((await f.saveMeta(input)).emailStatus,"failed");
+  await f.saveMeta(input); assert.equal(f.emails.length,1);
+});
+test("guide-only email does not promise reminders", async () => {
+  const m=await loadModule<typeof import('./trip-guide-email')>("lib/trip-guide-email.ts", {"./consultation":consultation,"./trip-guide":guide,"./mailersend-transactional":{sendTripGuideEmailMessage:async()=>({})}});
+  const message=m.buildTripGuideEmail({firstName:"Traveler",timing:"june_2027",stopToken:uuid(),includeReminders:false});
+  assert.ok(message.text.includes(guide.tripGuideUrl)); assert.ok(!message.text.includes('three and seven'));
+});
