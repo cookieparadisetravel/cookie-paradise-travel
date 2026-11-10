@@ -403,3 +403,24 @@ test("closing a production booking also closes its guide follow-up; a later fres
     assert.equal(f.subscriptions.length,2);
   }
 });
+
+test('owner can record and undo an external guide email without sending or changing consent', async () => {
+  const f = await fixture();
+  await f.saveMeta({ ...leadInput(), source:'meta', contactConsent:true, submissionId:'meta:record-test' });
+  const row = f.sqlite.prepare('SELECT id,marketing_consent,guide_email_status FROM trip_guide_leads').get()!;
+  let owner = true;
+  const route = await loadModule<{POST:Function}>('app/api/admin/inquiries/guide/[id]/email-record/route.ts', {
+    'cloudflare:workers': {env:f.runtime}, 'zod':{z}, '@/lib/owner-auth':{requireOwner:async()=>owner},
+    '@/lib/lead-request': requests, '@/lib/followup-history': f.history,
+  });
+  const call = (action:string, renewedAt:string|null=null) => route.POST(new Request('https://cookieparadisetravel.com/api/admin/inquiries/guide/test/email-record', {method:'POST',headers:{Origin:'https://cookieparadisetravel.com','Content-Type':'application/json'},body:JSON.stringify({action,renewedAt})}),{params:Promise.resolve({id:row.id})});
+  owner=false; assert.equal((await call('record')).status,403); owner=true;
+  assert.equal((await call('record')).status,200);
+  assert.equal((await call('record')).status,200);
+  assert.equal(f.sqlite.prepare("SELECT count(*) AS n FROM inquiry_followup_history WHERE event='manual_guide_sent'").get()!.n,1);
+  assert.equal(f.emails.length,0);
+  assert.deepEqual(f.sqlite.prepare('SELECT id,marketing_consent,guide_email_status FROM trip_guide_leads').get(),row);
+  assert.equal((await call('record','stale')).status,409);
+  assert.equal((await call('undo')).status,200);
+  assert.equal(f.sqlite.prepare("SELECT count(*) AS n FROM inquiry_followup_history WHERE event='manual_guide_sent'").get()!.n,0);
+});

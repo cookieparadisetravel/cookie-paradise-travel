@@ -6,6 +6,7 @@ import { ensureInquirySalesStorage } from "./inquiry-sales-storage";
 export type GuideLeadRow = {
   id: string; first_name: string; email: string; phone: string; city: string; travel_timing: string; status: string;
   source: string; sources: string; referral_code: string | null; guide_email_status: string; guide_email_sent_at: string | null;
+  manual_guide_sent_at?: string | null;
   contacted_at: string | null; consultation_booked_at: string | null; created_at: string; marketing_consent: number;
   campaign: string | null; audience: string | null; ad_id: string | null; submission_count: number; booking_id: number | null;
   reminder_days_sent: string | null; reminder_failures: number;
@@ -33,6 +34,8 @@ export async function loadLeadInbox(page: number | null = 1, filter?: { id?: str
     coalesce(json_extract(h.details_json,'$.source'),l.source) AS source,
     CASE WHEN h.id IS NULL THEN l.referral_code ELSE json_extract(h.details_json,'$.referralCode') END AS referral_code,
     h.created_at AS renewed_at,
+    (SELECT max(sent_at) FROM inquiry_followup_history WHERE guide_lead_id=l.id AND event='manual_guide_sent'
+      AND cycle_id=coalesce(h.cycle_id,l.id)) AS manual_guide_sent_at,
     CASE WHEN h.id IS NOT NULL THEN coalesce((SELECT status FROM inquiry_followup_history WHERE guide_lead_id=l.id AND cycle_id=h.cycle_id AND event='guide_email'),'pending') END AS renewed_email_status,
     (SELECT group_concat(substr(event,10)) FROM inquiry_followup_history WHERE guide_lead_id=l.id AND cycle_id=h.cycle_id AND event IN ('reminder_3','reminder_7') AND status='sent') AS renewed_reminder_days_sent,
     (SELECT json_group_array(json_object('event',event,'status',status,'createdAt',created_at,'sentAt',sent_at))
