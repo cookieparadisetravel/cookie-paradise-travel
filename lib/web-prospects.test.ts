@@ -237,7 +237,7 @@ test("Tavily uses bounded basic search and preserves suppressed posts across pro
       calls++;
       assert.equal(String(input), "https://api.tavily.com/search");
       assert.equal(init?.method, "POST");
-      assert.equal(init?.redirect, "error");
+      assert.equal(init?.redirect, "manual");
       assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-tavily-key");
       const body = JSON.parse(String(init?.body));
       assert.equal(body.search_depth, "basic"); assert.equal(body.auto_parameters, false);
