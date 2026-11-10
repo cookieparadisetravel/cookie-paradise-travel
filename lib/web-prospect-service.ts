@@ -70,14 +70,20 @@ async function searchWeb(query: string, provider: DiscoveryProvider): Promise<Se
         body: JSON.stringify({ query, search_depth: "basic", auto_parameters: false, topic: "general", max_results: 20,
           time_range: "month", include_published_date: true, language: "en", safe_search: true,
           include_answer: false, include_raw_content: false, include_images: false }),
-        signal: AbortSignal.timeout(15000), redirect: "error",
+        signal: AbortSignal.timeout(15000), redirect: "manual",
       });
     } else {
       const url = new URL("https://api.search.brave.com/res/v1/web/search");
       url.search = new URLSearchParams({ q: query, count: "20", search_lang: "en", country: "ALL", freshness: "pm", text_decorations: "false", result_filter: "web", safesearch: "moderate" }).toString();
-      response = await fetch(url, { headers: { "X-Subscription-Token": env.BRAVE_SEARCH_API_KEY!.trim(), Accept: "application/json" }, signal: AbortSignal.timeout(15000), redirect: "error" });
+      response = await fetch(url, { headers: { "X-Subscription-Token": env.BRAVE_SEARCH_API_KEY!.trim(), Accept: "application/json" }, signal: AbortSignal.timeout(15000), redirect: "manual" });
     }
-  } catch { throw new ProspectError("The search provider could not be reached. Try again later."); }
+  } catch (error) {
+    if (error instanceof Error && ["TimeoutError", "AbortError"].includes(error.name)) throw new ProspectError("The search provider timed out after 15 seconds. Try again later.");
+    throw new ProspectError("The search provider could not be reached. Try again later.");
+  }
+  // Workers supports manual/follow, not redirect:error. Reject redirects here
+  // so API credentials are never forwarded to a different destination.
+  if (response.status >= 300 && response.status < 400) throw new ProspectError("The search provider returned an unexpected redirect. No redirect was followed.");
   if (!response.ok) {
     if (response.status === 401 || response.status === 403) throw new ProspectError("The search provider rejected the API key. Check the key and plan in Cloudflare.");
     if ([429, 432, 433].includes(response.status)) throw new ProspectError("The search provider rate or credit limit was reached.");

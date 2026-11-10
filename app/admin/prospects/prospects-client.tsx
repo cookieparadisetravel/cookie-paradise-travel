@@ -49,10 +49,10 @@ export function ProspectsClient({ initial, provider = "brave" }: { initial: Pros
     setBusy(true); setError(""); setMessage("");
     try {
       const response = await fetch(discovery.apiPath, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action, data: payload }) });
-      const result = await response.json() as { error?: string; result?: { error?: string; added: number; checked: number } };
+      const result = await response.json() as { error?: string; result?: { error?: string; added: number; checked: number; completed: number } };
       if (!response.ok) throw new Error(result.error || "The update could not be completed.");
       if (action === "scan" && result.result) {
-        setMessage(`${result.result.added} new prospects saved from ${result.result.checked} results checked.`);
+        if (!result.result.error || result.result.completed > 0) setMessage(`${result.result.added} new prospects saved from ${result.result.checked} results checked.`);
         if (result.result.error) setError(result.result.error);
       } else setMessage(action === "settings" ? "Discovery settings saved." : "Prospect saved.");
       if (action === "update") setSelected(null);
