@@ -1,6 +1,5 @@
 "use client";
 import { useState, type FormEvent } from "react";
-import { BrandLogo } from "@/app/components/brand-logo";
 import type { WelcomeCredit } from "@/lib/welcome-credit";
 export function CreditsClient({credits,query}:{credits:WelcomeCredit[];query:string}){
   const [rows,setRows]=useState(credits),[error,setError]=useState(""),[busy,setBusy]=useState("");
@@ -14,8 +13,8 @@ export function CreditsClient({credits,query}:{credits:WelcomeCredit[];query:str
     }catch(e){setError(e instanceof Error?e.message:"Could not save.");}finally{setBusy("");}
   }
   const date=(value:string)=>new Date(value).toLocaleString("en-US",{timeZone:"America/Indiana/Indianapolis"});
-  return <main className="min-h-screen bg-[#fff9f0] p-5 text-[#593412] sm:p-10"><div className="mx-auto max-w-5xl">
-    <header className="mb-8 flex flex-wrap items-center justify-between gap-5"><div className="w-64"><BrandLogo/></div><a href="/admin/inquiries" className="underline">Back to inquiries</a></header>
+  return <main className="ws-legacy-page"><div className="mx-auto max-w-5xl">
+    <p className="ws-eyebrow">A WARM WELCOME</p>
     <h1 className="font-serif text-4xl">$50 welcome credits</h1>
     <p className="my-4 max-w-3xl leading-7">One credit per subscribed email, for one hosted or private/FIT Vietnam booking. Verify the customer’s email, deduct $50 from their quote or invoice, then record the booking reference here. This ledger records the credit; it does not change agreements, prices, or Square invoices.</p>
     <p className="mb-5 text-sm">For hosted bookings, arrange the credit before sending agreements and payment requests. If documents have already been issued, reconcile the adjustment with the customer first. Only confirmed subscriptions can be marked used.</p>

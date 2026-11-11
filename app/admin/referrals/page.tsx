@@ -1,5 +1,3 @@
-import { BrandLogo } from "@/app/components/brand-logo";
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq, isNotNull } from "drizzle-orm";
 import { getDb } from "@/db";
@@ -26,11 +24,10 @@ export default async function ReferralDashboard() {
       .leftJoin(referralRecipients, eq(referralRecipients.travelerId, travelers.id)).where(isNotNull(bookingRequests.referralCode)),
   ]);
   const today = todayInIndiana();
-  return <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)] sm:px-8"><div className="mx-auto max-w-6xl">
-    <div className="mb-6"><BrandLogo /></div>
-    <Link href="/admin/inquiries" className="text-sm font-bold underline">← Inquiries</Link>
-    <h1 className="mt-5 font-serif text-4xl">Partner referral pilot</h1>
-    <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-ink)]">Commission recipients and bonuses depend on the partner’s program below. Start each 90-day pilot when its promotional materials are received. One successful referral means one qualifying traveler, reviewed after full payment and trip completion. Record the person who made each referral so earnings and nail-tech bonuses are calculated separately. Totals are calculated commissions; record actual payments separately in your accounting.</p>
+  return <main className="ws-legacy-page"><div className="mx-auto max-w-6xl">
+    <p className="ws-eyebrow">GROWING TOGETHER</p>
+    <h1 className="font-serif text-4xl">Partnerships.</h1>
+    <p className="mt-3 max-w-3xl text-sm leading-7 text-[var(--muted-ink)]">The relationships bringing more people to Vietnam. Open a partner to manage their referral materials, pilot dates, and commission reviews.</p>
     <div className="mt-8 grid gap-6 lg:grid-cols-2">{salonPartners.map((partner) => {
       const pilot = pilots.find((p) => p.code === partner.code);
       const referred = inquiries.filter((i) => i.referralCode === partner.code);
@@ -42,6 +39,8 @@ export default async function ReferralDashboard() {
       const earnings = referralEarnings(partner, successfulRows.map((r) => r.recipient?.referrerName ?? null));
       return <section key={partner.code} className="rounded-2xl border border-[var(--line)] bg-white p-5 sm:p-6">
         <div className="flex items-center gap-4"><div className={`flex h-20 w-28 items-center justify-center rounded-xl p-2 ${partner.creamSurface ? "bg-[var(--cream)]" : "bg-white"}`}><img alt={`${partner.name} logo`} src={partner.logo} className={`max-h-full max-w-full object-contain ${isChumleysLogo ? "brightness-0" : ""}`} /></div><div><h2 className="font-serif text-2xl font-bold">{partner.name}</h2><p className="mt-1 text-xs font-semibold text-[var(--muted-ink)]">{pilot ? `${pilot.materialsReceivedOn} through ${pilotLastDay(pilot.materialsReceivedOn)}` : "Pilot has not started"}</p></div></div>
+        <div className="mt-5 flex gap-8 text-sm"><div><strong className="block text-2xl font-medium">{referred.length}</strong><span className="text-xs text-[var(--muted-ink)]">Attributed inquiries</span></div><div><strong className="block text-2xl font-medium">{successful}</strong><span className="text-xs text-[var(--muted-ink)]">Successful travelers</span></div></div>
+        <details className="ws-partner-details"><summary>Referral materials & commission details</summary>
         <p className="mt-4 rounded-xl bg-[var(--cream)] p-4 text-sm leading-6">{plan.terms}</p>
         <p className="mt-4 break-all text-sm"><a className="font-semibold underline" href={`/r/${partner.code}`}>https://cookieparadisetravel.com/r/{partner.code}</a></p>
         <div className="mt-4 flex items-center gap-4"><img alt={`${partner.name} travel referral QR code`} className="h-24 w-24" src={`/referrals/${partner.code}-qr.svg`} /><a download className="text-sm font-bold underline" href={`/referrals/${partner.code}-qr.svg`}>Download QR code</a></div>
@@ -64,6 +63,7 @@ export default async function ReferralDashboard() {
         {referred.length ? <ul className="mt-2 space-y-2 text-sm">{referred.map((i) => <li key={i.id}><a href={`/admin/inquiries/${i.id}`} className="font-semibold underline">#{i.id} · {i.fullName}</a></li>)}</ul> : <p className="mt-2 text-sm text-[var(--muted-ink)]">No attributed inquiries yet.</p>}
         <h3 className="mt-6 text-lg font-bold">Traveler commission reviews</h3>
         <div className="mt-3 space-y-4">{travelerRows.map((r) => <article key={r.traveler.id} className="rounded-xl border border-[var(--line)] p-4"><p className="font-bold">{r.traveler.firstName} {r.traveler.lastName}</p><p className="mb-3 mt-1 text-xs text-[var(--muted-ink)]">Inquiry #{r.inquiry.id} · Square {r.inquiry.environment} · Invoice {r.inquiry.invoiceStatus} · {r.completion?.successful ? "Confirmed successful" : "Not confirmed successful"}</p><ReferralControl travelerId={r.traveler.id} successful={r.completion?.successful ?? false} qualifiedOn={r.completion?.qualifiedOn} referrerName={r.recipient?.referrerName} referrerLabel={plan.referrerLabel} today={today} />{r.recipient && <p className="mt-2 text-xs text-[var(--muted-ink)]">Referrer last updated {r.recipient.updatedAt} by {r.recipient.updatedBy}</p>}{r.completion && <p className="mt-2 text-xs text-[var(--muted-ink)]">Last reviewed {r.completion.reviewedAt} by {r.completion.reviewedBy}</p>}</article>)}</div>
+        </details>
       </section>;
     })}</div>
   </div></main>;

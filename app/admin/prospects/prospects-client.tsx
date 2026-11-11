@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowLeft, ArrowUpRight, Globe2, Plus, RefreshCw, Search, Settings2, X } from "lucide-react";
-import { BrandLogo } from "@/app/components/brand-logo";
 import { discoveryProviders, discoveryDefaults, type DiscoveryProvider, fitLabels, PAGE_SIZE, prospectFits, prospectStatuses, statusLabels, type Prospect, type ProspectDashboard, type ProspectSettings } from "@/lib/web-prospects";
 
 const button = "inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-[var(--line)] bg-white px-4 py-2 text-sm font-bold disabled:cursor-not-allowed disabled:opacity-50";
@@ -65,16 +64,8 @@ export function ProspectsClient({ initial, provider = "brave" }: { initial: Pros
   const totalActive = ["new", "reviewed", "contacted", "replied"].reduce((sum, status) => sum + (data.counts[status] || 0), 0);
   const pages = Math.max(1, Math.ceil(data.total / PAGE_SIZE));
 
-  return <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
-    <header className="border-b border-[var(--line)] bg-white">
-      <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-5 sm:px-7">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-          <BrandLogo />
-          <div><p className="text-xs font-bold uppercase tracking-[.2em]">Owner dashboard</p><h1 className="mt-1 font-serif text-3xl font-bold">Web prospects · {discovery.label}</h1></div>
-        </div>
-        <a href="/admin/inquiries" className={button}><ArrowLeft size={16} /> Inquiries</a>
-      </div>
-    </header>
+  return <main className="ws-workflow-page">
+    <div className="ws-workflow-heading"><div><p className="ws-eyebrow">NEW CONNECTIONS</p><h1>Web prospects</h1><p>{discovery.label} discovery · Find your next travel conversation.</p></div></div>
     <div className="mx-auto max-w-[1500px] space-y-5 px-4 py-6 sm:px-7">
       <nav aria-label="Discovery providers" className="flex flex-wrap gap-2">{Object.entries(discoveryProviders).map(([key, option]) => <a key={key} href={option.path} aria-current={key === provider ? "page" : undefined} className={key === provider ? primary : button}>{option.label} discovery</a>)}</nav>
       <p className="text-sm text-[var(--muted-ink)]">Each search tool has its own settings and history. Both use the same saved prospect list, notes, and contact status to avoid duplicate outreach.</p>

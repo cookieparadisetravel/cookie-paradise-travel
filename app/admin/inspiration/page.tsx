@@ -1,0 +1,3 @@
+import { InspirationGallery, PersonalizeButton, PhotoSlideshow, QuoteSlideshow } from "../workspace/inspiration";
+export const metadata={title:"Inspiration | Cookie Paradise Travel",robots:{index:false,follow:false}};
+export default function InspirationPage(){return <main className="ws-page"><div className="ws-heading"><div><p className="ws-eyebrow">INSPIRATION</p><h1>Remember what you’re building.</h1><p className="ws-muted">Your children, your homeland, and the words that keep you moving.</p></div><PersonalizeButton/></div><PhotoSlideshow/><div className="ws-wide-quote"><QuoteSlideshow/></div><InspirationGallery/></main>;}

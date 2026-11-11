@@ -1,4 +1,3 @@
-import { BrandLogo } from "@/app/components/brand-logo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { env } from "cloudflare:workers";
@@ -12,10 +11,9 @@ export default async function ReminderTestsPage() {
   const owner = await requireOwner("/admin/reminder-tests");
   if (!owner) notFound();
   const remindersEnabled = env.INQUIRY_REMINDERS_ENABLED === "true" && env.SQUARE_ENV === "production";
-  return <main className="min-h-screen bg-[var(--sand)] px-5 py-8 text-[var(--ink)] sm:px-8">
+  return <main className="ws-legacy-page">
     <div className="mx-auto max-w-3xl">
-      <div className="mb-6"><BrandLogo /></div>
-      <Link href="/admin/inquiries" className="text-sm font-bold underline">← Inquiries</Link>
+        <Link href="/admin/tools" className="text-sm font-bold underline">← Tools & integrations</Link>
       <p className="mt-8 text-xs font-extrabold uppercase tracking-[0.2em] text-[var(--ink)]">Owner dashboard</p>
       <h1 className="mt-2 font-serif text-4xl font-bold">Test inquiry reminders</h1>
       <p className="mt-3 text-sm leading-7 text-[var(--muted-ink)]">Check the consultation calendar and preview the three-day and seven-day emails. Tests do not change customer inquiries or their reminder schedules.</p>
