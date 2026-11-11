@@ -1,5 +1,11 @@
 # Referral partner assets
 
+## Captain Shine - November 11, 2026
+
+- Original transparent header logo downloaded unchanged from https://ik.imagekit.io/4wu305uo4/image_69d6af6e5c7cd75eb801a026.png, verified against the header of https://callcaptainshine.com/. The navy/gold artwork is displayed on the existing white logo surface.
+- QR SVG encodes https://cookieparadisetravel.com/r/captain-shine with a four-module quiet zone. The rendered SVG was decoded to verify the exact destination.
+- Uses the existing `directReferrer` plan, attribution, qualification and owner-review rules. No new financial terms, pilot start date, successful-traveler confirmation or payout is created by adding this partner.
+
 ## Partners added October 24, 2026
 
 - Dorothy’s Playhouse: original website header logo, downloaded unchanged from https://static.wixstatic.com/media/8038d9_98e97a5635b943edbd6a2201e4f6da97~mv2.png via https://www.dorothysplayhouse.com/.
