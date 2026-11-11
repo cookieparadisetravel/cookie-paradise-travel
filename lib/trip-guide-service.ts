@@ -127,7 +127,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
     try {
       const text = [reopened ? "Returning Vietnam trip guide inquiry (reopened)" : "New Vietnam trip guide request", `Name: ${input.firstName}`, `Email: ${email}`, `Phone: ${input.phone || "Not provided"}`, `City: ${input.city}`, `Interest: ${input.timing}`, `Source: ${input.source}`, `Campaign: ${boundedText(attribution.utmCampaign) || "Not provided"}`, `Guide email: ${emailStatus}`, "", "Review this inquiry:", `https://cookieparadisetravel.com/admin/inquiries/guide/${id}`].join("\n");
       const escaped = text.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
-      await sendTripGuideEmailMessage({ toEmail: ownerEmail, toName: "Trung", subject: reopened ? "Returning Vietnam trip guide inquiry" : "New Vietnam trip guide inquiry", text, html: `<pre style="font:15px/1.7 Arial,sans-serif;white-space:pre-wrap">${escaped}</pre><p><a href="https://cookieparadisetravel.com/admin/inquiries/guide/${id}">Open inquiry</a></p>` });
+      await sendTripGuideEmailMessage({ toEmail: ownerEmail, toName: "Trung", subject: reopened ? "Returning Vietnam trip guide inquiry" : "New Vietnam trip guide inquiry", text, html: `<pre style="font:16px/1.65 Arial,sans-serif;color:#000000;white-space:pre-wrap">${escaped}</pre><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="https://cookieparadisetravel.com/admin/inquiries/guide/${id}" style="color:#000000;text-decoration:underline">Open inquiry</a></p>` });
       ownerStatus = "sent";
     } catch { ownerStatus = "error"; }
   } else if ((!reopened || ownerClaim) && runtime.OWNER_NOTIFICATION_WEBHOOK_URL) {

@@ -12,7 +12,7 @@ export async function sendInquiryReminderEmail(input: { toEmail: string; toName:
     toEmail: input.toEmail, toName: input.toName,
     subject: `${input.testPreview ? `[TEST: Day ${input.reminderDay}] ` : ""}${subject}`,
     text: [...(input.testPreview ? [previewNotice, ""] : []), `Hello ${input.toName},`, "", message, "", invitation, "", `Book your 30-minute consultation: ${consultationBookingUrl}`, "", "You can also reply to this email with your questions.", "", "Trung", "Cookie Paradise Travel Company"].join("\n"),
-    html: `${input.testPreview ? `<p style="background:#fff3d6;border:1px solid #f7b658;padding:12px;font-weight:700">${escapeHtml(previewNotice)}</p>` : ""}<p>Hello ${escapeHtml(input.toName)},</p><p>${escapeHtml(message)}</p><p>${escapeHtml(invitation)}</p><p><a href="${consultationBookingUrl}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Book a 30-minute consultation</a></p><p>You can also reply to this email with your questions.</p><p>Trung<br>Cookie Paradise Travel Company</p>`,
+    html: `${input.testPreview ? `<p style="color:#000000;background:#fff3d6;border:1px solid #f7b658;padding:12px;font-weight:700">${escapeHtml(previewNotice)}</p>` : ""}<p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">${escapeHtml(message)}</p><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">${escapeHtml(invitation)}</p><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${consultationBookingUrl}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Book a 30-minute consultation</a></p><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">You can also reply to this email with your questions.</p><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Trung<br>Cookie Paradise Travel Company</p>`,
   });
 }
 
@@ -46,7 +46,7 @@ export async function sendOwnerInquiryEmail(input: {
     toName: "Trung",
     subject,
     text: `${summary}\n\nOpen inquiry #${input.inquiryId}: ${dashboardUrl}`,
-    html: `<p>${escapeHtml(summary)}</p><p><a href="${dashboardUrl}">Open inquiry #${input.inquiryId}</a></p>`,
+    html: `<p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">${escapeHtml(summary)}</p><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${dashboardUrl}" style="color:#000000;text-decoration:underline">Open inquiry #${input.inquiryId}</a></p>`,
   });
 }
 
@@ -79,11 +79,11 @@ export async function sendTravelerListInvitationEmail(input: {
       "No payment is collected on this page.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Thank you for choosing to continue with your <strong>Discover Southern Vietnam</strong> booking for ${input.partySize} travelers.</p>
-      <p>Before we can send each traveler the required agreement, please provide the legal name and email address for every traveler in your party.</p>
-      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Provide traveler details</a></p>
-      <p>This secure one-time link expires ${escapeHtml(expires)}. No payment is collected on this page.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Thank you for choosing to continue with your <strong>Discover Southern Vietnam</strong> booking for ${input.partySize} travelers.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Before we can send each traveler the required agreement, please provide the legal name and email address for every traveler in your party.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Provide traveler details</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This secure one-time link expires ${escapeHtml(expires)}. No payment is collected on this page.</p>
     `,
   });
 }
@@ -113,12 +113,12 @@ export async function sendPaymentChoiceInvitationEmail(input: {
       `This secure one-time link expires ${expires}.`,
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>All required Traveler Agreements for your booking have been completed.</p>
-      <p><strong>Confirmed booking total: ${escapeHtml(total)}</strong></p>
-      <p>Choose payment in full or the available payment plan. After you submit your choice, Square will create and email your invoice.</p>
-      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Choose payment option</a></p>
-      <p>This secure one-time link expires ${escapeHtml(expires)}.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">All required Traveler Agreements for your booking have been completed.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><strong>Confirmed booking total: ${escapeHtml(total)}</strong></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Choose payment in full or the available payment plan. After you submit your choice, Square will create and email your invoice.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Choose payment option</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This secure one-time link expires ${escapeHtml(expires)}.</p>
     `,
   });
 }
@@ -148,12 +148,12 @@ export async function sendAgreementInvitationEmail(input: {
       "If you did not expect this message, please contact trung@cookieparadise.co.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Please review and electronically sign the Cookie Paradise Travel Company Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>.</p>
-      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Open secure agreement</a></p>
-      <p>This one-time link expires ${escapeHtml(expires)}.</p>
-      <p>After opening the link, you will be asked to request a separate verification code sent to this email address before signing.</p>
-      <p>If you did not expect this message, please contact <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Please review and electronically sign the Cookie Paradise Travel Company Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Open secure agreement</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This one-time link expires ${escapeHtml(expires)}.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">After opening the link, you will be asked to request a separate verification code sent to this email address before signing.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">If you did not expect this message, please contact <a href="mailto:trung@cookieparadise.co" style="color:#000000;text-decoration:underline">trung@cookieparadise.co</a>.</p>
     `,
   });
 }
@@ -180,13 +180,13 @@ export async function sendAgreementReminderEmail(input: {
       "If you have questions or no longer wish to proceed, reply to this email or contact trung@cookieparadise.co.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>We're following up on the Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>. Our records show it has not yet been signed.</p>
-      <p>Please review and sign the agreement when you are ready so we can continue your booking.</p>
-      <p><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review and sign agreement</a></p>
-      <p>This secure link expires ${escapeHtml(expires)}.</p>
-      <p>Opening this link does not collect a payment. You will be asked to verify your email before signing if you have not already done so.</p>
-      <p>If you have questions or no longer wish to proceed, reply to this email or contact <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">We're following up on the Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>. Our records show it has not yet been signed.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Please review and sign the agreement when you are ready so we can continue your booking.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Review and sign agreement</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This secure link expires ${escapeHtml(expires)}.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Opening this link does not collect a payment. You will be asked to verify your email before signing if you have not already done so.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">If you have questions or no longer wish to proceed, reply to this email or contact <a href="mailto:trung@cookieparadise.co" style="color:#000000;text-decoration:underline">trung@cookieparadise.co</a>.</p>
     `,
   });
 }
@@ -211,11 +211,11 @@ export async function sendAgreementVerificationCodeEmail(input: {
       "Cookie Paradise Travel Company will never ask for this code by phone or text message.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Your verification code is:</p>
-      <p style="font-size:28px;font-weight:800;letter-spacing:0.2em;color:#593412">${escapeHtml(input.code)}</p>
-      <p>This code expires in ${input.expiresInMinutes} minutes. Do not share it with anyone.</p>
-      <p>Cookie Paradise Travel Company will never ask for this code by phone or text message.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Your verification code is:</p>
+      <p style="font-size:28px;font-weight:800;letter-spacing:0.2em;color:#000000">${escapeHtml(input.code)}</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This code expires in ${input.expiresInMinutes} minutes. Do not share it with anyone.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Cookie Paradise Travel Company will never ask for this code by phone or text message.</p>
     `,
   });
 }
@@ -242,10 +242,10 @@ export async function sendSignedAgreementEmail(input: {
       "Please retain this PDF for your records.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Attached is your signed Cookie Paradise Travel Company Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>.</p>
-      <p>It was electronically accepted on ${escapeHtml(accepted)}.</p>
-      <p>Please retain this PDF for your records.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Attached is your signed Cookie Paradise Travel Company Traveler Agreement for <strong>${escapeHtml(input.travelerName)}</strong>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">It was electronically accepted on ${escapeHtml(accepted)}.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Please retain this PDF for your records.</p>
     `,
     attachments: [{ content: input.pdfBase64, filename: input.filename, disposition: "attachment" }],
   });
@@ -283,14 +283,14 @@ export async function sendTravelInsuranceReferralEmail(input: {
       "Cookie Paradise Travel Company does not determine eligibility for coverage or provide advice about which policy is right for you.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>${escapeHtml(paymentAcknowledgment)}</p>
-      <p>Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you.</p>
-      <p><a href="${affiliateUrl}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review Seven Corners options</a></p>
-      <p><strong>Why consider Seven Corners?</strong> Seven Corners is a privately held travel insurance and healthcare company founded in 1993 and headquartered in Carmel, Indiana. It is BBB Accredited with an A+ rating and has an in-house 24/7 travel assistance team with live translation support in more than 130 languages. You can also speak with a licensed live agent before purchasing to compare available benefits, limits, exclusions, and optional coverage for your needs.</p>
-      <p style="font-size:13px;line-height:1.6;color:#5f5145"><strong>Affiliate disclosure:</strong> Cookie Paradise Travel Company may receive marketing referral compensation if you purchase through this link. You are not required to purchase from Seven Corners, and you may choose any insurance provider.</p>
-      <p>For questions about Seven Corners coverage, benefits, exclusions, or purchasing, contact Lakita Brewington at <a href="tel:+13174553634">317-455-3634</a> or <a href="mailto:Lakita.Brewington@sevencorners.com">Lakita.Brewington@sevencorners.com</a>.</p>
-      <p>Cookie Paradise Travel Company does not determine eligibility for coverage or provide advice about which policy is right for you.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">${escapeHtml(paymentAcknowledgment)}</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Travel insurance is not included in your trip price. We encourage you to consider whether travel insurance is appropriate for you.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${affiliateUrl}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Review Seven Corners options</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><strong>Why consider Seven Corners?</strong> Seven Corners is a privately held travel insurance and healthcare company founded in 1993 and headquartered in Carmel, Indiana. It is BBB Accredited with an A+ rating and has an in-house 24/7 travel assistance team with live translation support in more than 130 languages. You can also speak with a licensed live agent before purchasing to compare available benefits, limits, exclusions, and optional coverage for your needs.</p>
+      <p style="font-size:16px;line-height:1.6;color:#000000"><strong>Affiliate disclosure:</strong> Cookie Paradise Travel Company may receive marketing referral compensation if you purchase through this link. You are not required to purchase from Seven Corners, and you may choose any insurance provider.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">For questions about Seven Corners coverage, benefits, exclusions, or purchasing, contact Lakita Brewington at <a href="tel:+13174553634" style="color:#000000;text-decoration:underline">317-455-3634</a> or <a href="mailto:Lakita.Brewington@sevencorners.com" style="color:#000000;text-decoration:underline">Lakita.Brewington@sevencorners.com</a>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Cookie Paradise Travel Company does not determine eligibility for coverage or provide advice about which policy is right for you.</p>
     `,
   });
 }
@@ -318,11 +318,11 @@ export async function sendAutopayAuthorizationInvitationEmail(input: {
       "If you prefer to make each installment manually, no action is required.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Thank you for making your reservation deposit for <strong>Discover Southern Vietnam</strong>.</p>
-      <p>Automatic installments are optional. If you saved your card securely with Square and would like Square to charge the remaining installments automatically, use the secure link below. The page will show the exact remaining amounts and due dates before you authorize anything.</p>
-      <p><a href="${escapeHtml(input.authorizationUrl)}" style="display:inline-block;border-radius:999px;background:#593412;color:#ffffff;padding:12px 20px;text-decoration:none;font-weight:700">Review automatic installments</a></p>
-      <p>This secure one-time link expires ${escapeHtml(expires)}. If you prefer to make each installment manually, no action is required.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Thank you for making your reservation deposit for <strong>Discover Southern Vietnam</strong>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Automatic installments are optional. If you saved your card securely with Square and would like Square to charge the remaining installments automatically, use the secure link below. The page will show the exact remaining amounts and due dates before you authorize anything.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.authorizationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Review automatic installments</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This secure one-time link expires ${escapeHtml(expires)}. If you prefer to make each installment manually, no action is required.</p>
     `,
   });
 }
@@ -340,7 +340,7 @@ export async function sendAutopayAuthorizationConfirmationEmail(input: {
     .map((payment) => `${formatCalendarDate(payment.dueDate)} — ${money(payment.amountCents)}`)
     .join("\n");
   const scheduleHtml = input.schedule
-    .map((payment) => `<tr><td style="padding:8px 12px;border-bottom:1px solid #eadfce">${escapeHtml(formatCalendarDate(payment.dueDate))}</td><td style="padding:8px 12px;border-bottom:1px solid #eadfce;text-align:right;font-weight:700">${escapeHtml(money(payment.amountCents))}</td></tr>`)
+    .map((payment) => `<tr><td style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000;padding:8px 12px;border-bottom:1px solid #eadfce">${escapeHtml(formatCalendarDate(payment.dueDate))}</td><td style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000;padding:8px 12px;border-bottom:1px solid #eadfce;text-align:right;font-weight:700">${escapeHtml(money(payment.amountCents))}</td></tr>`)
     .join("");
 
   return sendEmail({
@@ -364,13 +364,13 @@ export async function sendAutopayAuthorizationConfirmationEmail(input: {
       "Please keep this email for your records.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>Automatic installments are now authorized for your <strong>${escapeHtml(input.cardBrand)} card ending in ${escapeHtml(input.cardLast4)}</strong>.</p>
-      <table style="width:100%;border-collapse:collapse;margin:18px 0"><thead><tr><th style="padding:8px 12px;text-align:left;background:#f7efe2">Due date</th><th style="padding:8px 12px;text-align:right;background:#f7efe2">Amount</th></tr></thead><tbody>${scheduleHtml}<tr><td style="padding:10px 12px;font-weight:700">Total authorized</td><td style="padding:10px 12px;text-align:right;font-weight:700">${escapeHtml(money(input.totalCents))}</td></tr></tbody></table>
-      <p><strong>Authorization:</strong></p>
-      <p>${escapeHtml(input.authorizationText)}</p>
-      <p>To stop future automatic payments, email <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a> at least 3 business days before a scheduled charge. Stopping automatic payments does not cancel your booking or change a payment deadline.</p>
-      <p>Please keep this email for your records.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Automatic installments are now authorized for your <strong>${escapeHtml(input.cardBrand)} card ending in ${escapeHtml(input.cardLast4)}</strong>.</p>
+      <table style="width:100%;border-collapse:collapse;margin:18px 0"><thead><tr><th style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000;padding:8px 12px;text-align:left;background:#f7efe2">Due date</th><th style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000;padding:8px 12px;text-align:right;background:#f7efe2">Amount</th></tr></thead><tbody>${scheduleHtml}<tr><td style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000;padding:10px 12px;font-weight:700">Total authorized</td><td style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000;padding:10px 12px;text-align:right;font-weight:700">${escapeHtml(money(input.totalCents))}</td></tr></tbody></table>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><strong>Authorization:</strong></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">${escapeHtml(input.authorizationText)}</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">To stop future automatic payments, email <a href="mailto:trung@cookieparadise.co" style="color:#000000;text-decoration:underline">trung@cookieparadise.co</a> at least 3 business days before a scheduled charge. Stopping automatic payments does not cancel your booking or change a payment deadline.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Please keep this email for your records.</p>
     `,
   });
 }
@@ -392,11 +392,39 @@ export async function sendAutopayStoppedEmail(input: {
       "If you have questions, email trung@cookieparadise.co.",
     ].join("\n"),
     html: `
-      <p>Hello ${escapeHtml(input.toName)},</p>
-      <p>${escapeHtml(message)}</p>
-      <p>If you have questions, email <a href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a>.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">${escapeHtml(message)}</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">If you have questions, email <a href="mailto:trung@cookieparadise.co" style="color:#000000;text-decoration:underline">trung@cookieparadise.co</a>.</p>
     `,
   });
+}
+
+// Readability takes precedence over branding in every outgoing website email.
+// Keep fragment text and links explicitly black; use gold backgrounds for buttons.
+function renderEmailDocument(html: string) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <style>
+    :root { color-scheme: light; supported-color-schemes: light; }
+    body, table, td, th, div, p, h1, h2, h3, li, strong, span, a, a:visited { color:#000000; }
+    a[x-apple-data-detectors] { color:#000000 !important; text-decoration:underline !important; }
+  </style>
+</head>
+<body bgcolor="#ffffff" style="margin:0;padding:0;background-color:#ffffff;color:#000000;font-family:Arial,sans-serif;font-size:16px;line-height:1.65">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff" style="background-color:#ffffff;color:#000000">
+    <tr><td align="center" style="padding:24px 16px;color:#000000">
+      <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+      <div style="max-width:600px;margin:0 auto;text-align:left;background-color:#ffffff;color:#000000;font-family:Arial,sans-serif;font-size:16px;line-height:1.65;overflow-wrap:anywhere">${html}</div>
+      <!--[if mso]></td></tr></table><![endif]-->
+    </td></tr>
+  </table>
+</body>
+</html>`;
 }
 
 async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResult> {
@@ -420,7 +448,7 @@ async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResul
       to: [{ email: input.toEmail, name: input.toName }],
       reply_to: { email: "trung@cookieparadise.co", name: "Trung Le" },
       subject: input.subject,
-      html: input.html,
+      html: renderEmailDocument(input.html),
       text: input.text,
       attachments: input.attachments,
     }),
