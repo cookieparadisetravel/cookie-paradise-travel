@@ -70,7 +70,7 @@ const worker = {
       return heroVideoResponse(request, env.ASSETS);
     }
     const response=await handler.fetch(request, env, ctx);
-    if (path.startsWith("/start-booking/") || (path === "/admin/prospects" || path.startsWith("/admin/prospects/")) || path.startsWith("/api/admin/prospects")) {
+    if (path.startsWith("/start-booking/") || (path === "/admin" || path.startsWith("/admin/")) || path.startsWith("/api/admin/")) {
       const headers=new Headers(response.headers);
       headers.set("Cache-Control","private, no-store");
       headers.set("Referrer-Policy","no-referrer");

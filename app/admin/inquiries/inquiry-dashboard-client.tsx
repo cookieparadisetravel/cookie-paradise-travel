@@ -1,8 +1,6 @@
 "use client";
 
 import { getSalonPartner } from "@/lib/salon-referrals";
-import { BrandLogo } from "@/app/components/brand-logo";
-import { MetaSyncPanel } from "./meta-sync-panel";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -17,7 +15,6 @@ import {
   FileSignature,
   Inbox,
   ListFilter,
-  LogOut,
   RefreshCw,
   Search,
   ShieldAlert,
@@ -266,33 +263,8 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
   }
 
   return (
-    <main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
-      <header className="border-b border-[var(--line)] bg-white">
-        <div className="mx-auto flex max-w-[1500px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-7">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
-            <BrandLogo />
-            <div>
-              <p className="text-[0.68rem] font-extrabold uppercase tracking-[0.2em] text-[var(--orange)]">Owner dashboard</p>
-              <h1 className="font-serif text-2xl font-bold sm:text-3xl">{selectedInquiry ? "Inquiry details" : "Inquiries"}</h1>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <span className={`hidden rounded-full px-3 py-1 text-xs font-extrabold sm:inline-flex ${squareMode === "sandbox" ? "bg-amber-100 text-amber-900" : "bg-emerald-100 text-emerald-900"}`}>
-              Square {squareMode === "sandbox" ? "Sandbox" : "Production"}
-            </span>
-            <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/prospects">Web prospects</a>
-            <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/welcome-credits">$50 credits</a>
-            <a className="min-h-10 rounded-full border border-[var(--line)] px-3 py-2 text-sm font-bold" href="/admin/referrals">Referrals</a>
-            <a className="min-h-10 rounded-full bg-[var(--gold)] px-3 py-2 text-sm font-bold text-[var(--ink)]" href="/admin/reminder-tests">Test reminders</a>
-            <button aria-label="Refresh inquiries" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-[var(--line)] px-3 text-sm font-bold hover:bg-[var(--cream)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/40" onClick={refresh} type="button">
-              <RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /> <span className="hidden sm:inline">Refresh</span>
-            </button>
-            <a aria-label="Sign out of owner dashboard" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-[var(--navy)] px-3 text-sm font-bold text-white hover:bg-[var(--ink)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/50" href="/cdn-cgi/access/logout">
-              <LogOut className="h-4 w-4" /> <span className="hidden sm:inline">Sign out</span>
-            </a>
-          </div>
-        </div>
-      </header>
+    <main className="ws-workflow-page">
+      <div className="ws-workflow-heading"><div><p className="ws-eyebrow">YOUR CONVERSATIONS</p><h1>{selectedInquiry ? "Inquiry details" : "Inquiries"}</h1><p>{selectedInquiry ? "Everything you need for the next step." : "Follow each conversation from first interest to departure."}</p></div><div><small title={`Signed in as ${ownerEmail}`}>Square {squareMode === "sandbox" ? "Sandbox" : "Production"}</small><button aria-label="Refresh inquiries" className="ws-button" onClick={refresh} type="button"><RefreshCw className={`h-4 w-4 ${refreshing ? "animate-spin" : ""}`} /><span>Refresh</span></button></div></div>
 
       {selectedInquiry ? (
         <InquiryDetail
@@ -312,31 +284,11 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
         />
       ) : (
       <div className="mx-auto max-w-[1500px] px-4 py-6 sm:px-7 sm:py-8">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="font-serif text-3xl font-bold sm:text-4xl">Who needs attention?</h2>
-            <p className="mt-1 text-sm text-[var(--muted-ink)]">Attention counts overlap and are not a total.</p>
-            <p className="mt-1 text-sm text-[var(--muted-ink)]">Follow each inquiry from first interest through consultation and booking.</p>
-          </div>
-          <p className="text-xs font-semibold text-[var(--muted-ink)]">Signed in as {ownerEmail}</p>
+        <div className="ws-inquiry-filters" aria-label="Attention filters">
+          {([['new','New inquiries'],['missing_travelers','Missing traveler details'],['agreements','Agreements incomplete'],['invoice_issues','Invoice issues']] as const).map(([key,label])=><button type="button" className="ws-filter-pill" key={key} aria-pressed={attentionFilter===key} onClick={()=>selectAttention(key)}>{label} <span>{attentionCounts[key]}</span></button>)}
         </div>
-
-        <section aria-label="Guide email work queue" className="mt-6 rounded-2xl border border-[var(--line)] bg-white p-5">
-          <h3 className="font-serif text-2xl font-bold">Trip guide emails</h3>
-          <p className="mt-1 text-sm text-[var(--muted-ink)]">Start here to see who needs a guide. Emails sent outside this dashboard must be recorded manually.</p>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {([['needs_guide', 'Needs guide'], ['guide_sent', 'Sent'], ['guide_review', 'Check status'], ['guide_inactive', 'No email action']] as const).map(([key,label]) =>
-              <AttentionCard key={key} active={attentionFilter === key} count={feed.filter(entry => entry.guide && guideEmailState(entry.guide).bucket === key).length} icon={key === 'guide_sent' ? CheckCircle2 : key === 'guide_review' ? AlertCircle : Inbox} label={label} onClick={() => selectAttention(key)} />)}
-          </div>
-        </section>
-        <MetaSyncPanel />
-        <div className="mt-6"><SalesOverview processes={salesProcesses} /></div>
-        <section aria-label="Attention filters" className="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <AttentionCard active={attentionFilter === "new"} count={attentionCounts.new} icon={Inbox} label="New inquiries" onClick={() => selectAttention("new")} />
-          <AttentionCard active={attentionFilter === "missing_travelers"} count={attentionCounts.missing_travelers} icon={UserRoundSearch} label="Missing traveler details" onClick={() => selectAttention("missing_travelers")} />
-          <AttentionCard active={attentionFilter === "agreements"} count={attentionCounts.agreements} icon={FileSignature} label="Agreements incomplete" onClick={() => selectAttention("agreements")} />
-          <AttentionCard active={attentionFilter === "invoice_issues"} count={attentionCounts.invoice_issues} icon={AlertCircle} label="Invoice issues" onClick={() => selectAttention("invoice_issues")} />
-        </section>
+        <details className="ws-guide-queue"><summary>Trip guide emails · {feed.filter(entry=>entry.guide && ['needs_guide','guide_review'].includes(guideEmailState(entry.guide).bucket)).length} to review</summary><p className="ws-muted" style={{marginTop:10}}>Review requested guides and record emails sent outside the dashboard.</p><div className="ws-inquiry-filters">{([['needs_guide','Needs guide'],['guide_sent','Sent'],['guide_review','Check status'],['guide_inactive','No email action']] as const).map(([key,label])=><button type="button" className="ws-filter-pill" key={key} aria-pressed={attentionFilter===key} onClick={()=>selectAttention(key)}>{label} <span>{feed.filter(entry=>entry.guide && guideEmailState(entry.guide).bucket===key).length}</span></button>)}</div></details>
+        <details className="ws-reports"><summary>Sales overview & source conversions</summary><SalesOverview processes={salesProcesses}/></details>
 
         <section className="mt-6 overflow-hidden rounded-2xl border border-[var(--line)] bg-white shadow-sm">
           <div className="border-b border-[var(--line)] p-4 sm:p-5">
@@ -344,7 +296,7 @@ export function InquiryDashboardClient({ inquiries, acceptanceDate, initialDetai
               <label className="relative block">
                 <span className="sr-only">Search inquiries</span>
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-ink)]" />
-                <input className="min-h-11 w-full rounded-xl border border-[var(--input)] bg-white pl-10 pr-3 text-sm outline-none focus:border-[var(--orange)] focus:ring-4 focus:ring-[var(--gold)]/25" onChange={(event) => setSearch(event.target.value)} placeholder="Search name, email, phone or ID" type="search" value={search} />
+                <input id="inquiry-search" className="min-h-11 w-full rounded-xl border border-[var(--input)] bg-white pl-10 pr-3 text-sm outline-none focus:border-[var(--orange)] focus:ring-4 focus:ring-[var(--gold)]/25" onChange={(event) => setSearch(event.target.value)} placeholder="Search name, email, phone or ID" type="search" value={search} />
               </label>
               <FilterSelect icon={ListFilter} label="Stage" onChange={setStage} value={stage}>
                 <option value="all">All sales stages</option>
