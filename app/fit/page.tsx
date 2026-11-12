@@ -1,5 +1,5 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Native navigation avoids the vinext client-router failure observed in production. */
-import type { Metadata } from "next";
+import { publicPageMetadata } from "@/lib/public-page-metadata";
 import { cookies } from "next/headers";
 import { ArrowDown, ArrowRight, ArrowUpRight, Check, MapPin } from "lucide-react";
 import { ConsultationLink } from "../components/consultation-link";
@@ -11,23 +11,13 @@ import "./fit.css";
 
 export const dynamic = "force-dynamic";
 
-export const metadata: Metadata = {
-  title: "Private Vietnam Travel & Custom Trips | Cookie Paradise Travel",
-  description: "A whole Vietnam journey or help with one arrangement. Plan around your dates, interests and budget with Trung, your Columbus, Indiana-based Vietnam trip planner.",
-  alternates: { canonical: "https://cookieparadisetravel.com/fit" },
-  openGraph: {
-    title: "Vietnam, at your pace. | Cookie Paradise Travel",
-    description: "Private journeys, personally planned. Your dates, your people, your kind of Vietnam.",
-    url: "https://cookieparadisetravel.com/fit",
-    images: [{ url: "/travel/fit-mu-cang-chai-1800.webp", width: 1800, height: 1201, alt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam" }],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Vietnam, at your pace. | Cookie Paradise Travel",
-    description: "Private Vietnam journeys shaped around your dates, interests and pace.",
-    images: ["/travel/fit-mu-cang-chai-1800.webp"],
-  },
-};
+export const metadata = publicPageMetadata({
+  title: "Private Vietnam Trips & Custom Tours | Cookie Paradise Travel",
+  description: "Plan a private Vietnam trip around your dates, interests and budget with Trung Le. Get help with a complete custom tour, hotels, transfers or local experiences.",
+  path: "/fit",
+  image: "/travel/fit-mu-cang-chai-1800.webp",
+  imageAlt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam",
+});
 
 const questions = [
   ["What is FIT travel?", "Here, FIT (Free Independent Travel) means a custom, independent journey for you and your travel companions. You work with Trung on the route and arrangements, rather than joining a scheduled group departure. Independent travel can still include prearranged hotels, transfers, experiences and local guides, as agreed in your proposal."],
@@ -57,8 +47,9 @@ export default async function FitTravelPage() {
     <header className="fit-header text-white">
       <div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5 sm:px-8">
         <div className="site-header-brand flex min-w-0 items-center gap-4">
-          <a href="/" className="site-header-home flex shrink-0 items-center gap-3" aria-label="Cookie Paradise Travel Company home">
+          <a href="/" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
             <BrandLogo surface="dark" />
+            <span className="max-w-60 text-sm leading-5 text-white">Small-group tours and private trips to Vietnam</span>
           </a>
           <ReferralBrand header />
         </div>
@@ -71,10 +62,10 @@ export default async function FitTravelPage() {
 
     <section id="fit-main" className="fit-hero fit-wrap" aria-labelledby="fit-title">
       <div className="fit-hero-copy">
-        <p className="fit-kicker">Private Vietnam journeys</p>
-        <h1 id="fit-title">Vietnam,<br /><em>at your pace.</em></h1>
-        <p className="fit-hero-intro">Your dates. Your people. Your kind of adventure.</p>
-        <p className="fit-body">The whole journey, or just the part you need help with. Tell Trung what you have in mind, and shape your Vietnam plans around your dates, interests and budget.</p>
+        <p className="fit-kicker">Your dates. Your own travel companions.</p>
+        <h1 id="fit-title">Private Vietnam trips,<br /><em>at your pace.</em></h1>
+        <p className="fit-hero-intro">Custom tours, personally planned with Trung.</p>
+        <p className="fit-body">Plan a private Vietnam tour for yourself, your partner, family or friends. Tell Trung your dates, interests and budget, and get help with the whole journey or just one arrangement.</p>
         <a className="fit-button fit-button-dark" href="#fit-plan">Plan my Vietnam trip <ArrowRight size={18} aria-hidden="true" /></a>
         <p className="fit-small fit-hero-note">Start with a free 30-minute conversation.</p>
         <a className="fit-text-link fit-explore" href="#fit-ideas">Find a little inspiration <ArrowDown size={16} aria-hidden="true" /></a>
@@ -148,6 +139,8 @@ export default async function FitTravelPage() {
       <div className="fit-questions">{questions.map(([question, answer]) => <details key={question}><summary>{question}<span className="fit-faq-sign" aria-hidden="true">+</span></summary><p className="fit-body">{answer}</p></details>)}</div>
     </section>
 
+    <div className="fit-wrap pb-10 text-base leading-7"><p>Choosing between a hosted tour and a private trip? <a className="font-semibold underline" href="/vietnam-trip-planning#travel-style">Compare Vietnam travel styles in our planning guide</a>.</p></div>
+
     <section id="fit-plan" className="fit-plan" aria-labelledby="fit-plan-title">
       <div className="fit-wrap fit-section fit-plan-grid">
         <div><p className="fit-kicker">Your Vietnam starts with a conversation</p><h2 id="fit-plan-title">Tell us what<br /><em>you&apos;re dreaming of.</em></h2><p className="fit-body">A free 30-minute Google Meet with Trung. Bring an idea, a few questions, or simply the wish to go.</p><div className="fit-plan-actions"><ConsultationLink /><a className="fit-email-link" href={emailHref}>Email Trung your trip ideas <ArrowUpRight size={17} aria-hidden="true" /></a></div><p className="fit-small">No obligation to book. The email link opens your email app with a few planning prompts; you can edit them before sending.</p><a className="fit-contact-address" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></div>
@@ -155,6 +148,6 @@ export default async function FitTravelPage() {
       </div>
     </section>
 
-    <footer className="fit-wrap fit-footer"><div><p className="fit-footer-name">Cookie Paradise Travel Company</p><p>Private journeys. Personal connections.</p></div><div><a href="/">Discover Southern Vietnam group trip <ArrowUpRight size={14} aria-hidden="true" /></a><a href="/privacy">Privacy policy</a><p>© {new Date().getFullYear()} Cookie Paradise Travel Company LLC · Columbus, Indiana</p></div></footer>
+    <footer className="fit-wrap fit-footer"><div><p className="fit-footer-name">Cookie Paradise Travel Company</p><p>Small-group tours and private trips to Vietnam.</p></div><div><a href="/">Discover Southern Vietnam group trip <ArrowUpRight size={14} aria-hidden="true" /></a><a href="/vietnam-trip-planning">Vietnam trip planning guide</a><a href="/privacy">Privacy policy</a><p>© {new Date().getFullYear()} Cookie Paradise Travel Company LLC · Columbus, Indiana</p></div></footer>
   </main></ReferralProvider>;
 }

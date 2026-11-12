@@ -1,4 +1,5 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Native navigation avoids the vinext client-router failure observed in production. */
+import { publicPageMetadata } from "@/lib/public-page-metadata";
 import { cookies } from "next/headers";
 import { ArrowRight, CalendarDays, Check, MapPin, Plane, Users } from "lucide-react";
 import { HeroVideo } from "../components/hero-video";
@@ -14,12 +15,13 @@ import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "../components/trip-availability";
 
 export const dynamic = "force-dynamic";
-export const metadata = {
-  title: "Vietnam Small-Group Trip, June 2027 | Free Trip Guide | Cookie Paradise Travel",
-  description: "Explore Vietnam with a Columbus, Indiana-based travel company. June 1-8, 2027: Ho Chi Minh City, Mekong Delta, Hue and Hoi An. Get the free itinerary and pricing or book a call with Trung.",
-  alternates: { canonical: "https://cookieparadisetravel.com/vietnam" },
-  openGraph: { title: "Your Vietnam adventure starts here", description: "June 1-8, 2027 · 8 days · Small group · Get the free trip guide", url: "https://cookieparadisetravel.com/vietnam", images: ["https://cookieparadisetravel.com/vietnam-hero-poster.webp"] },
-};
+export const metadata = publicPageMetadata({
+  title: "Vietnam Small-Group Tour, June 2027 | Free Itinerary & Pricing",
+  description: "Discover Southern Vietnam, June 1–8, 2027: an 8-day tour for 8–15 travelers through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. Get the free trip guide.",
+  path: "/vietnam",
+  image: "/vietnam-hero-poster.webp",
+  imageAlt: "Discover Southern Vietnam small-group tour",
+});
 
 const places = [
   ["01", "Ho Chi Minh City", "City landmarks, neighborhood life and a vintage-Jeep food adventure after dark."],
@@ -39,9 +41,9 @@ export default async function VietnamTrip() {
   const partner = getSalonPartner((await cookies()).get(REFERRAL_COOKIE)?.value);
   const availability = await getPublicTripAvailability(vietnamDeparture.tripSlug,vietnamDeparture.departure,vietnamDeparture.capacity);
   return <ReferralProvider partner={partner}><main className="min-h-screen bg-[var(--sand)] text-[var(--ink)]">
-    <header className="bg-[var(--navy)] text-white"><div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8"><div className="site-header-brand flex min-w-0 items-center gap-4"><a href="/" className="site-header-home flex shrink-0 items-center" aria-label="Cookie Paradise Travel Company home"><BrandLogo surface="dark" /></a><ReferralBrand header /></div><a className="site-header-call rounded-full border border-white/35 px-4 py-2 text-sm font-semibold hover:bg-white/10" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Talk with Trung <span aria-hidden="true">↗</span></a></div></header>
+    <header className="bg-[var(--navy)] text-white"><div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8"><div className="site-header-brand flex min-w-0 items-center gap-4"><a href="/" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home"><BrandLogo surface="dark" /><span className="max-w-60 text-sm leading-5 text-white">Small-group tours and private trips to Vietnam</span></a><ReferralBrand header /></div><a className="site-header-call rounded-full border border-white/35 px-4 py-2 text-sm font-semibold hover:bg-white/10" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Talk with Trung <span aria-hidden="true">↗</span></a></div></header>
     <section className="relative isolate overflow-hidden bg-[var(--navy)] text-white"><HeroVideo /><div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.92),rgba(45,29,16,.65))]" /><div className="mx-auto grid max-w-7xl items-center gap-10 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1.15fr_1fr] lg:gap-14 lg:py-20"><div>
-      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--gold)]">Small-group travel · From America to Vietnam</p><h1 className="mt-5 font-serif text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">Imagine yourself<br />in Vietnam.</h1>
+      <p className="text-xs font-bold uppercase tracking-[0.22em] text-[var(--gold)]">Discover Southern Vietnam · June 2027</p><h1 className="mt-5 font-serif text-5xl leading-[1.02] tracking-tight sm:text-6xl lg:text-7xl">A small-group tour<br />of Vietnam.</h1>
       <p className="mt-6 max-w-xl text-lg leading-8 text-white/85">From the vibrant streets of Ho Chi Minh City (Saigon) to Mekong waterways, imperial Hue and lantern-lit Hoi An. Eight memorable days, with the details thoughtfully arranged.</p>
       <div className="mt-7 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold"><span className="flex items-center gap-2"><CalendarDays size={18} className="text-[var(--gold)]" /> June 1–8, 2027</span><span className="flex items-center gap-2"><Users size={18} className="text-[var(--gold)]" /> 8–15 travelers</span></div>
       <p className="mt-7 text-3xl font-bold text-[var(--gold)]">$2,875 <span className="text-base font-normal text-white/80">per traveler at 8 travelers</span></p><p className="mt-2 max-w-md text-sm leading-6 text-white/75">Shared room · 8 days / 7 nights · Lower prices as the confirmed group grows · International airfare extra</p>
@@ -64,6 +66,6 @@ export default async function VietnamTrip() {
       </div>
     </div>
     <section className="mx-auto max-w-4xl px-5 pb-16 sm:px-8"><p className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#87551f]"><MapPin size={16} /> A personal conversation, close to home</p><h2 className="mt-3 font-serif text-4xl">Your questions, answered</h2><div className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">{questions.map(([question,answer]) => <details key={question} className="group py-5"><summary className="cursor-pointer text-lg font-semibold">{question}</summary><p className="mt-3 pr-4 text-base leading-8 text-[var(--muted-ink)]">{answer}</p></details>)}</div><JourneyPhoto photo="hue" className="story-funnel-hue" sizes="(min-width: 640px) 480px, 90vw" /><div className="mt-10 flex flex-col items-start gap-5 rounded-3xl bg-[var(--navy)] p-7 text-white sm:p-10"><h2 className="font-serif text-3xl">Ready for the next step?</h2><p className="max-w-xl leading-7 text-white/80">Talk with Trung first, or send a booking request when you&apos;re ready. A reservation is confirmed only through the booking process.</p><div className="flex flex-wrap gap-3"><a href={consultationBookingUrl} target="_blank" rel="noopener noreferrer" className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[var(--gold)] px-6 py-3 font-bold text-[#38281e]">Book a free 30-minute call <ArrowRight size={18} /></a><BookingDialog triggerLabel="I'm ready to request a spot" /></div></div></section>
-    <footer className="border-t border-[var(--line)] px-5 py-8 text-center text-sm leading-7 text-[var(--muted-ink)]">Cookie Paradise Travel Company LLC · Columbus, Indiana<br /><a className="underline" href="/">Full trip website</a><span className="mx-3">·</span><a className="underline" href="/privacy">Privacy</a><span className="mx-3">·</span><a className="underline" href="mailto:trung@cookieparadise.co">Email Trung</a></footer>
+    <footer className="border-t border-[var(--line)] px-5 py-8 text-center text-sm leading-7 text-[var(--muted-ink)]">Cookie Paradise Travel Company LLC · Columbus, Indiana<br /><a className="underline" href="/">Full Vietnam tour itinerary</a><span className="mx-3">·</span><a className="underline" href="/fit">Private Vietnam trips</a><span className="mx-3">·</span><a className="underline" href="/vietnam-trip-planning">Vietnam planning guide</a><span className="mx-3">·</span><a className="underline" href="/privacy">Privacy</a><span className="mx-3">·</span><a className="underline" href="mailto:trung@cookieparadise.co">Email Trung</a></footer>
   </main></ReferralProvider>;
 }
