@@ -35,7 +35,7 @@ export function InquirySalesPanel({sale}:{sale:SalesProcess}) {
       <li>✓ {sale.guideId ? "Guide requested" : "Inquiry received"}</li><li>{sale.consultationBookedAt ? "✓" : "○"} Consultation booked</li><li>{sale.bookingIntent==="ready_to_book" ? "✓" : "○"} Booking started</li><li>{sale.stage==="reserved" ? "✓" : "○"} Reserved</li>
     </ol>
     {sale.consultationBookedAt && <p className="mt-3 text-sm leading-6">{sale.consultationStartsAt ? `Consultation: ${timestamp(sale.consultationStartsAt)} · Indiana time` : "Consultation booking recorded; calendar details are not yet available."}{sale.consultationCompletedAt && ` · Completed ${timestamp(sale.consultationCompletedAt)}`}</p>}
-    <form className="mt-5 grid gap-4 sm:grid-cols-[1fr_190px_auto] sm:items-end" onSubmit={event=>{event.preventDefault();void update({action:"followup",nextAction,dueDate:dueDate || null});}}>
+    <form className="ws-followup-form mt-5 grid gap-4 sm:items-end" onSubmit={event=>{event.preventDefault();void update({action:"followup",nextAction,dueDate:dueDate || null});}}>
       <label className="text-sm font-bold">Next action<input className="field-input mt-2 w-full font-normal" value={nextAction} disabled={busy} onChange={event=>setNextAction(event.target.value)} maxLength={500} placeholder="Discuss flights, answer room questions…" /></label>
       <label className="text-sm font-bold">Follow-up date (Indiana)<input className="field-input mt-2 w-full font-normal" type="date" disabled={busy} value={dueDate} onChange={event=>setDueDate(event.target.value)} /></label>
       <button className="min-h-11 rounded-full bg-[var(--gold)] px-5 text-sm font-bold disabled:opacity-50" disabled={busy} type="submit">Save follow-up</button>
