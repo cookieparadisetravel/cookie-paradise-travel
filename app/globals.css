@@ -47,8 +47,22 @@ a { text-underline-offset: 4px; }
 
 .company-logo { display: block; width: 14rem; max-width: 100%; height: auto; flex-shrink: 0; }
 .company-logo--footer { width: 18rem; }
+/* A centered brand signature, sized to the wordmark instead of a body-copy column. */
+.brand-signature { display: block; width: 14rem; max-width: 100%; }
+.brand-signature .company-logo { width: 100%; }
+.brand-signature__tagline {
+  display: block; margin-top: .7rem; padding-top: .55rem;
+  border-top: 1px solid rgb(247 182 88 / 35%);
+  color: #f4ddbd; text-align: center;
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
+  font-size: 1.125rem; font-style: italic; font-weight: 400;
+  line-height: 1.4; letter-spacing: .01em; white-space: nowrap;
+}
+.brand-signature--light .brand-signature__tagline { color: var(--ink); border-color: var(--line); }
 @media (max-width: 639px) {
   .company-logo { width: 9rem; }
+  .brand-signature { width: 9rem; }
+  .brand-signature__tagline { font-size: 1rem; margin-top: .6rem; padding-top: .45rem; }
   .company-logo--footer { width: 18rem; }
 }
 .site-header-logo { height: auto; width: 8rem; flex-shrink: 0; }

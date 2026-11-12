@@ -149,8 +149,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
             <a href="#top" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
-              <BrandLogo surface="dark" />
-              <span className="max-w-60 text-sm leading-5 text-white">Small-group tours and private trips to Vietnam</span>
+              <BrandLogo surface="dark" tagline />
             </a>
             <ReferralBrand header />
           </div>
