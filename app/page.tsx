@@ -18,7 +18,14 @@ import { BrandLogo } from "./components/brand-logo";
 import { TripGuideForm } from "./components/trip-guide-form";
 import { tripGuideUrl } from "@/lib/trip-guide";
 import travelerAgreementSummary from "@/lib/traveler-agreement-summary.json";
+import { publicPageMetadata } from "@/lib/public-page-metadata";
 export const dynamic = "force-dynamic";
+
+export const metadata = publicPageMetadata({
+  title: "Vietnam Small-Group Tours | Cookie Paradise Travel",
+  description: "Explore Vietnam on a hosted small-group tour or plan a private trip with Trung Le. Discover Ho Chi Minh City, the Mekong Delta, Hue and Hoi An.",
+  path: "/",
+});
 
 const itinerary = [
   ["01", "Arrive in Ho Chi Minh City", "A private airport welcome, hotel transfer and an easy first evening to settle in."],
@@ -135,11 +142,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
   return (
     <ReferralProvider partner={partner}>
     <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
-      <header className="absolute inset-x-0 top-0 z-20 border-b border-white/20 text-white">
+      <section id="top" className="relative isolate overflow-hidden bg-[var(--navy)] text-white">
+        <HeroVideo />
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.94)_0%,rgba(45,29,16,.78)_55%,rgba(45,29,16,.3)_100%)]" />
+      <header className="relative z-20 border-b border-white/20 text-white">
         <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
-            <a href="#top" className="site-header-home flex min-w-0 items-center gap-2 sm:gap-3" aria-label="Cookie Paradise Travel Company home">
+            <a href="#top" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
               <BrandLogo surface="dark" />
+              <span className="max-w-60 text-sm leading-5 text-white">Small-group tours and private trips to Vietnam</span>
             </a>
             <ReferralBrand header />
           </div>
@@ -148,7 +159,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <a className="hover:text-[var(--gold)]" href="#journey">The trip</a>
             <a className="hover:text-[var(--gold)]" href="/fit">Private Vietnam Trips</a>
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
-            <a className="hover:text-[var(--gold)]" href="#faq">Questions</a>
+            <a className="hover:text-[var(--gold)]" href="/vietnam-trip-planning">Planning guide</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
@@ -158,14 +169,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </nav>
       </header>
 
-      <section id="top" className="relative isolate overflow-hidden bg-[var(--navy)] text-white">
-        <HeroVideo />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.94)_0%,rgba(45,29,16,.78)_55%,rgba(45,29,16,.3)_100%)]" />
-        <div className="mx-auto flex min-h-[760px] max-w-7xl items-center px-5 pb-20 pt-40 sm:px-8 sm:pb-24">
+        <div className="mx-auto flex min-h-[680px] max-w-7xl items-center px-5 pb-20 pt-12 sm:px-8 sm:pb-24 sm:pt-16">
           <div className="max-w-3xl">
-            <p className="mb-5 text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)] sm:text-sm">Small-group Vietnam · June 1–8, 2027</p>
+            <p className="mb-5 text-sm font-bold uppercase tracking-[0.15em] text-[var(--gold)]">Small-group Vietnam tour · June 1–8, 2027</p>
             <h1 className="font-serif text-[2.6rem] leading-[1.02] tracking-[-0.04em] sm:text-7xl lg:text-[5.3rem]">Discover Southern Vietnam</h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 sm:text-xl sm:leading-8">Discover Ho Chi Minh City (Saigon), Mekong waterways, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
+            <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 sm:text-xl sm:leading-8">A hosted small-group tour through Ho Chi Minh City (Saigon), the Mekong Delta, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
             <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/90">
               <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[var(--gold)]" /> 8 days / 7 nights</span>
               <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[var(--gold)]" /> 8–15 travelers</span>
@@ -179,6 +187,17 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="mt-4 max-w-xl text-sm leading-6 text-white/90">Free 30-minute Google Meet with Trung, your Columbus-based trip planner. Ask about flights, rooms and whether this trip fits your plans. No obligation to book.</p>
             <a href="#journey" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)] underline underline-offset-4">Explore the journey <ArrowRight className="h-4 w-4" /></a>
           </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="travel-options-title" className="border-b border-[var(--line)] bg-white px-5 py-10 sm:px-8">
+        <div className="mx-auto max-w-7xl">
+          <h2 id="travel-options-title" className="font-serif text-3xl sm:text-4xl">Your Vietnam trip, your way</h2>
+          <div className="mt-6 grid gap-6 text-base leading-7 md:grid-cols-2 md:gap-12">
+            <p><a href="#journey" className="font-bold underline">Vietnam small-group tours</a> bring you together with fellow travelers on a scheduled, hosted itinerary. Explore the June 2027 departure below.</p>
+            <p><a href="/fit" className="font-bold underline">Private Vietnam trips</a> are planned around your dates, companions and interests. Ask Trung for help with the whole journey or one arrangement.</p>
+          </div>
+          <p className="mt-6 text-base leading-7">Still deciding? <a href="/vietnam-trip-planning" className="font-semibold underline">Read the Vietnam trip planning guide</a> to compare travel styles, routes and practical questions.</p>
         </div>
       </section>
 
@@ -403,9 +422,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="mx-auto flex max-w-7xl flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <BrandLogo footer surface="dark" />
-            <p className="mt-3 text-sm">Hosted small-group journeys from Columbus, Indiana.</p>
+            <p className="mt-3 text-sm">Small-group tours and private trips to Vietnam.</p>
           </div>
-          <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><a className="underline hover:text-white" href="/fit">Private Vietnam trips</a></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
+          <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><a className="underline hover:text-white" href="/fit">Private Vietnam trips</a></p><p className="mt-2"><a className="underline hover:text-white" href="/vietnam-trip-planning">Vietnam trip planning guide</a></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
         </div>
       </footer>
       <MobileBookBar availability={availability} />

@@ -4,14 +4,14 @@ import { WelcomeCreditPopup } from "./components/welcome-credit-popup";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cookieparadisetravel.com"),
-  title: "Cookie Paradise Travel Company | Hosted Small-Group Journeys",
-  description: "Thoughtfully hosted small-group journeys from Cookie Paradise Travel Company, beginning with Vietnam in 2027.",
+  title: "Vietnam Tours & Private Trips | Cookie Paradise Travel",
+  description: "Small-group tours and private trips to Vietnam, planned with Trung Le in Columbus, Indiana. Explore local food, culture and everyday life at a pace that fits you.",
   openGraph: {
     type: "website",
     url: "https://cookieparadisetravel.com",
     siteName: "Cookie Paradise Travel Company",
-    title: "Cookie Paradise Travel Company | Hosted Small-Group Journeys",
-    description: "Thoughtfully hosted small-group journeys from Cookie Paradise Travel Company, beginning with Vietnam in 2027.",
+    title: "Vietnam Tours & Private Trips | Cookie Paradise Travel",
+    description: "Small-group tours and private trips to Vietnam, planned with Trung Le in Columbus, Indiana. Explore local food, culture and everyday life at a pace that fits you.",
     images: [{
       url: "/social-preview.png?v=2",
       width: 1200,
@@ -21,8 +21,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Cookie Paradise Travel Company | Hosted Small-Group Journeys",
-    description: "Thoughtfully hosted small-group journeys from Cookie Paradise Travel Company, beginning with Vietnam in 2027.",
+    title: "Vietnam Tours & Private Trips | Cookie Paradise Travel",
+    description: "Small-group tours and private trips to Vietnam, planned with Trung Le in Columbus, Indiana. Explore local food, culture and everyday life at a pace that fits you.",
     images: ["/social-preview.png?v=2"],
   },
   icons: {
