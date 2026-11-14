@@ -11,7 +11,6 @@ import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
 import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "./components/trip-availability";
-import { HeroVideo } from "./components/hero-video";
 import { JourneyPhoto } from "./components/journey-photo";
 import { ConsultationLink } from "./components/consultation-link";
 import { BrandLogo } from "./components/brand-logo";
@@ -141,15 +140,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
   const availability = await getPublicTripAvailability(vietnamDeparture.tripSlug, vietnamDeparture.departure, vietnamDeparture.capacity);
   return (
     <ReferralProvider partner={partner}>
-    <main className="min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
-      <section id="top" className="relative isolate overflow-hidden bg-[var(--navy)] text-white">
-        <HeroVideo />
-        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(36,21,10,.94)_0%,rgba(45,29,16,.78)_55%,rgba(45,29,16,.3)_100%)]" />
-      <header className="relative z-20 border-b border-white/20 text-white">
+    <main className="bright-home min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
+      <section id="top" className="overflow-hidden bg-[#faf8f3] text-[var(--ink)]">
+      <header className="relative z-20 border-b border-black/10 bg-[#faf8f3] text-[var(--ink)]">
         <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
             <a href="#top" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
-              <BrandLogo surface="dark" tagline />
+              <BrandLogo surface="light" tagline />
             </a>
             <ReferralBrand header />
           </div>
@@ -162,29 +159,34 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
-        <nav className="flex items-center justify-center gap-6 border-t border-white/15 bg-[var(--navy)]/35 px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
+        <nav className="flex items-center justify-center gap-6 border-t border-black/10 bg-[#faf8f3] px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
           <a className="hover:text-[var(--gold)]" href="#journey">Group Trip</a>
-          <a className="text-[var(--gold)] hover:text-white" href="/fit">Private Vietnam Trips</a>
+          <a className="text-[var(--ink)] hover:underline" href="/fit">Private Vietnam Trips</a>
         </nav>
       </header>
 
-        <div className="mx-auto flex min-h-[680px] max-w-7xl items-center px-5 pb-20 pt-12 sm:px-8 sm:pb-24 sm:pt-16">
-          <div className="max-w-3xl">
-            <p className="mb-5 text-sm font-bold uppercase tracking-[0.15em] text-[var(--gold)]">Small-group Vietnam tour · June 1–8, 2027</p>
-            <h1 className="font-serif text-[2.6rem] leading-[1.02] tracking-[-0.04em] sm:text-7xl lg:text-[5.3rem]">Discover Southern Vietnam</h1>
-            <p className="mt-6 max-w-2xl text-base leading-7 text-white/90 sm:text-xl sm:leading-8">A hosted small-group tour through Ho Chi Minh City (Saigon), the Mekong Delta, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-white/90">
-              <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[var(--gold)]" /> 8 days / 7 nights</span>
-              <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[var(--gold)]" /> 8–15 travelers</span>
+        <div className="destination-hero relative isolate flex min-h-[520px] items-center justify-center overflow-hidden px-5 py-24 text-center text-white sm:min-h-[660px]">
+          <img src="/travel/hue-citadel-1800.webp" srcSet="/travel/hue-citadel-640.webp 640w, /travel/hue-citadel-1280.webp 1280w, /travel/hue-citadel-1800.webp 1800w" sizes="100vw" width={1800} height={1200} alt="The Imperial Citadel in Hue beneath a blue sky" fetchPriority="high" className="absolute inset-0 -z-20 h-full w-full object-cover object-center" />
+          <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.22)_55%,rgba(0,0,0,.12))]" />
+          <h1 className="max-w-4xl font-serif text-[clamp(2.8rem,7vw,6.5rem)] font-normal leading-[1.08] tracking-[-.025em] [text-shadow:0_2px_16px_rgba(0,0,0,.65)]">Discover<br />Southern Vietnam</h1>
+          <span className="absolute bottom-5 right-6 text-xs text-white [text-shadow:0_1px_5px_black]">Imperial Hue, Vietnam</span>
+        </div>
+        <div className="mx-auto max-w-4xl px-5 py-12 text-center sm:px-8 sm:py-16">
+          <p className="text-sm font-semibold uppercase tracking-[.14em] text-[#805018]">Small-group Vietnam tour · June 1–8, 2027</p>
+          <div className="hero-trip-details">
+            <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">A hosted small-group tour through Ho Chi Minh City (Saigon), the Mekong Delta, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
+            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-[var(--ink)]">
+              <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[#805018]" /> 8 days / 7 nights</span>
+              <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[#805018]" /> 8–15 travelers</span>
             </div>
-            <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[var(--gold)]">$2,875</span><span className="text-base text-white/90">per traveler at eight travelers</span></p>
-            <p className="mt-2 text-sm leading-6 text-white/85">Shared room · International airfare extra · Lower group-price tiers available</p>
+            <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler at eight travelers</span></p>
+            <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra · Lower group-price tiers available</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <ConsultationLink />
-              <a href="#guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-white/60 px-6 py-3 text-center text-sm font-bold hover:bg-white/10">Get the itinerary and pricing <ArrowRight className="h-4 w-4 shrink-0" /></a>
+              <a href="#guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/25 px-6 py-3 text-center text-sm font-bold hover:bg-black/5">Get the itinerary and pricing <ArrowRight className="h-4 w-4 shrink-0" /></a>
             </div>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-white/90">Free 30-minute Google Meet with Trung, your Columbus-based trip planner. Ask about flights, rooms and whether this trip fits your plans. No obligation to book.</p>
-            <a href="#journey" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[var(--gold)] underline underline-offset-4">Explore the journey <ArrowRight className="h-4 w-4" /></a>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--ink)]">Free 30-minute Google Meet with Trung, your Columbus-based trip planner. Ask about flights, rooms and whether this trip fits your plans. No obligation to book.</p>
+            <a href="#journey" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#805018] underline underline-offset-4">Explore the journey <ArrowRight className="h-4 w-4" /></a>
           </div>
         </div>
       </section>
@@ -255,32 +257,32 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
       </section>
 
-      <section id="pricing" className="bg-[var(--navy)] py-20 text-white sm:py-28">
+      <section id="pricing" className="bg-[#f4f0e8] py-20 text-[var(--ink)] sm:py-28">
         <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:items-center">
           <div>
-            <p className="eyebrow" style={{ color: "var(--gold)" }}>Small group, shared value</p>
-            <h2 className="section-title text-white">Your Vietnam trip, clearly priced.</h2>
-            <p className="mt-7 text-5xl font-bold text-[var(--gold)]">$2,875</p>
-            <p className="mt-3 text-base leading-7 text-white/85">Per traveler, sharing a room, at eight travelers.<br />June 1–8, 2027 · International airfare extra.</p>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-white/70">
+            <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
+            <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
+            <p className="mt-7 text-5xl font-bold text-[#805018]">$2,875</p>
+            <p className="mt-3 text-base leading-7 text-[var(--ink)]">Per traveler, sharing a room, at eight travelers.<br />June 1–8, 2027 · International airfare extra.</p>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]">
               {approvedSummary("Price and room arrangements")}
             </p>
-            <TripAvailability availability={availability} label={vietnamDeparture.label} />
-            <div className="mt-7 flex items-start gap-3 rounded-2xl border border-white/15 bg-white/5 p-5 text-sm leading-6 text-white/75">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--gold)]" />
+            <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
+            <div className="mt-7 flex items-start gap-3 rounded-2xl border border-black/10 bg-white p-5 text-sm leading-6 text-[var(--ink)]">
+              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#805018]" />
               <span>Requesting a spot is free. No payment is collected until Trung confirms your departure.</span>
             </div>
             <div className="mt-7 flex flex-wrap gap-3"><ConsultationLink /><BookingDialog triggerLabel="I’m ready to request a spot" compact /></div>
           </div>
-          <div className="overflow-hidden rounded-[2rem] border border-white/15 bg-white/5">
+          <div className="overflow-hidden rounded-[2rem] border border-black/10 bg-white">
             {pricing.map(([group, price], index) => (
-              <div key={group} className={"flex items-end justify-between gap-4 px-6 py-6 sm:px-9 " + (index ? "border-t border-white/10" : "")}>
-                <div><p className="text-sm text-white/55">Confirmed group</p><p className="mt-1 font-semibold">{group}</p></div>
-                <p className="font-serif text-3xl text-[var(--gold)] sm:text-4xl">{price}<span className="ml-1 font-sans text-xs text-white/50">/ person</span></p>
+              <div key={group} className={"flex items-end justify-between gap-4 px-6 py-6 sm:px-9 " + (index ? "border-t border-black/10" : "")}>
+                <div><p className="text-sm text-[var(--ink)]">Confirmed group</p><p className="mt-1 font-semibold">{group}</p></div>
+                <p className="font-serif text-3xl text-[#805018] sm:text-4xl">{price}<span className="ml-1 font-sans text-xs text-[var(--ink)]">/ person</span></p>
               </div>
             ))}
-            <div className="border-t border-white/10 bg-white/5 px-6 py-5 text-sm text-white/70 sm:px-9">
-              Private-room supplement: <strong className="text-white">$399</strong> for a single traveler who wants a room to themselves, subject to availability. Couples sharing a room can request a queen bed or separate beds. International airfare is not included.
+            <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
+              Private-room supplement: <strong className="text-[var(--ink)]">$399</strong> for a single traveler who wants a room to themselves, subject to availability. Couples sharing a room can request a queen bed or separate beds. International airfare is not included.
             </div>
           </div>
         </div>

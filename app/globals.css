@@ -135,3 +135,18 @@ a { text-underline-offset: 4px; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+/* Bright destination-led homepage. */
+.bright-home { --sand: #faf8f3; }
+.bright-home .hero-trip-details > p { margin-left: auto; margin-right: auto; }
+.bright-home .hero-trip-details > .flex { justify-content: center; }
+.bright-home .hero-trip-details > p.flex { justify-content: center; }
+.bright-home header a:hover { text-decoration: underline; text-underline-offset: 5px; }
+@media (max-width: 639px) {
+  .bright-home .destination-hero { min-height: 500px; min-height: 65svh; max-height: 720px; }
+  .bright-home .destination-hero img { object-position: 45% center; }
+}
+
+.bright-home .availability-light > div { background: white; border-color: #d8d0c4; }
+.bright-home .availability-light p { color: #29251f; }
+.bright-home .availability-light [role="progressbar"] { background: #e9e3d8; }
