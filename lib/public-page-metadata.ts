@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 const siteUrl = "https://cookieparadisetravel.com";
 
 /** Keep search and sharing descriptions specific to each public page. */
-export function publicPageMetadata({ title, description, path, image = "/social-preview.png?v=2", imageAlt = "Cookie Paradise Travel Company — Vietnam tours and private trips" }: {
+export function publicPageMetadata({ title, description, path, image = "/travel/social-preview-hue-v3.jpg", imageAlt = "Discover Southern Vietnam — the Imperial Citadel in Hue" }: {
   title: string;
   description: string;
   path: string;

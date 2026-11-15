@@ -13,17 +13,17 @@ export const metadata: Metadata = {
     title: "Vietnam Tours & Private Trips | Cookie Paradise Travel",
     description: "Small-group tours and private trips to Vietnam, planned with Trung Le in Columbus, Indiana. Explore local food, culture and everyday life at a pace that fits you.",
     images: [{
-      url: "/social-preview.png?v=2",
+      url: "/travel/social-preview-hue-v3.jpg",
       width: 1200,
       height: 630,
-      alt: "Cookie Paradise Travel Company",
+      alt: "Discover Southern Vietnam — the Imperial Citadel in Hue",
     }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Vietnam Tours & Private Trips | Cookie Paradise Travel",
     description: "Small-group tours and private trips to Vietnam, planned with Trung Le in Columbus, Indiana. Explore local food, culture and everyday life at a pace that fits you.",
-    images: ["/social-preview.png?v=2"],
+    images: ["/travel/social-preview-hue-v3.jpg"],
   },
   icons: {
     icon: [{ url: "/favicon.png", type: "image/png", sizes: "256x256" }],
