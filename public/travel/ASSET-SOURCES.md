@@ -1,5 +1,16 @@
 # Destination photography
 
+## Homepage visual pause: owner-selected Vietnamese market
+
+The owner selected Duy Nguyen's photograph and requested it between the homepage introduction and the travel-options section. It depicts everyday market life in Vietnam; no specific city or relationship to the pictured people is claimed.
+
+- Source: https://www.pexels.com/photo/vibrant-vietnamese-street-market-scene-30372197/
+- Photographer: Duy Nguyen
+- License: Pexels License, https://www.pexels.com/license/ (free commercial use; no implied endorsement).
+- Download: https://images.pexels.com/photos/30372197/pexels-photo-30372197/free-photo-of-vibrant-vietnamese-street-market-scene.jpeg?auto=compress&w=2400
+- Local files: `vietnam-market-duy-{640,1280,1800}.webp`, quality 82, original aspect ratio retained. CSS uses a 4:3 mobile crop centered at 43% to keep the seated vendors visible. No color grading or overlay added.
+
+
 These five real destination photographs were selected for the editorial landing-page layout on November 2, 2026. They illustrate destinations, rather than promising the exact supplier, boat, view or activity shown. The two Hoi An photographs and Ho Chi Minh City skyline were explicitly selected by the owner.
 
 All originals are offered under the [Unsplash License](https://unsplash.com/license), which allows free commercial use. Visible photo credits link to each original listing. Local responsive WebP derivatives at widths of 640, 1280 and 1800 pixels avoid third-party image requests. Display crops are controlled by CSS; originals are not stretched.

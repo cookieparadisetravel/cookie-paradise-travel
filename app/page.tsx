@@ -191,6 +191,22 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
       </section>
 
+      <figure className="homepage-life-photo">
+        <img
+          src="/travel/vietnam-market-duy-1280.webp"
+          srcSet="/travel/vietnam-market-duy-640.webp 640w, /travel/vietnam-market-duy-1280.webp 1280w, /travel/vietnam-market-duy-1800.webp 1800w"
+          sizes="(min-width: 1280px) 1280px, 100vw"
+          width={1800}
+          height={1013}
+          alt="Vendors seated among baskets of fresh herbs and vegetables outside a neighborhood shop in Vietnam, with scooters lining the street"
+          loading="lazy"
+          decoding="async"
+        />
+        <figcaption>
+          <a href="https://www.pexels.com/photo/vibrant-vietnamese-street-market-scene-30372197/" target="_blank" rel="noopener noreferrer" aria-label="Photo by Duy Nguyen on Pexels (opens in a new tab)">Photo: Duy Nguyen</a>
+        </figcaption>
+      </figure>
+
       <section aria-labelledby="travel-options-title" className="border-b border-[var(--line)] bg-white px-5 py-10 sm:px-8">
         <div className="mx-auto max-w-7xl">
           <h2 id="travel-options-title" className="font-serif text-3xl sm:text-4xl">Your Vietnam trip, your way</h2>

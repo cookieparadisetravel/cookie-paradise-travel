@@ -138,6 +138,13 @@ a { text-underline-offset: 4px; }
 
 /* Bright destination-led homepage. */
 .bright-home { --sand: #faf8f3; }
+.homepage-life-photo { margin: 0; padding: 0; background: #fff; }
+.homepage-life-photo img { display: block; width: 100%; max-width: 1280px; height: auto; aspect-ratio: 16 / 9; object-fit: cover; margin: 0 auto; }
+.homepage-life-photo figcaption { max-width: 1280px; margin: 0 auto; padding: .65rem 1.25rem 0; text-align: right; color: #55483b; font-size: .75rem; line-height: 1.5; }
+.homepage-life-photo figcaption a { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 639px) {
+  .homepage-life-photo img { aspect-ratio: 4 / 3; object-position: 43% center; }
+}
 .bright-home .hero-trip-details > p { margin-left: auto; margin-right: auto; }
 .bright-home .hero-trip-details > .flex { justify-content: center; }
 .bright-home .hero-trip-details > p.flex { justify-content: center; }
