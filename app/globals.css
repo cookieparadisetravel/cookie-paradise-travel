@@ -179,3 +179,10 @@ a { text-underline-offset: 4px; }
 /* Keep budget figures and supporting text legible on the light pricing card. */
 .bright-home .trip-budget { color: #171717; }
 .trip-budget summary:focus-visible { outline: 2px solid #805018; outline-offset: 5px; border-radius: .25rem; }
+
+/* Place the approved market photograph beside the concise inclusions list. */
+.inclusions-life-photo { background: transparent; min-width: 0; }
+.inclusions-life-photo img { aspect-ratio: 4 / 3; border-radius: 1.5rem; object-position: 43% center; }
+.inclusions-life-photo figcaption { padding-right: 0; }
+.hero-essential-copy { width: 100%; }
+.hero-essential-copy h1 { margin-inline: auto; }

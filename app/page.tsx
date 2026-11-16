@@ -1,6 +1,5 @@
 import {
-  ArrowRight, Check, ChevronDown, Clock3, Compass, MapPin, Plane,
-  ShieldCheck, Sparkles, Users, Utensils,
+  ArrowRight, ChevronDown, Plane, Users, Utensils,
 } from "lucide-react";
 import { BookingDialog } from "./components/booking-dialog";
 import { MobileBookBar } from "./components/mobile-book-bar";
@@ -12,7 +11,7 @@ import { getPublicTripAvailability } from "@/lib/public-trip-availability";
 import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "./components/trip-availability";
 import { TripBudget } from "./components/trip-budget";
-import { JourneyPhoto, photographs } from "./components/journey-photo";
+import { JourneyPhoto } from "./components/journey-photo";
 import { DestinationSlideshow } from "./components/destination-slideshow";
 import { LegacyJourneyCleanup, TripSectionLink } from "./components/trip-section-link";
 import { ConsultationLink } from "./components/consultation-link";
@@ -124,11 +123,10 @@ const approvedSummary = (label: string) => {
     .replace(/\s*\(Sections? [^)]+\)/g, "");
 };
 const homepageFaqs = [
-  { question: "Do I need to be ready to book before we talk?", answer: "No. The free 30-minute Google Meet is a chance to ask about the itinerary, flights, rooms and whether the trip fits your plans. There is no obligation to book. You can also download the trip itinerary and pricing PDF first or email Trung at trung@cookieparadise.co." },
+  { question: "How do I reserve a place?", answer: "Choose ‘Request a spot’ in the pricing section. Trung will review your plans and send a personalized Traveler Agreement and secure Square invoice. Your booking is confirmed only after our written acceptance, the required signatures and cleared deposit or required full payment. Submitting the form does not take a payment or confirm a reservation." },
   { question: "Where do I fly into and out of?", answer: "Arrive at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City for June 1, 2027. Depart from Da Nang International Airport (DAD), near Hoi An, on June 8. The listed domestic flight from Ho Chi Minh City to Hue (HUI) is included; international flights are extra. Discuss flight plans with Trung before purchasing." },
   { question: "What are the room options for solo travelers, friends and couples?", answer: "The listed price is per person sharing a double or twin room. Friends can request separate beds; couples can request a queen bed or separate beds. If you are traveling solo, ask Trung about room arrangements. A room to yourself adds $399, subject to availability; a roommate match is not guaranteed." },
   { question: "What is the daily pace like?", answer: "The itinerary includes city and heritage-site walking, getting on and off boats, some early starts and full activity days, alongside free time. The Mekong village routes offer bicycle or buggy options. Talk with Trung about your preferred pace and any arrangements that need to be checked before booking." },
-  { question: "Who will host the trip?", answer: "The trip is created by Trung Le and hosted by Trung or another carefully selected Cookie Paradise Travel Company host. Ask who is planned to host your departure when you speak with Trung." },
   { question: "What are the deposit and payment terms?", answer: approvedSummary("Deposit and payments") },
   { question: "What happens if the minimum group is not reached?", answer: approvedSummary("Minimum group and company cancellation") + " Independently purchased international flights and other arrangements are not covered by this refund." },
   { question: "What if a major disruption affects the trip?", answer: approvedSummary("Changes and major disruptions") },
@@ -155,51 +153,81 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <ReferralBrand header />
           </div>
           <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Main navigation">
+            <a className="hover:text-[var(--gold)]" href="#pricing">Pricing &amp; budget</a>
+            <a className="hover:text-[var(--gold)]" href="#included">What’s included</a>
+            <TripSectionLink className="hover:text-[var(--gold)]">Itinerary</TripSectionLink>
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
-            <TripSectionLink className="hover:text-[var(--gold)]">The trip</TripSectionLink>
-            <a className="hover:text-[var(--gold)]" href="/fit">Private Vietnam Trips</a>
-            <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
-            <a className="hover:text-[var(--gold)]" href="/vietnam-trip-planning">Planning guide</a>
+            <a className="hover:text-[var(--gold)]" href="/fit">Private trips</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
-        <nav className="flex items-center justify-center gap-6 border-t border-black/10 bg-[#faf8f3] px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
-          <TripSectionLink className="hover:text-[var(--gold)]">Group Trip</TripSectionLink>
-          <a className="text-[var(--ink)] hover:underline" href="/fit">Private Vietnam Trips</a>
+        <nav className="flex items-center justify-center gap-5 border-t border-black/10 bg-[#faf8f3] px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
+          <a className="hover:underline" href="#pricing">Pricing</a>
+          <TripSectionLink className="hover:underline">Itinerary</TripSectionLink>
+          <a className="hover:underline" href="/fit">Private trips</a>
         </nav>
       </header>
 
         <div className="destination-hero relative isolate flex min-h-[520px] items-center justify-center overflow-hidden px-5 py-24 text-center text-white sm:min-h-[660px]">
           <img src="/travel/hue-citadel-1800.webp" srcSet="/travel/hue-citadel-640.webp 640w, /travel/hue-citadel-1280.webp 1280w, /travel/hue-citadel-1800.webp 1800w" sizes="100vw" width={1800} height={1200} alt="The Imperial Citadel in Hue beneath a blue sky" fetchPriority="high" className="absolute inset-0 -z-20 h-full w-full object-cover object-center" />
           <div aria-hidden="true" className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(0,0,0,.04),rgba(0,0,0,.22)_55%,rgba(0,0,0,.12))]" />
+          <div className="hero-essential-copy">
+            <p className="mb-5 text-sm font-semibold uppercase tracking-[.14em] [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">Small-group Vietnam tour</p>
           <h1 className="max-w-4xl font-serif text-[clamp(2.8rem,7vw,6.5rem)] font-normal leading-[1.08] tracking-[-.025em] [text-shadow:0_2px_16px_rgba(0,0,0,.65)]">Discover<br />Southern Vietnam</h1>
+            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 · 8 days · 8–15 travelers</p>
+          </div>
           <span className="absolute bottom-5 right-6 text-xs text-white [text-shadow:0_1px_5px_black]">Imperial Hue, Vietnam</span>
         </div>
         <div className="mx-auto max-w-4xl px-5 py-12 text-center sm:px-8 sm:py-16">
-          <p className="text-sm font-semibold uppercase tracking-[.14em] text-[#805018]">Small-group Vietnam tour · June 1–8, 2027</p>
           <div className="hero-trip-details">
-            <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">A hosted small-group tour through Ho Chi Minh City (Saigon), the Mekong Delta, imperial Hue and lantern-lit Hoi An, with the details thoughtfully arranged.</p>
-            <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3 text-sm font-semibold text-[var(--ink)]">
-              <span className="flex items-center gap-2"><Clock3 className="h-4 w-4 text-[#805018]" /> 8 days / 7 nights</span>
-              <span className="flex items-center gap-2"><Users className="h-4 w-4 text-[#805018]" /> 8–15 travelers</span>
-            </div>
+            <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
             <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler at eight travelers</span></p>
-            <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra · Lower group-price tiers available</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <ConsultationLink />
               <a href="#guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/25 px-6 py-3 text-center text-sm font-bold hover:bg-black/5">Get the itinerary and pricing <ArrowRight className="h-4 w-4 shrink-0" /></a>
             </div>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--ink)]">Free 30-minute Google Meet with Trung, your Columbus-based trip planner. Ask about flights, rooms and whether this trip fits your plans. No obligation to book.</p>
-            <TripSectionLink className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#805018] underline underline-offset-4">Explore the trip <ArrowRight className="h-4 w-4" /></TripSectionLink>
+            <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--ink)]">Free 30-minute Google Meet with Trung · No obligation to book.</p>
+            <a href="#pricing" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#805018] underline underline-offset-4">See the full trip budget <ArrowRight className="h-4 w-4" /></a>
           </div>
         </div>
       </section>
 
-      <figure className="homepage-life-photo">
+      <section id="pricing" className="bg-[#f4f0e8] py-14 text-[var(--ink)] sm:py-20">
+        <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:items-center">
+          <div>
+            <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
+            <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
+            <p className="mt-5 text-base leading-7">The tour price is per person sharing a room. Your final price depends on the confirmed group size.</p>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due April 1, 2027.</p>
+            <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
+            <div className="mt-7 flex flex-wrap gap-3"><BookingDialog triggerLabel="Request a spot" compact /><a href="#faq" className="inline-flex min-h-12 items-center px-2 text-sm font-semibold underline">Booking questions</a></div>
+          </div>
+          <div className="overflow-hidden rounded-[2rem] border border-black/10 bg-white">
+            {pricing.map(([group, price], index) => (
+              <div key={group} className={"flex items-end justify-between gap-4 px-6 py-6 sm:px-9 " + (index ? "border-t border-black/10" : "")}>
+                <p className="font-semibold">{group}</p>
+                <p className="font-serif text-3xl text-[#805018] sm:text-4xl">{price}<span className="ml-1 font-sans text-xs text-[var(--ink)]">/ person</span></p>
+              </div>
+            ))}
+            <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
+              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">How group pricing works</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
+              Private room: <strong className="text-[var(--ink)]">+$399</strong>, subject to availability. <a href="#faq" className="font-semibold underline">See room options and booking terms.</a>
+            </div>
+          </div>
+        </div>
+        <TripBudget />
+      </section>
+
+      <section id="included" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-14 sm:px-8 sm:py-20">
+        <p className="eyebrow">Included in the tour price</p>
+        <h2 className="section-title">The details, taken care of.</h2>
+        <div className="mt-8 grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
+      <figure className="homepage-life-photo inclusions-life-photo">
         <img
           src="/travel/vietnam-market-duy-1280.webp"
           srcSet="/travel/vietnam-market-duy-640.webp 640w, /travel/vietnam-market-duy-1280.webp 1280w, /travel/vietnam-market-duy-1800.webp 1800w"
-          sizes="(min-width: 1280px) 1280px, 100vw"
+          sizes="(min-width: 1024px) 48vw, 100vw"
           width={1800}
           height={1013}
           alt="Vendors seated among baskets of fresh herbs and vegetables outside a neighborhood shop in Vietnam, with scooters lining the street"
@@ -210,190 +238,31 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <a href="https://www.pexels.com/photo/vibrant-vietnamese-street-market-scene-30372197/" target="_blank" rel="noopener noreferrer" aria-label="Photo by Duy Nguyen on Pexels (opens in a new tab)">Photo: Duy Nguyen</a>
         </figcaption>
       </figure>
-
-      <section aria-labelledby="travel-options-title" className="border-b border-[var(--line)] bg-white px-5 py-10 sm:px-8">
-        <div className="mx-auto max-w-7xl">
-          <h2 id="travel-options-title" className="font-serif text-3xl sm:text-4xl">Your Vietnam trip, your way</h2>
-          <div className="mt-6 grid gap-6 text-base leading-7 md:grid-cols-2 md:gap-12">
-            <p><TripSectionLink className="font-bold underline">Vietnam small-group tours</TripSectionLink> bring you together with fellow travelers on a scheduled, hosted itinerary. Explore the June 2027 departure below.</p>
-            <p><a href="/fit" className="font-bold underline">Private Vietnam trips</a> are planned around your dates, companions and interests. Ask Trung for help with the whole journey or one arrangement.</p>
-          </div>
-          <p className="mt-6 text-base leading-7">Still deciding? <a href="/vietnam-trip-planning" className="font-semibold underline">Read the Vietnam trip planning guide</a> to compare travel styles, routes and practical questions.</p>
-        </div>
-      </section>
-
-      <section id="about" className="scroll-mt-6 border-b border-[var(--line)] bg-white py-14 sm:py-20">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[.65fr_1.35fr] lg:gap-16">
-          <div className="relative mx-auto w-full max-w-sm pr-4">
-            <div className="absolute bottom-0 right-0 top-4 w-[92%] rounded-[2rem] bg-[var(--gold)]" aria-hidden="true" />
-            <img src="/about-trung.jpg" alt="Trung Le seated in front of the yellow Cookie Paradise bakery trailer" className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-center shadow-lg" width={960} height={1280} loading="lazy" />
-          </div>
-          <div>
-            <p className="eyebrow">A local connection to Vietnam</p>
-            <h2 className="section-title">Meet Trung, your Vietnam trip planner.</h2>
-            <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Born in Vietnam and now based in Columbus, Indiana, Trung Le spent seven years living in Ho Chi Minh City. He is the founder of Cookie Paradise Travel Company and co-owner of the local Cookie Paradise bakery.</p>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Get to know the person planning your trip before you decide. Your call is a chance to talk through the experience, ask practical questions and see whether the journey is right for you.</p>
-            <div className="mt-6 flex flex-wrap gap-2 text-sm font-semibold">
-              <span className="rounded-full bg-[var(--cream)] px-4 py-2">Born in Vietnam</span>
-              <span className="rounded-full bg-[var(--cream)] px-4 py-2">Columbus, Indiana home</span>
-              <span className="rounded-full bg-[var(--cream)] px-4 py-2">First-hand Vietnam experience</span>
-            </div>
-            <div className="mt-7"><ConsultationLink inverse /></div>
-            <details className="mt-6 max-w-2xl rounded-2xl border border-[var(--line)] px-5 py-4">
-              <summary className="cursor-pointer font-semibold">More about Trung</summary>
-              <div className="mt-7 space-y-5 text-lg leading-8 text-[var(--muted-ink)]">
-              <p>
-                Trung Le is the founder of Cookie Paradise Travel Company and the co-owner of Cookie Paradise, the Columbus cottage bakery known for its generous cookies and warm hospitality. For him, travel is an extension of that same idea: bringing people together through food, stories and experiences that feel personal.
-              </p>
-              <p>
-                Born in 1989 in the mountains of Northern Vietnam’s Hoang Lien Son range, Trung came to French Lick, Indiana, as an exchange student in 2006. He attended Franklin College the following year, then moved to Columbus and worked for Cummins from 2011 to 2017.
-              </p>
-              <p>
-                In 2017, Trung returned to Vietnam and spent seven years living in Ho Chi Minh City before relocating his family back to Columbus. He loves both Vietnam and the United States and remains deeply connected to each country. These journeys are his way of sharing the Vietnam he knows—not simply as a destination, but as a place of family, flavor, resilience and welcome.
-              </p>
-            </div>
-
-            </details>
+          <div className="divide-y divide-[var(--line)]">
+            {[
+              [Utensils, "Hotels & meals", "Seven hotel nights, seven breakfasts, five lunches and three dinners, including a home-hosted Mekong lunch and Hue royal dinner."],
+              [Plane, "Flights & transfers", "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers and private boats."],
+              [Users, "Guides & experiences", "English-speaking local guides, admission fees and all scheduled activities, from the Jeep food tour to Hoi An’s culinary challenge."],
+            ].map(([Icon, title, text]) => {
+              const ItemIcon = Icon as typeof Plane;
+              return <div key={title as string} className="flex gap-4 py-5 first:pt-0"><ItemIcon aria-hidden="true" className="mt-1 h-6 w-6 shrink-0 text-[var(--orange)]" /><div><h3 className="font-serif text-2xl">{title as string}</h3><p className="mt-2 text-base leading-7 text-[var(--muted-ink)]">{text as string}</p></div></div>;
+            })}
+            <p className="pt-5 text-sm leading-6 text-[var(--muted-ink)]">Drinking water and a refillable bottle are provided. International flights and other extras are covered in the budget estimate above.</p>
           </div>
         </div>
       </section>
 
-      <section id="trip-highlights" tabIndex={-1} aria-label="Vietnam trip highlights" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
-        <div className="story-intro">
-        <div className="max-w-3xl"><p className="eyebrow">Four places. One memorable journey.</p><h2 className="section-title">Picture yourself here.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted-ink)]">Taste sizzling street food, drift through palm-lined waterways and wander lantern-lit lanes. From vibrant Ho Chi Minh City to imperial Hue and the warm evenings of Hoi An, explore with no more than 15 travelers, hosted by Trung or a carefully selected Cookie Paradise Travel Company host.</p></div>
-        <DestinationSlideshow />
-        </div>
-        <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["01", "Ho Chi Minh City", "Explore Ho Chi Minh City's neighborhoods and landmarks, then head out by vintage Jeep for a food adventure after dark."],
-            ["02", "Mekong Delta", "Travel sampan waterways, meet local makers and share a home-hosted lunch, with village paths along the way."],
-            ["03", "Hue", "Discover imperial heritage and royal tombs, savor garden-house traditions and cruise the Perfume River at sunset."],
-            ["04", "Hoi An", "Cross the Hai Van Pass, make a lantern, explore old-town lanes and join a hands-on culinary challenge."],
-          ].map(([number,title,description], index) => {
-            const photo = [photographs.skyline, photographs.mekong, photographs.hue, photographs.street][index];
-            return <article key={number} className="overflow-hidden rounded-3xl border border-[var(--line)] bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`/travel/${photo.file}-640.webp`} alt={photo.alt} width={640} height={420} loading="lazy" decoding="async" className="aspect-[3/2] w-full object-cover" />
-              <div className="p-6"><p className="text-sm font-bold tracking-widest text-[var(--orange)]">{number}</p><h3 className="mt-3 font-serif text-2xl">{title}</h3><p className="mt-3 text-base leading-7 text-[var(--muted-ink)]">{description}</p>
-              <a href={photo.source} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-xs text-[var(--muted-ink)] underline">Photo: {photo.photographer}</a></div>
-            </article>;
-          })}
-        </div>
-        <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-4">
-          <a href="#daily-schedule" className="inline-flex items-center gap-2 font-semibold underline decoration-[var(--gold)] decoration-2 underline-offset-4">See the full daily itinerary <ArrowRight className="h-4 w-4" /></a>
-          <a href="#pricing" className="font-semibold underline underline-offset-4">See pricing and what&apos;s included</a>
-        </div>
-      </section>
-
-      <section id="pricing" className="bg-[#f4f0e8] py-20 text-[var(--ink)] sm:py-28">
-        <div className="mx-auto grid max-w-7xl gap-12 px-5 sm:px-8 lg:grid-cols-[1fr_1.2fr] lg:items-center">
-          <div>
-            <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
-            <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
-            <p className="mt-7 text-5xl font-bold text-[#805018]">$2,875</p>
-            <p className="mt-3 text-base leading-7 text-[var(--ink)]">Per traveler, sharing a room, at eight travelers.<br />June 1–8, 2027 · International airfare extra.</p>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due April 1, 2027.</p>
-            <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
-            <div className="mt-7 flex items-start gap-3 rounded-2xl border border-black/10 bg-white p-5 text-sm leading-6 text-[var(--ink)]">
-              <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#805018]" />
-              <span>Requesting a spot is free. No payment is collected until Trung confirms your departure.</span>
-            </div>
-            <div className="mt-7 flex flex-wrap gap-3"><ConsultationLink /><BookingDialog triggerLabel="I’m ready to request a spot" compact /></div>
-          </div>
-          <div className="overflow-hidden rounded-[2rem] border border-black/10 bg-white">
-            {pricing.map(([group, price], index) => (
-              <div key={group} className={"flex items-end justify-between gap-4 px-6 py-6 sm:px-9 " + (index ? "border-t border-black/10" : "")}>
-                <div><p className="text-sm text-[var(--ink)]">Confirmed group</p><p className="mt-1 font-semibold">{group}</p></div>
-                <p className="font-serif text-3xl text-[#805018] sm:text-4xl">{price}<span className="ml-1 font-sans text-xs text-[var(--ink)]">/ person</span></p>
-              </div>
-            ))}
-            <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
-              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">How group pricing works</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
-              Private-room supplement: <strong className="text-[var(--ink)]">$399</strong> for a single traveler who wants a room to themselves, subject to availability. Couples sharing a room can request a queen bed or separate beds. International airfare is not included.
-            </div>
-          </div>
-        </div>
-        <TripBudget />
-      </section>
-
-      <section id="included" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
-        <div className="max-w-3xl">
-          <p className="eyebrow">Included in your trip</p>
-          <h2 className="section-title">The essentials—and the experiences you’ll remember.</h2>
-        </div>
-        <div className="story-inclusions">
-        <JourneyPhoto photo="mekong" className="story-mekong" sizes="(min-width: 1280px) 450px, (min-width: 768px) 36vw, 92vw" />
-        <div className="grid gap-5 sm:grid-cols-2">
-          {[
-            [Plane, "Hotels & transport", "Seven hotel nights, daily breakfast, private ground transportation, scheduled airport transfers and the domestic flight to Hue."],
-            [Utensils, "Meals & local flavor", "Meals marked in the itinerary, a home-hosted Mekong lunch, Hue royal dinner and Hoi An farewell dinner."],
-            [Sparkles, "Signature experiences", "Ho Chi Minh City by vintage Jeep, Perfume River sunset cruise, lantern workshop, basket boat and culinary challenge."],
-            [Users, "Guides & admissions", "English-speaking local guides, entrance fees and the scheduled activities described in the itinerary."],
-            [Check, "Thoughtful details", "Refillable water bottle, purified drinking water, private boats and carefully paced days."],
-            [MapPin, "Three distinct regions", "Ho Chi Minh City and the Mekong Delta, imperial Hue, and the living heritage of Hoi An."],
-          ].map(([Icon, title, text]) => {
-            const CardIcon = Icon as typeof Plane;
-            return (
-              <article key={title as string} className="rounded-3xl border border-[var(--line)] bg-white p-7">
-                <CardIcon className="h-7 w-7 text-[var(--orange)]" />
-                <h3 className="mt-6 font-serif text-2xl">{title as string}</h3>
-                <p className="mt-3 leading-7 text-[var(--muted-ink)]">{text as string}</p>
-              </article>
-            );
-          })}
-        </div>
-        </div>
-        <div className="mt-10 grid gap-6 rounded-3xl border border-[var(--line)] bg-[var(--cream)] p-7 sm:grid-cols-2 sm:p-9">
-          <div><h3 className="font-serif text-2xl">A few extras to budget for</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">International flights, travel insurance, personal spending, airport fast-track assistance and anything not specifically included are extra.</p>
-            <dl className="mt-5 space-y-4 text-base leading-7">
-              <div><dt className="font-bold">Vietnam e-visa: US$25 single entry</dt><dd>US$50 for multiple entry. These are government fees; eligibility and fees can change. <a href="https://evisa.gov.vn/" target="_blank" rel="noopener noreferrer" className="font-semibold underline">Check the official visa portal.</a></dd></div>
-              <div><dt className="font-bold">Tips: budget about US$40–60 per traveler</dt><dd>A planning estimate for the eight-day group trip, covering shared guide and driver tips, boats, porters and included meals. Tips are optional and based on service; we will share guidance before departure.</dd></div>
-            </dl>
-          </div>
-          <div><h3 className="font-serif text-2xl">A little flexibility, thoughtfully handled</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">Even a good itinerary can’t negotiate with the weather. Local conditions and supplier schedules sometimes mean adjusting a hotel, flight, activity or route. We’ll explain changes and use comparable arrangements when practical.</p><p className="mt-4 leading-7 text-[var(--muted-ink)]">For bigger disruptions, <a href="#faq" className="font-semibold underline">see the cancellation and refund answers below</a> and your Traveler Agreement.</p></div>
-        </div>
-      </section>
-
-
-      <section id="faq" className="mx-auto max-w-5xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
-        <div className="story-faq-intro">
-        <div><p className="eyebrow">Find your fit</p><h2 className="section-title">Your questions, answered.</h2>
-        <p className="mt-5 max-w-3xl text-lg leading-8 text-[var(--muted-ink)]">You should have the practical details before deciding. If something still needs a conversation, Trung is here to help.</p>
-        </div>
-        <JourneyPhoto photo="street" className="story-street" sizes="(min-width: 1024px) 340px, (min-width: 768px) 35vw, 80vw" />
-        </div>
-        <div className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
-          {homepageFaqs.map(item => <details key={item.question} className="group py-5">
-            <summary className="flex cursor-pointer list-none items-start justify-between gap-5 text-lg font-semibold [&::-webkit-details-marker]:hidden">{item.question}<ChevronDown aria-hidden="true" className="mt-1 h-5 w-5 shrink-0 transition-transform group-open:rotate-180" /></summary>
-            <p className="mt-4 max-w-4xl text-base leading-8 text-[var(--muted-ink)]">{item.answer}</p>
-          </details>)}
-        </div>
-        <p className="mt-5 text-sm leading-6 text-[var(--muted-ink)]">These answers are a summary. Your personalized Traveler Agreement contains the complete booking terms.</p>
-        <div className="mt-7"><ConsultationLink inverse /></div>
-      </section>
-
-      <section id="itinerary" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">
+      <section id="itinerary" tabIndex={-1} aria-labelledby="itinerary-title" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-14 sm:px-8 sm:py-20">
         <div className="grid gap-12 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
           <div className="lg:self-start">
             <p className="eyebrow">The daily itinerary</p>
-            <h2 className="section-title">Eight days, thoughtfully arranged</h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">
-              Each day balances memorable experiences with room to breathe. You’ll meet the country through its food, families, landscapes and layered history—not from a bus window.
-            </p>
-            <a href="#daily-schedule" className="mt-7 inline-flex items-center gap-2 font-bold text-[var(--orange)] underline decoration-[var(--gold)] decoration-2 underline-offset-4">
-              Jump to the day-by-day schedule <ArrowRight className="h-4 w-4" />
-            </a>
-            <div className="mt-7"><ConsultationLink inverse /></div>
-            <div className="mt-8 rounded-3xl bg-[var(--navy)] p-7 text-white">
-              <Compass className="h-8 w-8 text-[var(--gold)]" />
-              <p className="mt-5 font-serif text-2xl">Thoughtfully hosted</p>
-              <p className="mt-3 leading-7 text-white/70">Each departure is hosted by Trung or another carefully selected Cookie Paradise Travel Company host. Ask Trung who is planned to host your departure and what to expect along the way.</p>
-            </div>
-            <JourneyPhoto photo="hue" className="story-hue" sizes="(min-width: 1280px) 400px, (min-width: 1024px) 32vw, 92vw" />
+            <h2 id="itinerary-title" className="section-title">Picture your eight days in Vietnam.</h2>
+            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Sizzling street food, palm-lined waterways, royal gardens and lantern-lit lanes. Open any day for its schedule and meals.</p>
+            <DestinationSlideshow />
           </div>
           <div id="daily-schedule" className="scroll-mt-6 space-y-4">
             {detailedItinerary.map((day, index) => (
-              <details key={day.day} open={index === 0} className="group overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--sand)]">
+              <details key={day.day} className="group overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--sand)]">
                 <summary className="flex cursor-pointer list-none items-start gap-4 px-5 py-5 sm:px-7 [&::-webkit-details-marker]:hidden">
                   <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--gold)] text-sm font-extrabold text-[var(--orange)]">{day.day}</span>
                   <span className="min-w-0 flex-1">
@@ -422,11 +291,50 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
       </section>
 
+      <section id="about" className="scroll-mt-6 border-b border-[var(--line)] bg-white py-14 sm:py-20">
+        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[.65fr_1.35fr] lg:gap-16">
+          <div className="relative mx-auto w-full max-w-sm pr-4">
+            <div className="absolute bottom-0 right-0 top-4 w-[92%] rounded-[2rem] bg-[var(--gold)]" aria-hidden="true" />
+            <img src="/about-trung.jpg" alt="Trung Le seated in front of the yellow Cookie Paradise bakery trailer" className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-center shadow-lg" width={960} height={1280} loading="lazy" />
+          </div>
+          <div>
+            <p className="eyebrow">A local connection to Vietnam</p>
+            <h2 className="section-title">Meet Trung, your Vietnam trip planner.</h2>
+            <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Born in Vietnam and now based in Columbus, Indiana, Trung Le spent seven years living in Ho Chi Minh City. He is the founder of Cookie Paradise Travel Company and co-owner of the local Cookie Paradise bakery.</p>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Trung created this itinerary to share the food, everyday life and places he knows. Your departure will be hosted by Trung or another carefully selected Cookie Paradise Travel Company host; ask who is planned for your trip.</p>
+            <details className="mt-6 max-w-2xl rounded-2xl border border-[var(--line)] px-5 py-4">
+              <summary className="cursor-pointer font-semibold">More about Trung</summary>
+              <div className="mt-7 space-y-5 text-lg leading-8 text-[var(--muted-ink)]">
+              <p>
+                Born in 1989 in the mountains of Northern Vietnam’s Hoang Lien Son range, Trung came to French Lick, Indiana, as an exchange student in 2006. He attended Franklin College the following year, then moved to Columbus and worked for Cummins from 2011 to 2017.
+              </p>
+              <p>
+                His family returned to Columbus after their years in Vietnam. Through food, stories and shared experiences, he continues to bring the two places he calls home together.
+              </p>
+            </div>
+
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" className="mx-auto max-w-5xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
+        <p className="eyebrow">Before you book</p>
+        <h2 className="section-title">Your practical questions, answered.</h2>
+        <div className="mt-8 divide-y divide-[var(--line)] border-y border-[var(--line)]">
+          {homepageFaqs.map(item => <details key={item.question} className="group py-5">
+            <summary className="flex cursor-pointer list-none items-start justify-between gap-5 text-lg font-semibold [&::-webkit-details-marker]:hidden">{item.question}<ChevronDown aria-hidden="true" className="mt-1 h-5 w-5 shrink-0 transition-transform group-open:rotate-180" /></summary>
+            <p className="mt-4 max-w-4xl text-base leading-8 text-[var(--muted-ink)]">{item.answer}</p>
+          </details>)}
+        </div>
+        <p className="mt-5 text-sm leading-6 text-[var(--muted-ink)]">These answers are a summary. Your personalized Traveler Agreement contains the complete booking terms.</p>
+      </section>
 
       <section id="guide" className="border-y border-[var(--line)] bg-[var(--cream)] py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl items-start gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
-          <div><p className="eyebrow">Take the details with you</p><h2 className="section-title">Take the itinerary with you.</h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">Save the itinerary and pricing, share it with your travel companion and come back with your questions. Request an emailed copy here without starting a booking.</p>
+          <div><p className="eyebrow">Your next step</p><h2 className="section-title">Let’s plan your Vietnam trip.</h2>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">Talk through your plans with Trung on a free 30-minute Google Meet, or take the itinerary with you and decide in your own time.</p>
+            <div className="mt-6"><ConsultationLink /></div>
             <a href={tripGuideUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center gap-2 font-semibold underline underline-offset-4">View the itinerary and pricing (PDF) <ArrowRight className="h-4 w-4" /></a>
             <p className="mt-6 text-base leading-7 text-[var(--muted-ink)]">Prefer to ask by email? Write to <a href="mailto:trung@cookieparadise.co" className="font-semibold underline">trung@cookieparadise.co</a>.</p>
             <JourneyPhoto photo="lanterns" className="story-guide-lanterns" sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 70vw" />
@@ -435,21 +343,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
       </section>
 
-      <section id="how-booking-works" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
-        <p className="eyebrow">When you are ready</p><h2 className="section-title">A clear next step, at your pace.</h2>
-        <ol className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["01", "Talk or explore first", "Book a free 30-minute Google Meet, read the daily itinerary or download the itinerary and pricing PDF. These steps do not create a reservation or payment obligation."],
-            ["02", "Request your spot", "When ready, send your departure, traveler and room details. Your request is reviewed before the booking can be confirmed."],
-            ["03", "Review and sign", "Review your personalized Traveler Agreement. Each adult signs separately; a parent or guardian signs for a minor."],
-            ["04", "Confirm your booking", "Confirmation requires our written acceptance, your signature and cleared deposit or required full payment. Payments are handled through a secure Square invoice."],
-          ].map(([number,title,description]) => <li key={number} className="rounded-2xl border border-[var(--line)] bg-white p-6"><p className="text-sm font-bold text-[var(--orange)]">{number}</p><h3 className="mt-4 font-serif text-2xl">{title}</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">{description}</p></li>)}
-        </ol>
-        <div className="mt-8 flex flex-wrap items-center gap-4"><BookingDialog triggerLabel="I’m ready to request a spot" /><p className="max-w-xl text-sm leading-6 text-[var(--muted-ink)]">No payment is collected by the inquiry form. A request is not a confirmed reservation.</p></div>
-      </section>
-
-      <section className="mx-4 mb-4 rounded-[2rem] bg-[var(--navy)] px-6 py-12 text-white sm:mx-6 sm:mb-6 sm:px-10 sm:py-16">
-        <div className="mx-auto max-w-5xl text-center"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Your Vietnam questions are welcome</p><h2 className="mt-4 font-serif text-4xl leading-tight sm:text-5xl">Let&apos;s see whether this journey is right for you.</h2><p className="mx-auto mt-5 max-w-2xl text-lg leading-8 text-white/85">Talk through the itinerary, flight arrangements, rooms and anything you want to understand before deciding.</p><div className="mt-7"><ConsultationLink /></div><p className="mt-4 text-sm text-white/85">Free 30-minute Google Meet · No obligation to book</p><a href="#guide" className="mt-5 inline-block text-sm font-semibold text-[var(--gold)] underline underline-offset-4">I&apos;d like the itinerary and pricing first</a></div>
+      <section aria-labelledby="private-travel-title" className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-12">
+        <div className="flex flex-col justify-between gap-5 sm:flex-row sm:items-center">
+          <div><h2 id="private-travel-title" className="font-serif text-2xl">Prefer your own dates and itinerary?</h2><p className="mt-2 text-base leading-7 text-[var(--muted-ink)]">Plan a private Vietnam trip around your companions, pace and interests.</p></div>
+          <a href="/fit" className="inline-flex min-h-12 shrink-0 items-center gap-2 font-semibold underline underline-offset-4">Explore private trips <ArrowRight className="h-4 w-4" /></a>
+        </div>
       </section>
 
       <footer className="bg-[var(--navy)] px-5 pb-40 pt-10 text-white/65 sm:px-8 md:pb-10">

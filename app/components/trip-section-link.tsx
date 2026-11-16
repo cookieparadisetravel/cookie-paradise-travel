@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from "react";
 
 export function TripSectionLink({ children, className }: { children: ReactNode; className?: string }) {
   return <button type="button" className={`cursor-pointer ${className ?? ""}`} onClick={() => {
-    const section = document.getElementById("trip-highlights");
+    const section = document.getElementById("itinerary");
     section?.scrollIntoView({ behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth", block: "start" });
     section?.focus({ preventScroll: true });
   }}>{children}</button>;

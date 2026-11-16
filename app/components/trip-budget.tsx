@@ -39,7 +39,6 @@ export function TripBudget() {
             {tripBudget.map(item => <div key={item.label} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 py-4"><dt className="text-base font-semibold">{item.label}</dt><dd className="text-base font-bold tabular-nums">{budgetRange(item.low, item.high)}</dd><dd className="col-span-2 max-w-3xl text-sm leading-6">{item.note}</dd></div>)}
             <div className="flex flex-wrap items-baseline justify-between gap-3 pt-5 text-lg font-bold"><dt>Estimated total · rounded</dt><dd className="tabular-nums">{roundedTripBudget}</dd></div>
           </dl>
-          <p className="mt-5 text-sm leading-6">The tour already covers seven hotel nights, seven breakfasts, five lunches, three dinners, scheduled transfers, activities and the Ho Chi Minh City–Hue flight. These are not charged again in the extras.</p>
           <p className="mt-3 text-sm leading-6">Budget about $400 more for a private room, subject to availability, or about $400 less for the tour if the 15-traveler price tier is reached. See the exact room and group prices above. Premium upgrades, airport fast-track service, passport fees, individual medical costs and spending beyond these allowances require an additional budget.</p>
         </details>
 
