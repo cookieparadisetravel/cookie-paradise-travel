@@ -77,3 +77,35 @@
 
 .ws-followup-form { grid-template-columns: repeat(auto-fit, minmax(min(100%,14rem),1fr)); }
 .ws-followup-form > label { min-width: 0; }
+
+/* Advisor network reference, within the existing owner-only workspace. */
+.ws-network-intro { display: flex; align-items: flex-start; gap: 16px; padding: 24px; background: #e8eee2; border: 1px solid var(--line); border-radius: 11px; }
+.ws-network-intro > svg { flex-shrink: 0; margin-top: 4px; }
+.ws-network-intro h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 8px; }
+.ws-network-intro p { font-size: 1rem; max-width: 950px; }
+.ws-network-jumps { display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 22px 0 30px; font-size: 1rem; }
+.ws-network-jumps a { text-decoration: underline; text-underline-offset: 4px; padding: 6px 0; }
+.ws-network-section { margin-bottom: 34px; }
+.ws-network-section h2 { scroll-margin-top: 24px; font-size: 1.25rem; }
+.ws-network-section-intro { margin-bottom: 18px !important; }
+.ws-network-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 18px; }
+.ws-network-card, .ws-network-panel { min-width: 0; border: 1px solid var(--line); border-radius: 11px; background: white; padding: 24px; }
+.ws-network-card { display: flex; flex-direction: column; align-items: flex-start; gap: 16px; font-size: 1rem; }
+.ws-network-card-heading { display: flex; gap: 12px; align-items: flex-start; }
+.ws-network-card h3, .ws-network-panel h3 { font-size: 1.125rem; font-weight: 650; }
+.ws-network-number { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--green); color: white; flex-shrink: 0; }
+.ws-network-reach { margin-top: 5px !important; color: #626e60; font-size: .9375rem; }
+.ws-network-note { color: #626e60; }
+.ws-network-card .ws-button { margin-top: auto; text-align: left; justify-content: space-between; }
+.ws-network-card .ws-button > svg { flex-shrink: 0; }
+.ws-network-panel ul { list-style: disc; padding-left: 22px; margin: 16px 0 0; font-size: 1rem; }
+.ws-network-panel li + li { margin-top: 12px; }
+.ws-network-pitch { margin-top: 18px; padding: 24px; border-left: 3px solid #8da27f; background: #edf1e8; border-radius: 0 10px 10px 0; }
+.ws-network-pitch blockquote { max-width: 950px; font-size: 1.125rem; line-height: 1.8; }
+@media (min-width: 1350px) { .ws-network-priority { grid-template-columns: repeat(3,minmax(0,1fr)); } }
+@media (max-width: 1000px) { .ws-network-grid { grid-template-columns: minmax(0,1fr); } }
+@media (max-width: 480px) {
+  .ws-network-intro, .ws-network-card, .ws-network-panel, .ws-network-pitch { padding: 20px; }
+  .ws-network-intro > svg { display: none; }
+  .ws-network-card .ws-button { width: 100%; }
+}
