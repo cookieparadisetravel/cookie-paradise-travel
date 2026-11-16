@@ -7,6 +7,7 @@ export const travelDisclosures = {
   email: "trung@cookieparadise.co",
   registration: "CST 2176084-40",
   validity: "Registration valid November 23, 2026–November 22, 2027.",
+  registrationExplanation: "CST means California Seller of Travel. This number identifies Cookie Paradise Travel Company LLC’s registration with the California Attorney General’s Office for offering and selling travel to California residents, effective for the dates shown above.",
   approval: "Registration as a seller of travel does not constitute approval by the State of California.",
   trust: "California law requires certain sellers of travel to have a trust account or bond. This business has a trust account.",
   restitution: "This Seller of Travel is not a participant in the California Travel Consumer Restitution Fund.",
