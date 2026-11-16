@@ -29,6 +29,7 @@ export const salonPartners = [
   { code: "monica-salazar", name: "Monica Salazar", logo: "/referrals/monica-salazar-name.svg", website: "https://salazarmonica.com/", creamSurface: false, commissionPlan: "directReferrer" },
   { code: "dillon-travels", name: "Dillon Travels", logo: "/referrals/dillon-travels-logo.png", website: "https://www.dillontravelagency.com/", creamSurface: false, commissionPlan: "directReferrer" },
   { code: "captain-shine", name: "Captain Shine", logo: "/referrals/captain-shine-logo.png", website: "https://callcaptainshine.com/", creamSurface: false, commissionPlan: "directReferrer" },
+  { code: "actionx", name: "ActionX Pest Defense", logo: "/referrals/actionx-logo.jpg", website: "", creamSurface: false, commissionPlan: "directReferrer" },
 ] as const;
 export type SalonPartner = typeof salonPartners[number];
 export function getSalonPartner(code: unknown): SalonPartner | null {
