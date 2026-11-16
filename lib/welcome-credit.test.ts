@@ -44,7 +44,18 @@ test("credit signup requires explicit consent and a permitted source",()=>{
   const data={...input,turnstileToken:"verified",consent:true};
   assert.equal(credit.signupSchema.parse(data).email,"test@example.com");
   assert.equal(credit.signupSchema.safeParse({...data,consent:false}).success,false);
-  assert.equal(credit.signupSchema.safeParse({...data,source:"/vietnam"}).success,false);
+  for (const source of ["/", "/vietnam", "/fit"]) {
+    const result = credit.signupSchema.parse({email:"TRAVELER@example.com",source,turnstileToken:"verified",consent:true});
+    assert.equal(result.name, "");
+    assert.equal(result.email, "traveler@example.com");
+    assert.equal(credit.isWelcomeCreditPage(source), true);
+  }
+  for (const source of ["/admin", "/privacy", "/traveler-agreement/token", "/fit/other"]) {
+    assert.equal(credit.signupSchema.safeParse({...data,source}).success,false);
+    assert.equal(credit.isWelcomeCreditPage(source),false);
+  }
+  assert.equal(credit.isWelcomeCreditPage(null),false);
+  assert.equal(credit.signupSchema.safeParse({...data,email:"invalid"}).success,false);
 });
 test("concurrent repeated signups keep one credit, preserve consent and trigger one upsert",async()=>{
   const f=await fixture(),original=globalThis.fetch;let calls=0;
@@ -94,4 +105,31 @@ test("signup rejects cross-origin, absent consent and wrong verification action 
     assert.equal((await f.publicRoute.POST(request("/api/welcome-credit",data))).status,400);
     assert.equal((await f.service.listCredits()).length,0);
   }finally{globalThis.fetch=original;f.sqlite.close();}
+});
+
+test("email-only intake on all landing pages persists credits and does not overwrite subscriber names", async () => {
+  const f=await fixture(), original=globalThis.fetch;
+  const subscribers: Record<string, unknown>[]=[];
+  globalThis.fetch=async (url,options) => {
+    if(String(url).includes("turnstile/v0/siteverify")) return Response.json({success:true,hostname:"example.com",action:"welcome_credit"});
+    const body=JSON.parse(String(options?.body));
+    assert.deepEqual(body.fields,{});
+    assert.equal(body.resubscribe,false);
+    assert.deepEqual(body.groups,[credit.welcomeGroupId]);
+    subscribers.push(body);
+    return Response.json({data:{status:"active"}});
+  };
+  try {
+    for (const [index, source] of ["/", "/vietnam", "/fit"].entries()) {
+      const data={email:`email-only-${index}@example.com`,source,consent:true,turnstileToken:"verified"};
+      const response=await f.publicRoute.POST(request("/api/welcome-credit",data));
+      assert.equal(response.status,200);
+      assert.equal((await f.publicRoute.POST(request("/api/welcome-credit",data))).status,200);
+    }
+    const rows=await f.service.listCredits();
+    assert.equal(rows.length,3);
+    assert.equal(subscribers.length,3);
+    assert.ok(rows.every((row: credit.WelcomeCredit) => row.name === "" && row.sync_status === "synced"));
+    assert.deepEqual(rows.map((row: credit.WelcomeCredit) => row.source).sort(),["/","/fit","/vietnam"]);
+  } finally { globalThis.fetch=original; f.sqlite.close(); }
 });

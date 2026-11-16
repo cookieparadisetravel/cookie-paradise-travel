@@ -33,7 +33,7 @@ export async function registerCredit(input: { name: string; email: string; sourc
     const response = await fetch("https://connect.mailerlite.com/api/subscribers", {
       method:"POST", signal:AbortSignal.timeout(10000),
       headers:{Authorization:`Bearer ${token}`, Accept:"application/json", "Content-Type":"application/json"},
-      body:JSON.stringify({email,fields:{name:input.name},groups:[welcomeGroupId],resubscribe:false,opted_in_at:now.replace("T"," ").slice(0,19)}),
+      body:JSON.stringify({email,fields:input.name ? {name:input.name} : {},groups:[welcomeGroupId],resubscribe:false,opted_in_at:now.replace("T"," ").slice(0,19)}),
     });
     if (response.ok) {
       const result = await response.json() as {data?:{status?:string}};
