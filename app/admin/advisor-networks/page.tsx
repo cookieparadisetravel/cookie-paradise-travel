@@ -36,6 +36,14 @@ const startingNetworks: Network[] = [
 
 const otherNetworks: Network[] = [
   {
+    name: "Travelmation",
+    reach: "U.S. travel advisor network · Leisure and luxury travel",
+    action: "Call Travelmation at (954) 247-4064 and ask who handles supplier partnerships. Introduce your hosted Vietnam tours and request the process for tour-operator consideration.",
+    note: "Travelmation publishes a preferred-supplier list. A public supplier application was not found; confirm eligibility, commissions and any marketing fees directly with their team.",
+    href: "https://www.travelmation.net/preferredsuppliers",
+    link: "Preferred suppliers & contact",
+  },
+  {
     name: "Travel Leaders Network",
     reach: "U.S. and Canada · Leisure, groups, adventure and luxury",
     action: "Use the partnerships page to request the tour-operator supplier relations team.",
