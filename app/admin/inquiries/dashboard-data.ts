@@ -59,7 +59,7 @@ export async function loadInquiryDashboardData(inquiryId?: number) {
   const latestAgreementInvitationByTraveler = new Map<number, AgreementInvitationDelivery>();
   for (const invitation of agreementInvitationRows) {
     if (latestAgreementInvitationByTraveler.has(invitation.travelerId)) continue;
-    if (invitation.agreementVersion !== currentTravelerAgreement.version || !invitation.hasAgreementDocument) continue;
+    if ((invitation.agreementVersion !== currentTravelerAgreement.version && !(invitation.agreementVersion === "1.0" && invitation.acceptedAt)) || !invitation.hasAgreementDocument) continue;
     if (!invitation.invitationEmailSentAt || !invitation.recipientEmail) continue;
     latestAgreementInvitationByTraveler.set(invitation.travelerId, {
       email: invitation.recipientEmail,

@@ -451,3 +451,56 @@ test("webhook signature and malformed JSON rejection remain 403 and 400", async 
     assert.equal(malformed.status, 400);
   } finally { sqlite.close(); }
 });
+
+test("payment links enforce the standard plan even if an old client submits full payment", async () => {
+  for (const fullPaymentRequired of [false, true]) {
+    const { sqlite, stubs } = fixture("production", "production");
+    try {
+      sqlite.exec("UPDATE booking_requests SET square_deposit_invoice_id = NULL, payment_preference = NULL WHERE id = 1");
+      let invoicesCreated = 0;
+      stubs["@/lib/payment-preference-invitation"] = { getPaymentPreferenceInvitation: async () => ({
+        status: "ready", invitationId: 1, bookingRequestId: 1, primaryContactName: "Test Traveler",
+        departure: "2027-06-01", partySize: 1, bookingTotalCents: 287500, fullPaymentRequired,
+        createdBy: "owner@example.com",
+      }) };
+      stubs["@/lib/agreement-readiness"] = { getAgreementReadiness: async (_id: number, _count: number, options: { requireCurrentAgreement: boolean }) => {
+        assert.equal(options.requireCurrentAgreement, true);
+        return { readyForInvoice: true };
+      } };
+      stubs["@/lib/booking-invoice"] = { createBookingInvoice: async () => {
+        invoicesCreated++;
+        return { ok: true, publicUrl: "https://square.example.test/invoice", status: "unpaid" };
+      } };
+      stubs["@/lib/owner-notification"] = { sendOwnerPaymentPreferenceNotification: async () => "sent" };
+      stubs["@/lib/booking-automation"] = { markAutomatedInvoiceCreated: async () => {} };
+      const worker = await loadWorkerModule("app/api/payment-preferences/[token]/route.ts", addSqlBuilders(stubs));
+      const result = await worker.POST(new Request("https://example.com/api/payment-preferences/token", { method: "POST", body: JSON.stringify({ paymentPreference: fullPaymentRequired ? "payment_plan" : "full" }) }) as never, { params: Promise.resolve({ token: "test-token" }) } as never) as Response;
+      assert.equal(result.status, 201);
+      assert.equal(invoicesCreated, 1);
+      const row = rowSnapshot(sqlite)!;
+      assert.equal(row.payment_preference, fullPaymentRequired ? "full" : "payment_plan");
+      assert.equal(row.installment_autopay_authorized, 0, "Default installments must not authorize card charges.");
+    } finally { sqlite.close(); }
+  }
+});
+
+test("a revised agreement is required for new invoices while legacy signed invoices retain readiness", async () => {
+  const { sqlite, stubs } = fixture("production", "production");
+  try {
+    sqlite.exec(`INSERT INTO travelers (id, booking_request_id, first_name, last_name, email) VALUES (1, 1, 'Test', 'Traveler', 'test@example.com');
+      INSERT INTO agreement_invitations (id, traveler_id, token_hash, agreement_version, agreement_document_hash, expires_at) VALUES (1, 1, 'agreement-token', '1.0', 'signed-hash', '2026-10-30');
+      INSERT INTO agreement_acceptances (invitation_id, traveler_id, agreement_version, agreement_document_hash, signer_type, signer_legal_name, traveler_initials, electronic_signature_consent, agreement_consent, deposit_acknowledged, cancellation_acknowledged, insurance_selection, ip_hash, user_agent, accepted_at) VALUES (1, 1, '1.0', 'signed-hash', 'traveler', 'Test Traveler', 'TT', 1, 1, 1, 1, 'declined', 'ip-hash', 'test', '2026-10-20');`);
+    stubs["@/lib/traveler-agreement"] = { currentTravelerAgreement: { version: "1.1" } };
+    const worker = await loadWorkerModule("lib/agreement-readiness.ts", addSqlBuilders(stubs));
+    const existing = await worker.getAgreementReadiness(1 as never, 1 as never) as { readyForInvoice: boolean };
+    assert.equal(existing.readyForInvoice, true);
+    const newInvoice = await worker.getAgreementReadiness(1 as never, 1 as never, { requireCurrentAgreement: true } as never) as { readyForInvoice: boolean };
+    assert.equal(newInvoice.readyForInvoice, false);
+    sqlite.exec("UPDATE booking_requests SET square_deposit_invoice_id = NULL WHERE id = 1");
+    const unbilled = await worker.getAgreementReadiness(1 as never, 1 as never) as { readyForInvoice: boolean };
+    assert.equal(unbilled.readyForInvoice, false);
+    sqlite.exec("UPDATE agreement_invitations SET agreement_version = '1.1' WHERE id = 1; UPDATE agreement_acceptances SET agreement_version = '1.1' WHERE traveler_id = 1");
+    const revised = await worker.getAgreementReadiness(1 as never, 1 as never, { requireCurrentAgreement: true } as never) as { readyForInvoice: boolean };
+    assert.equal(revised.readyForInvoice, true);
+  } finally { sqlite.close(); }
+});

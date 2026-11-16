@@ -102,10 +102,10 @@ export function PaymentPreferenceInvitationAction({
   const persistedTotal = initialBookingTotalCents && initialBookingTotalCents > 0
     ? (initialBookingTotalCents / 100).toLocaleString("en-US", { style: "currency", currency: "USD" })
     : "Not recorded";
-  const emailSubject = "Choose your payment option for Discover Southern Vietnam";
+  const emailSubject = "Your deposit and installments for Discover Southern Vietnam";
   const emailBody = `Hi ${primaryContact.name},
 
-Your confirmed group booking total is ${formattedTotal}. Please use the secure link below to choose either pay in full or the $500-per-traveler deposit with monthly installments:
+Your confirmed group booking total is ${formattedTotal}. Please use the secure link below to review your $500-per-traveler nonrefundable deposit and monthly installments, with the final payment due two calendar months before departure:
 
 ${invitationUrl}
 
@@ -143,7 +143,7 @@ Cookie Paradise Travel Company`;
         expiresAt?: string;
       };
       if (!response.ok || !payload.invitationUrl || !payload.primaryContactName || !payload.primaryContactEmail || !payload.invitationId || !payload.createdAt || !payload.expiresAt) {
-        throw new Error(payload.error || "The payment-choice link could not be created.");
+        throw new Error(payload.error || "The payment link could not be created.");
       }
       const nextDraft: PaymentPreferenceGeneratedDraft = {
         invitationUrl: payload.invitationUrl,
@@ -165,7 +165,7 @@ Cookie Paradise Travel Company`;
       setPriceMismatchConfirmed(false);
       router.refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The payment-choice link could not be created.");
+      setError(cause instanceof Error ? cause.message : "The payment link could not be created.");
     } finally {
       setCreating(false);
     }
@@ -195,13 +195,13 @@ Cookie Paradise Travel Company`;
     <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]"><WalletCards className="h-4 w-4 text-[var(--orange)]" /> Customer payment preference</p>
-          <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">After every traveler signs Agreement 1.0, send the primary contact this secure, one-time link. Submitting it records the payment choice and creates the matching Square invoice.</p>
+          <p className="flex items-center gap-2 text-sm font-bold text-[var(--ink)]"><WalletCards className="h-4 w-4 text-[var(--orange)]" /> Customer payment setup</p>
+          <p className="mt-1 text-sm leading-6 text-[var(--muted-ink)]">After every traveler signs current Traveler Agreement, send the primary contact this secure, one-time link. Continuing creates the Square invoice for the standard deposit-and-installment plan.</p>
         </div>
         {paymentPreference && <span className="w-fit rounded-full bg-emerald-100 px-3 py-1 text-xs font-bold text-emerald-900">Choice received</span>}
       </div>
 
-      {invoiceExists && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">The Square invoice has been created from the customer’s recorded payment choice. The preference and confirmed traveler prices are now locked.</p>}
+      {invoiceExists && <p className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-semibold text-emerald-900">The Square invoice has been created from the customer’s recorded payment schedule. The preference and confirmed traveler prices are now locked.</p>}
       {!agreementReady && !invoiceExists && <p className="mt-4 flex items-start gap-2 rounded-xl border border-[var(--gold)]/60 bg-[var(--gold)]/15 p-3 text-sm font-semibold leading-6 text-[var(--ink)]"><LockKeyhole className="mt-0.5 h-4 w-4 shrink-0" /><span><strong>Payment-choice link locked.</strong> {agreementReadinessMessage}</span></p>}
       {paymentPreference && <div className="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-950">
         <p className="flex items-center gap-2 font-bold"><CheckCircle2 className="h-4 w-4" /> {paymentPreference === "full" ? "Pay in full now" : "Deposit + monthly installments"}</p>
@@ -246,7 +246,7 @@ Cookie Paradise Travel Company`;
               bookingTotalDirty: nextValue !== formatBookingTotal(initialBookingTotalCents),
             }));
           }} placeholder="Enter total including supplements" /></span>
-          {clientState.bookingTotalDirty && <span className="mt-1 block text-xs font-semibold text-amber-800">Unsaved total change. Creating or replacing the payment-choice link will save this amount.</span>}
+          {clientState.bookingTotalDirty && <span className="mt-1 block text-xs font-semibold text-amber-800">Unsaved total change. Creating or replacing the payment link will save this amount.</span>}
         </label>
 
         <div className={`mt-3 rounded-xl border p-3 text-sm ${priceMatches ? "border-emerald-200 bg-emerald-50 text-emerald-950" : bookingTotalIsValid ? "border-red-300 bg-red-50 text-red-950" : "border-amber-200 bg-amber-50 text-amber-950"}`}>
@@ -269,7 +269,7 @@ Cookie Paradise Travel Company`;
 
       {!invoiceExists && !invitationUrl && <button disabled={!canCreate || creating} className="mt-4 inline-flex items-center gap-2 rounded-full bg-[var(--orange)] px-4 py-2 text-sm font-bold text-white disabled:cursor-not-allowed disabled:opacity-50" type="button" onClick={createInvitation}>
         {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
-        {creating ? "Creating…" : paymentPreference ? "Create replacement payment-choice link" : "Create payment-choice link"}
+        {creating ? "Creating…" : paymentPreference ? "Create replacement payment link" : "Create payment link"}
       </button>}
 
       {!invoiceExists && invitationUrl && <div className="mt-4">

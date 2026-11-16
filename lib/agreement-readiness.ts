@@ -1,5 +1,5 @@
-import { and, eq } from "drizzle-orm";
-import { agreementAcceptances, agreementInvitations, travelers } from "@/db/schema";
+import { and, eq, isNotNull, or } from "drizzle-orm";
+import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { currentTravelerAgreement } from "@/lib/traveler-agreement";
 
@@ -13,7 +13,7 @@ export type AgreementReadiness = {
   message: string;
 };
 
-export async function getAgreementReadiness(bookingRequestId: number, expectedPartySize: number): Promise<AgreementReadiness> {
+export async function getAgreementReadiness(bookingRequestId: number, expectedPartySize: number, options: { requireCurrentAgreement?: boolean } = {}): Promise<AgreementReadiness> {
   const db = getDb();
   const travelerRecords = await db
     .select({ id: travelers.id })
@@ -32,14 +32,24 @@ export async function getAgreementReadiness(bookingRequestId: number, expectedPa
     };
   }
 
+  // Old signed terms remain valid for existing invoices and their autopay.
+  // New invoices require the revised payment agreement.
+  const versionCondition = options.requireCurrentAgreement
+    ? eq(agreementAcceptances.agreementVersion, currentTravelerAgreement.version)
+    : or(
+      eq(agreementAcceptances.agreementVersion, currentTravelerAgreement.version),
+      and(eq(agreementAcceptances.agreementVersion, "1.0"), isNotNull(bookingRequests.squareDepositInvoiceId)),
+    );
+
   const acceptedRecords = await db
     .select({ travelerId: agreementAcceptances.travelerId })
     .from(agreementAcceptances)
     .innerJoin(agreementInvitations, eq(agreementAcceptances.invitationId, agreementInvitations.id))
     .innerJoin(travelers, eq(agreementAcceptances.travelerId, travelers.id))
+    .innerJoin(bookingRequests, eq(travelers.bookingRequestId, bookingRequests.id))
     .where(and(
       eq(travelers.bookingRequestId, bookingRequestId),
-      eq(agreementAcceptances.agreementVersion, currentTravelerAgreement.version),
+      versionCondition,
       eq(agreementAcceptances.agreementDocumentHash, agreementInvitations.agreementDocumentHash),
     ));
 

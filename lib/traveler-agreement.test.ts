@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import revisedAgreement from "./traveler-agreement-v1-1.json" with { type: "json" };
 import originalAgreement from "./traveler-agreement-v1.json" with { type: "json" };
 import {
   buildPersonalizedTravelerAgreement,
@@ -10,10 +11,10 @@ import {
   parseAgreementDocument,
 } from "./traveler-agreement.ts";
 
-test("Agreement 1.0 contains the approved contact, cancellation and safety terms", () => {
+test("Agreement 1.1 contains the approved contact, cancellation and safety terms", () => {
   const canonical = canonicalizeAgreement(currentTravelerAgreement);
-  assert.equal(currentTravelerAgreement.version, "1.0");
-  assert.equal(currentTravelerAgreement.effectiveDate, "October 6, 2026");
+  assert.equal(currentTravelerAgreement.version, "1.1");
+  assert.equal(currentTravelerAgreement.effectiveDate, "November 15, 2026");
   assert.match(canonical, /3346 Cox Ln\., Columbus, IN 47203/u);
   assert.match(canonical, /trung@cookieparadise\.co/u);
   assert.match(canonical, /Package price per traveler/u);
@@ -27,7 +28,7 @@ test("includes the approved front-sheet summary without changing the full agreem
   const agreement = buildPersonalizedTravelerAgreement({
     travelerName: "Summary Traveler", departure: "2027-06-01", occupancy: "Shared double/twin room", tripPriceCents: 287_500,
   });
-  assert.deepEqual(agreement.sections.slice(1, -1), originalAgreement.sections);
+  assert.deepEqual(agreement.sections.slice(1, -1), revisedAgreement.sections);
   const summary = agreement.executiveSummary;
   assert.ok(summary);
   assert.equal(summary.items.length, 12);
@@ -74,4 +75,23 @@ test("personalized document hashes change with the traveler terms", async () => 
   const first = buildPersonalizedTravelerAgreement({ ...common, travelerName: "First Traveler", tripPriceCents: 287_500 });
   const second = buildPersonalizedTravelerAgreement({ ...common, travelerName: "Second Traveler", tripPriceCents: 267_500 });
   assert.notEqual(await hashAgreementDocument(first), await hashAgreementDocument(second));
+});
+
+ test("new agreement states the standard deposit and two-calendar-month deadline", () => {
+  const text = canonicalizeAgreement(currentTravelerAgreement);
+  assert.match(text, /standard payment plan is a \$500 nonrefundable reservation deposit per traveler/);
+  assert.match(text, /final installment is due two calendar months before departure/);
+  assert.doesNotMatch(text, /90 days before departure|within 90 days/);
+  assert.equal(originalAgreement.version, "1.0");
+  assert.match(JSON.stringify(originalAgreement), /90 days before departure/);
+});
+
+
+test("revised enrollment rules count current deposits and installments without requiring early full payment", () => {
+  const agreementText = JSON.stringify(revisedAgreement);
+  assert.match(agreementText, /Travelers current on payments 80 days before departure/);
+  assert.match(agreementText, /all installments due by the applicable cutoff have cleared/);
+  assert.match(agreementText, /no later than 75 days before departure/);
+  assert.match(agreementText, /do not need to be prepaid to count toward minimum enrollment/);
+  assert.doesNotMatch(agreementText, /fully paid travelers/);
 });

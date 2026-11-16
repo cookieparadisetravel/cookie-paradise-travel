@@ -60,14 +60,13 @@ export function createPaymentPlan(input: {
     };
   }
 
-  const monthlyDueDates: Date[] = [];
-  for (let month = 1; month <= 12; month += 1) {
-    const dueDate = addMonthsClamped(acceptedDate, month);
-    if (dueDate.getTime() > finalPaymentDate.getTime()) break;
-    monthlyDueDates.push(dueDate);
+  // Anchor monthly dates to the final deadline, so the last payment is exactly
+  // two calendar months before departure. Clamp short months independently.
+  const dueDates: Date[] = [];
+  for (let month = 11; month >= 0; month -= 1) {
+    const dueDate = addMonthsClamped(finalPaymentDate, -month);
+    if (dueDate.getTime() > acceptedDate.getTime()) dueDates.push(dueDate);
   }
-
-  const dueDates = monthlyDueDates.length >= 2 ? monthlyDueDates : [finalPaymentDate];
   const baseAmount = Math.floor(remainingBalanceCents / dueDates.length);
   const installments = dueDates.map((dueDate, index) => ({
     dueDate: formatDateOnly(dueDate),
@@ -188,7 +187,7 @@ function paymentDates(departure: string, acceptanceDate: string) {
   if (departureDate.getTime() <= acceptedDate.getTime()) {
     throw new Error("The departure date must be after the booking acceptance date.");
   }
-  const finalPaymentDate = addDays(departureDate, -90);
+  const finalPaymentDate = addMonthsClamped(departureDate, -2);
   return {
     departureDate,
     acceptedDate,
@@ -199,12 +198,6 @@ function paymentDates(departure: string, acceptanceDate: string) {
 
 function formatDateOnly(value: Date) {
   return `${value.getUTCFullYear()}-${String(value.getUTCMonth() + 1).padStart(2, "0")}-${String(value.getUTCDate()).padStart(2, "0")}`;
-}
-
-function addDays(value: Date, days: number) {
-  const result = new Date(value);
-  result.setUTCDate(result.getUTCDate() + days);
-  return result;
 }
 
 function addMonthsClamped(value: Date, months: number) {

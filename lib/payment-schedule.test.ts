@@ -19,149 +19,58 @@ function createCheckedPaymentPlan(input: PaymentPlanInput): PaymentPlan {
   return plan;
 }
 
-test("creates the checked five-installment schedule", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2026-10-01",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_725_000,
-    partySize: 6,
-  });
-
+test("uses a $500 deposit per traveler and finishes exactly two months before departure", () => {
+  const plan = createCheckedPaymentPlan({ acceptanceDate: "2026-11-15", departure: "2027-06-01", bookingTotalCents: 287_500, partySize: 1 });
   assert.equal(plan.paymentType, "deposit");
-  assert.equal(plan.depositAmountCents, 300_000);
-  assert.equal(plan.initialAmountCents, 300_000);
-  assert.equal(plan.finalPaymentDeadline, "2027-03-03");
+  assert.equal(plan.initialAmountCents, 50_000);
+  assert.equal(plan.finalPaymentDeadline, "2027-04-01");
   assert.deepEqual(plan.installments, [
-    { dueDate: "2026-11-01", amountCents: 285_000 },
-    { dueDate: "2026-12-01", amountCents: 285_000 },
-    { dueDate: "2027-01-01", amountCents: 285_000 },
-    { dueDate: "2027-02-01", amountCents: 285_000 },
-    { dueDate: "2027-03-01", amountCents: 285_000 },
+    { dueDate: "2026-12-01", amountCents: 47_500 },
+    { dueDate: "2027-01-01", amountCents: 47_500 },
+    { dueDate: "2027-02-01", amountCents: 47_500 },
+    { dueDate: "2027-03-01", amountCents: 47_500 },
+    { dueDate: "2027-04-01", amountCents: 47_500 },
   ]);
 });
 
-test("uses full payment at the 90-day deadline", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2027-03-03",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_000_001,
-    partySize: 2,
-  });
-
-  assert.equal(plan.paymentType, "full");
-  assert.equal(plan.initialAmountCents, 1_000_001);
-  assert.equal(plan.finalPaymentDeadline, "2027-03-03");
-  assert.deepEqual(plan.installments, []);
+test("requires full payment on or after the final deadline", () => {
+  for (const acceptanceDate of ["2027-04-01", "2027-04-02", "2027-05-31"]) {
+    const plan = createCheckedPaymentPlan({ acceptanceDate, departure: "2027-06-01", bookingTotalCents: 1_000_001, partySize: 2 });
+    assert.equal(plan.paymentType, "full");
+    assert.equal(plan.initialAmountCents, 1_000_001);
+    assert.deepEqual(plan.installments, []);
+  }
 });
 
-test("uses one balance payment when accepted 91 days before departure", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2027-03-02",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_000_001,
-    partySize: 2,
-  });
-
-  assert.deepEqual(plan.installments, [
-    { dueDate: "2027-03-03", amountCents: 900_001 },
-  ]);
+test("a booking just before the deadline has one balance payment", () => {
+  const plan = createCheckedPaymentPlan({ acceptanceDate: "2027-03-31", departure: "2027-06-01", bookingTotalCents: 1_000_001, partySize: 2 });
+  assert.equal(plan.initialAmountCents, 100_000);
+  assert.deepEqual(plan.installments, [{ dueDate: "2027-04-01", amountCents: 900_001 }]);
 });
 
-test("uses one balance payment when accepted 120 days before departure", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2027-02-01",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_000_001,
-    partySize: 2,
-  });
-
-  assert.deepEqual(plan.installments, [
-    { dueDate: "2027-03-03", amountCents: 900_001 },
-  ]);
+test("monthly payments exclude the deposit date and reconcile rounding in the last payment", () => {
+  const plan = createCheckedPaymentPlan({ acceptanceDate: "2027-02-01", departure: "2027-06-01", bookingTotalCents: 1_000_001, partySize: 2 });
+  assert.deepEqual(plan.installments, [{ dueDate: "2027-03-01", amountCents: 450_000 }, { dueDate: "2027-04-01", amountCents: 450_001 }]);
 });
 
-test("splits the balance across two monthly dates when accepted 150 days before departure", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2027-01-02",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_000_001,
-    partySize: 2,
-  });
-
-  assert.deepEqual(plan.installments, [
-    { dueDate: "2027-02-02", amountCents: 450_000 },
-    { dueDate: "2027-03-02", amountCents: 450_001 },
-  ]);
+test("clamps month ends without letting February shift later monthly dates", () => {
+  const plan = createCheckedPaymentPlan({ acceptanceDate: "2026-12-31", departure: "2027-07-31", bookingTotalCents: 1_000_001, partySize: 2 });
+  assert.deepEqual(plan.installments.map(i => i.dueDate), ["2027-01-31", "2027-02-28", "2027-03-31", "2027-04-30", "2027-05-31"]);
+  assert.equal(plan.installments.at(-1)!.amountCents, 180_001);
 });
 
-test("clamps month-end installment dates", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2026-12-31",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_000_001,
-    partySize: 2,
-  });
-
-  assert.deepEqual(plan.installments, [
-    { dueDate: "2027-01-31", amountCents: 450_000 },
-    { dueDate: "2027-02-28", amountCents: 450_001 },
-  ]);
+test("two calendar months handles leap years, short months, and year boundaries", () => {
+  assert.equal(getFinalPaymentDeadline("2028-04-30", "2027-12-01"), "2028-02-29");
+  assert.equal(getFinalPaymentDeadline("2027-04-30", "2026-12-01"), "2027-02-28");
+  assert.equal(getFinalPaymentDeadline("2027-01-31", "2026-10-01"), "2026-11-30");
 });
 
-test("limits a long payment schedule to twelve installments", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2026-01-17",
-    departure: "2027-06-01",
-    bookingTotalCents: 1_000_001,
-    partySize: 2,
-  });
-
+test("limits a long schedule to twelve consecutive monthly installments ending at the deadline", () => {
+  const plan = createCheckedPaymentPlan({ acceptanceDate: "2025-01-01", departure: "2027-06-01", bookingTotalCents: 1_000_001, partySize: 2 });
   assert.equal(plan.installments.length, 12);
-  assert.deepEqual(plan.installments.map((installment) => installment.dueDate), [
-    "2026-02-17",
-    "2026-03-17",
-    "2026-04-17",
-    "2026-05-17",
-    "2026-06-17",
-    "2026-07-17",
-    "2026-08-17",
-    "2026-09-17",
-    "2026-10-17",
-    "2026-11-17",
-    "2026-12-17",
-    "2027-01-17",
-  ]);
-  assert.deepEqual(plan.installments.map((installment) => installment.amountCents), [
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_000,
-    75_001,
-  ]);
-});
-
-test("keeps October 31 schedules on each month's final valid day", () => {
-  const plan = createCheckedPaymentPlan({
-    acceptanceDate: "2026-10-31",
-    departure: "2027-07-27",
-    bookingTotalCents: 1_000_000,
-    partySize: 2,
-  });
-
-  assert.deepEqual(plan.installments.map((installment) => installment.dueDate), [
-    "2026-11-30",
-    "2026-12-31",
-    "2027-01-31",
-    "2027-02-28",
-    "2027-03-31",
-  ]);
+  assert.equal(plan.installments[0].dueDate, "2026-05-01");
+  assert.equal(plan.installments.at(-1)!.dueDate, "2027-04-01");
+  assert.equal(plan.installments.at(-1)!.amountCents, 75_001);
 });
 
 test("allows a booking total equal to the reservation deposit", () => {
@@ -293,8 +202,8 @@ test("rejects a combined traveler schedule that does not equal the booking total
   assert.equal(combineTravelerPaymentPlans([plan], 300_000), null);
 });
 
-test("identifies when the secure payment choice must require full payment", () => {
-  assert.equal(isFullPaymentRequired("2027-06-01", "2027-03-02"), false);
-  assert.equal(isFullPaymentRequired("2027-06-01", "2027-03-03"), true);
-  assert.equal(getFinalPaymentDeadline("2027-06-01", "2026-10-01"), "2027-03-03");
+test("identifies when the standard payment schedule must require full payment", () => {
+  assert.equal(isFullPaymentRequired("2027-06-01", "2027-03-31"), false);
+  assert.equal(isFullPaymentRequired("2027-06-01", "2027-04-01"), true);
+  assert.equal(getFinalPaymentDeadline("2027-06-01", "2026-10-01"), "2027-04-01");
 });

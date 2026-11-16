@@ -1,4 +1,4 @@
-import agreementV1 from "./traveler-agreement-v1.json" with { type: "json" };
+import agreementV1 from "./traveler-agreement-v1-1.json" with { type: "json" };
 import executiveSummary from "./traveler-agreement-summary.json" with { type: "json" };
 
 export type AgreementSegment = {
@@ -31,7 +31,7 @@ export type AgreementDocument = {
 
 const approvedAgreementV1 = agreementV1 as AgreementDocument;
 
-// Agreement 1.0 was approved for interim operational use on October 6, 2026.
+// Version 1.1 applies the owner-requested deposit and two-calendar-month payment policy.
 // Each invitation stores the complete personalized document and its SHA-256 hash.
 export const currentTravelerAgreement: AgreementDocument = { ...approvedAgreementV1, executiveSummary };
 

@@ -9,7 +9,7 @@ import {
 
 test("builds the complete versioned Section 5(c) authorization text", () => {
   assert.equal(AUTOPAY_AUTHORIZATION_VERSION, "1.0");
-  assert.equal(REQUIRED_AGREEMENT_VERSION, "1.0");
+  assert.equal(REQUIRED_AGREEMENT_VERSION, "1.1");
   assert.equal(
     buildAutopayAuthorizationText({
       cardholderName: "Jordan Sample",

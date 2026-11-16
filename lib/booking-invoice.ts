@@ -50,21 +50,21 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
   );
   if (environmentError) return failure(409, environmentError);
 
-  const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize);
+  const agreementReadiness = await getAgreementReadiness(input.inquiryId, inquiry.partySize, { requireCurrentAgreement: true });
   if (!agreementReadiness.readyForInvoice) {
     return failure(409, `Payment invoice is locked. ${agreementReadiness.message}`);
   }
   if (!inquiry.confirmedBookingTotalCents || inquiry.confirmedBookingTotalCents < 1) {
-    return failure(409, "Create the secure payment-choice link with the confirmed booking total before invoicing.");
+    return failure(409, "Create the secure payment link with the confirmed booking total before invoicing.");
   }
   if (inquiry.departure === "flexible") {
     return failure(400, "Assign a specific departure before creating a payment invoice.");
   }
   if (!isPaymentPreference(inquiry.paymentPreference)) {
-    return failure(409, "The primary contact must submit a payment preference before invoicing.");
+    return failure(409, "The primary contact must review the payment schedule and continue to Square before invoicing.");
   }
 
-  const paymentPreference = inquiry.paymentPreference;
+  const paymentPreference = inquiry.squareDepositInvoiceId ? inquiry.paymentPreference : "payment_plan";
   const bookingTotalCents = inquiry.confirmedBookingTotalCents;
   const acceptanceDate = todayInIndiana();
   let paymentPlan;
@@ -201,7 +201,8 @@ export async function createBookingInvoice(input: { inquiryId: number; acceptedB
     let published: { status: string; publicUrl: string | null; version: number };
     if (invoiceVersion === undefined) {
       const existingInvoice = await getSquareInvoiceVersion(invoiceId);
-      if (existingInvoice.paymentType !== paymentPlan.paymentType) {
+      if (existingInvoice.paymentType !== paymentPlan.paymentType
+        || (existingInvoice.status === "draft" && JSON.stringify(existingInvoice.dueDates) !== JSON.stringify([acceptanceDate, ...paymentPlan.installments.map((item) => item.dueDate)].sort()))) {
         await db.update(bookingRequests).set({
           squareDepositInvoiceStatus: "error",
           squareDepositClaimedAt: null,

@@ -100,14 +100,14 @@ export async function sendPaymentChoiceInvitationEmail(input: {
   return sendEmail({
     toEmail: input.toEmail,
     toName: input.toName,
-    subject: "Choose how you would like to pay for your Vietnam trip",
+    subject: "Your Vietnam trip deposit and monthly installments",
     text: [
       `Hello ${input.toName},`,
       "",
       "All required Traveler Agreements for your booking have been completed.",
       `Confirmed booking total: ${total}`,
       "",
-      "Use the secure link below to choose payment in full or the available payment plan. After you submit your choice, Square will create and email your invoice:",
+      "Use the secure link below to review your $500-per-traveler nonrefundable deposit and monthly installments, with the final payment due two calendar months before departure. Bookings accepted on or after that deadline require full payment. Continue to Square to review the exact schedule and pay:",
       input.invitationUrl,
       "",
       `This secure one-time link expires ${expires}.`,
@@ -116,8 +116,8 @@ export async function sendPaymentChoiceInvitationEmail(input: {
       <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Hello ${escapeHtml(input.toName)},</p>
       <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">All required Traveler Agreements for your booking have been completed.</p>
       <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><strong>Confirmed booking total: ${escapeHtml(total)}</strong></p>
-      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Choose payment in full or the available payment plan. After you submit your choice, Square will create and email your invoice.</p>
-      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Choose payment option</a></p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">Your payment plan starts with a $500-per-traveler nonrefundable deposit, followed by monthly installments. The final payment is due two calendar months before departure. Bookings accepted on or after that deadline require full payment. Use the secure link to continue to Square and review the exact schedule before paying.</p>
+      <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="${escapeHtml(input.invitationUrl)}" style="display:inline-block;border-radius:999px;background:#f7b658;color:#000000;padding:12px 20px;text-decoration:none;font-weight:700">Review deposit and installments</a></p>
       <p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000">This secure one-time link expires ${escapeHtml(expires)}.</p>
     `,
   });

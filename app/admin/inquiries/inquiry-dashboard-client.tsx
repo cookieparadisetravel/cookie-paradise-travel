@@ -584,7 +584,7 @@ function ActivitySection({ inquiry }: { inquiry: DashboardInquiry }) {
           <InfoItem label="Traveler-list link created">{formatTimestamp(inquiry.latestTravelerListLinkCreatedAt)}</InfoItem>
           <InfoItem label="Traveler list submitted">{formatTimestamp(inquiry.latestTravelerListCompletedAt)}</InfoItem>
           <InfoItem label="Payment-choice link created">{formatTimestamp(inquiry.latestPaymentChoiceLinkCreatedAt)}</InfoItem>
-          <InfoItem label="Payment choice recorded">{formatTimestamp(inquiry.paymentPreferenceSelectedAt)}</InfoItem>
+          <InfoItem label="Payment schedule recorded">{formatTimestamp(inquiry.paymentPreferenceSelectedAt)}</InfoItem>
           <InfoItem label="Automatic installments">{autopayStatusLabel(inquiry.installmentAutopayStatus)}</InfoItem>
           <InfoItem label="Autopay authorization recorded">{formatTimestamp(inquiry.installmentAutopayAuthorizedAt)}</InfoItem>
           <InfoItem label="Authorized cardholder">{inquiry.installmentAutopayPayerName ?? "Not recorded"}</InfoItem>
@@ -737,8 +737,8 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
       ? { label: "Booking total", detail: `${formatCurrency(inquiry.confirmedBookingTotalCents)} confirmed.`, state: "complete", section: "payments" }
       : { label: "Booking total", detail: "Confirmed total has not been entered.", state: "pending", section: "payments" },
     inquiry.paymentPreference && inquiry.paymentPreferenceSelectedAt
-      ? { label: "Payment choice", detail: `${inquiry.paymentPreference === "full" ? "Full payment" : "Installment plan"} selected by customer.`, state: "complete", section: "payments" }
-      : { label: "Payment choice", detail: "No submitted customer choice is recorded.", state: "pending", section: "payments" },
+      ? { label: "Payment schedule", detail: `${inquiry.paymentPreference === "full" ? "Full payment" : "Installment plan"} recorded.`, state: "complete", section: "payments" }
+      : { label: "Payment schedule", detail: "No submitted customer choice is recorded.", state: "pending", section: "payments" },
     invoiceItem,
     paymentItem,
   ];
@@ -756,16 +756,16 @@ function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string
     : { label: "Collect traveler details", detail: `${inquiry.partySize - inquiry.travelers.length} traveler record${inquiry.partySize - inquiry.travelers.length === 1 ? " is" : "s are"} still needed. Create or replace the secure traveler-list link in the traveler section.`, actionLabel: "Open travelers", section: "travelers", blocked: false };
   if (inquiry.departure === "flexible") return { label: "Confirm departure", detail: "A specific departure must be confirmed before agreement acceptance and payment scheduling can proceed.", actionLabel: "Review overview", section: "overview", blocked: true };
   if (!inquiry.agreementActive) return { label: "Await agreement activation", detail: "Traveler agreement invitations remain disabled until the legally approved agreement is activated.", actionLabel: "Review travelers", section: "travelers", blocked: true };
-  if (!travelerPricesComplete(inquiry)) return { label: "Set traveler prices", detail: "Enter and save each traveler’s confirmed Trip Price before asking the primary contact to choose a payment option.", actionLabel: "Open travelers", section: "travelers", blocked: false };
-  if (hasIncompleteAgreements(inquiry)) return { label: "Review agreements", detail: `${inquiry.partySize - acceptedAgreementCount(inquiry)} personalized Agreement 1.0 acceptance${inquiry.partySize - acceptedAgreementCount(inquiry) === 1 ? " is" : "s are"} still needed before the payment-choice link can be sent.`, actionLabel: "Open agreements", section: "travelers", blocked: false };
-  if (!inquiry.confirmedBookingTotalCents) return { label: "Prepare payment-choice link", detail: "All agreements are complete. Confirm the group total and create the secure payment-choice link.", actionLabel: "Open payments", section: "payments", blocked: false };
-  if (!inquiry.paymentPreference) return { label: "Await payment choice", detail: "The customer has not submitted a payment preference. The Square invoice will be created only after the one-time link is submitted.", actionLabel: "Open payments", section: "payments", blocked: false };
+  if (!travelerPricesComplete(inquiry)) return { label: "Set traveler prices", detail: "Enter and save each traveler’s confirmed Trip Price before asking the primary contact to review the payment schedule.", actionLabel: "Open travelers", section: "travelers", blocked: false };
+  if (hasIncompleteAgreements(inquiry)) return { label: "Review agreements", detail: `${inquiry.partySize - acceptedAgreementCount(inquiry)} current personalized Traveler Agreement acceptance${inquiry.partySize - acceptedAgreementCount(inquiry) === 1 ? " is" : "s are"} still needed before the payment link can be sent.`, actionLabel: "Open agreements", section: "travelers", blocked: false };
+  if (!inquiry.confirmedBookingTotalCents) return { label: "Prepare payment link", detail: "All agreements are complete. Confirm the group total and create the secure payment link.", actionLabel: "Open payments", section: "payments", blocked: false };
+  if (!inquiry.paymentPreference) return { label: "Await deposit payment", detail: "The customer has not continued to Square yet. The Square invoice will be created only after the one-time link is submitted.", actionLabel: "Open payments", section: "payments", blocked: false };
   if (hasInvoiceIssue(inquiry)) {
     const invoiceStatus = getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus);
     return { label: "Review invoice issue", detail: invoiceStatus.description, actionLabel: "Review payment", section: "payments", blocked: invoiceStatus.tone === "danger" };
   }
   if (getSquareInvoiceStatusPresentation(inquiry.squareDepositInvoiceStatus).invoiceExists) return { label: inquiry.squareDepositInvoiceStatus === "paid" ? "Review completed payment" : "Open Square invoice", detail: "Square's persisted invoice status is shown. Paid amounts and balances are omitted because they are not stored in D1.", actionLabel: "Open payments", section: "payments", blocked: false };
-  return { label: "Review payment setup", detail: "The payment preference is recorded, but a published Square invoice is not available.", actionLabel: "Open payments", section: "payments", blocked: false };
+  return { label: "Review payment setup", detail: "The payment setup is recorded, but a published Square invoice is not available.", actionLabel: "Open payments", section: "payments", blocked: false };
 }
 
 function hasMissingTravelerDetails(inquiry: DashboardInquiry) { return inquiry.travelers.length < inquiry.partySize; }

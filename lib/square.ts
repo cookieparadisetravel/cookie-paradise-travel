@@ -144,7 +144,7 @@ export async function createSquareDepositInvoice(input: {
   const initialAmount = input.initialAmountCents / 100;
   const paymentRequests = buildPaymentRequests(input);
   const result = await squareRequest<{ invoice?: { id?: string; version?: number } }>("/v2/invoices", { body: {
-    idempotency_key: `cpt-inquiry-${input.inquiryId}-payment-plan-invoice-v4-${input.paymentType}-${input.bookingTotalCents}-${input.acceptanceDate}`,
+    idempotency_key: `cpt-inquiry-${input.inquiryId}-payment-plan-invoice-v5-${input.paymentType}-${input.bookingTotalCents}-${input.acceptanceDate}`,
     invoice: {
       location_id: locationId,
       order_id: input.orderId,
@@ -209,7 +209,7 @@ function depositInvoiceDescription(
     : installments.length === 1
       ? `The remaining balance is due in one payment on ${formatInvoiceDate(installments[0].dueDate)}.`
       : `The remaining balance is divided into ${installments.length} monthly installments beginning ${formatInvoiceDate(installments[0].dueDate)}; the final installment is due ${formatInvoiceDate(installments.at(-1)!.dueDate)}.`;
-  return `Total booking price for ${travelerLabel}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first payment is a $${depositAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} reservation deposit ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, 90 days before departure. To request optional automatic installments after paying the deposit, select Save my card on file in Square. A separate authorization showing the remaining schedule will be emailed after the deposit is received. No payment surcharge is added.`;
+  return `Total booking price for ${travelerLabel}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first payment is a $${depositAmount.toLocaleString("en-US", { minimumFractionDigits: 2 })} reservation deposit ($500 per traveler). The deposit is nonrefundable, subject to the Traveler Agreement. ${schedule} Full payment is due no later than ${formatInvoiceDate(finalPaymentDeadline)}, two calendar months before departure. To request optional automatic installments after paying the deposit, select Save my card on file in Square. A separate authorization showing the remaining schedule will be emailed after the deposit is received. No payment surcharge is added.`;
 }
 
 function buildPaymentRequests(input: {
@@ -309,6 +309,7 @@ export async function getSquareInvoiceVersion(invoiceId: string) {
       : "full" as const,
     paymentRequestUids: paymentRequestUids as string[],
     earliestDueDate: getEarliestInvoiceDueDate(result.invoice.payment_requests ?? []),
+    dueDates: (result.invoice.payment_requests ?? []).map((request) => request.due_date ?? "").sort(),
   };
 }
 

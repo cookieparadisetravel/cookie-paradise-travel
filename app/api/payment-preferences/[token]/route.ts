@@ -4,7 +4,7 @@ import { getDb } from "@/db";
 import { createBookingInvoice } from "@/lib/booking-invoice";
 import { getAgreementReadiness } from "@/lib/agreement-readiness";
 import { sendOwnerPaymentPreferenceNotification } from "@/lib/owner-notification";
-import { getPaymentPreferenceInvitation, isPaymentPreference } from "@/lib/payment-preference-invitation";
+import { getPaymentPreferenceInvitation } from "@/lib/payment-preference-invitation";
 import { markAutomatedInvoiceCreated } from "@/lib/booking-automation";
 
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {
@@ -14,7 +14,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     return Response.json({ error: invitation.message }, { status: 409 });
   }
   if (invitation.status === "completed") {
-    return Response.json({ error: "This payment preference has already been submitted." }, { status: 409 });
+    return Response.json({ error: "This payment setup has already been submitted." }, { status: 409 });
   }
   if (invitation.status !== "ready") {
     return Response.json({ error: "This payment-preference link is invalid, expired or unavailable." }, { status: invitation.status === "expired" ? 410 : 404 });
@@ -31,15 +31,9 @@ export async function POST(request: Request, context: { params: Promise<{ token:
   if (!body || typeof body !== "object" || Array.isArray(body)) {
     return Response.json({ error: "Request body must be a JSON object." }, { status: 400 });
   }
-  const paymentPreference = "paymentPreference" in body ? body.paymentPreference : null;
-  if (!isPaymentPreference(paymentPreference)) {
-    return Response.json({ error: "Choose a payment option before continuing." }, { status: 400 });
-  }
-  if (invitation.fullPaymentRequired && paymentPreference !== "full") {
-    return Response.json({ error: "This booking is within 90 days of departure and requires full payment." }, { status: 400 });
-  }
+  const paymentPreference = invitation.fullPaymentRequired ? "full" : "payment_plan";
   const db = getDb();
-  const agreementReadiness = await getAgreementReadiness(invitation.bookingRequestId, invitation.partySize);
+  const agreementReadiness = await getAgreementReadiness(invitation.bookingRequestId, invitation.partySize, { requireCurrentAgreement: true });
   if (!agreementReadiness.readyForInvoice) {
     return Response.json({ error: `Payment setup is locked. ${agreementReadiness.message}` }, { status: 409 });
   }
@@ -50,7 +44,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     isNull(paymentPreferenceInvitations.revokedAt),
   )).returning({ id: paymentPreferenceInvitations.id });
   if (claimedInvitations.length === 0) {
-    return Response.json({ error: "This payment preference has already been submitted." }, { status: 409 });
+    return Response.json({ error: "This payment setup has already been submitted." }, { status: 409 });
   }
 
   async function releaseClaim() {
@@ -73,7 +67,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
       installmentAutopayCardLast4: null,
       installmentAutopayError: null,
       companyAcceptedAt: sql`coalesce(${bookingRequests.companyAcceptedAt}, ${completedAt})`,
-      companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${invitation.createdBy ?? "Secure payment-choice link"})`,
+      companyAcceptedBy: sql`coalesce(${bookingRequests.companyAcceptedBy}, ${invitation.createdBy ?? "Secure payment link"})`,
     }).where(and(
       eq(bookingRequests.id, invitation.bookingRequestId),
       eq(bookingRequests.confirmedBookingTotalCents, invitation.bookingTotalCents),
@@ -92,12 +86,12 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     } catch {
       return Response.json({ error: "Your preference could not be saved, and the secure link could not be restored. Please contact Cookie Paradise Travel Company for a new link." }, { status: 500 });
     }
-    return Response.json({ error: "Your payment preference could not be saved. Please try again." }, { status: 500 });
+    return Response.json({ error: "Your payment setup could not be saved. Please try again." }, { status: 500 });
   }
 
   const invoiceResult = await createBookingInvoice({
     inquiryId: invitation.bookingRequestId,
-    acceptedBy: invitation.createdBy ?? "Secure payment-choice link",
+    acceptedBy: invitation.createdBy ?? "Secure payment link",
   });
   if (!invoiceResult.ok) {
     try {
@@ -118,7 +112,7 @@ export async function POST(request: Request, context: { params: Promise<{ token:
     paymentPreference,
   });
   if (ownerNotificationStatus === "error") {
-    console.error("Payment preference was saved, but the owner notification could not be delivered", {
+    console.error("Payment setup was saved, but the owner notification could not be delivered", {
       bookingRequestId: invitation.bookingRequestId,
       invitationId,
     });

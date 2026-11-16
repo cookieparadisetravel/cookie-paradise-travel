@@ -61,15 +61,15 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   );
   if (environmentError) return Response.json({ error: environmentError }, { status: 409 });
   if (inquiry.squareDepositInvoiceId) {
-    return Response.json({ error: "A Square invoice already exists, so the payment preference can no longer be changed here." }, { status: 409 });
+    return Response.json({ error: "A Square invoice already exists, so the payment setup can no longer be changed here." }, { status: 409 });
   }
   if (inquiry.departure === "flexible") {
-    return Response.json({ error: "Assign a specific departure before requesting a payment preference." }, { status: 400 });
+    return Response.json({ error: "Assign a specific departure before requesting a payment setup." }, { status: 400 });
   }
-  const agreementReadiness = await getAgreementReadiness(bookingRequestId, inquiry.partySize);
+  const agreementReadiness = await getAgreementReadiness(bookingRequestId, inquiry.partySize, { requireCurrentAgreement: true });
   if (!agreementReadiness.readyForInvoice) {
     return Response.json({
-      error: `The payment-choice link is locked. ${agreementReadiness.message}`,
+      error: `The payment link is locked. ${agreementReadiness.message}`,
     }, { status: 409 });
   }
 
@@ -96,10 +96,10 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     confirmedOccupancy: travelers.confirmedOccupancy,
   }).from(travelers).where(eq(travelers.bookingRequestId, bookingRequestId));
   if (bookingTravelers.length !== inquiry.partySize) {
-    return Response.json({ error: "Enter exactly one traveler record for each person before creating the payment-choice link." }, { status: 409 });
+    return Response.json({ error: "Enter exactly one traveler record for each person before creating the payment link." }, { status: 409 });
   }
   if (bookingTravelers.some((traveler) => !traveler.confirmedTripPriceCents || traveler.confirmedTripPriceCents < 1 || (traveler.confirmedOccupancy !== "shared" && traveler.confirmedOccupancy !== "private"))) {
-    return Response.json({ error: "Save a confirmed Trip Price and occupancy for every traveler before creating the payment-choice link." }, { status: 409 });
+    return Response.json({ error: "Save a confirmed Trip Price and occupancy for every traveler before creating the payment link." }, { status: 409 });
   }
   const allocatedTotal = bookingTravelers.reduce((sum, traveler) => sum + (traveler.confirmedTripPriceCents ?? 0), 0);
   if (allocatedTotal !== bookingTotalCents) {
@@ -143,7 +143,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
     createdAt,
   }).returning({ id: paymentPreferenceInvitations.id });
   if (!createdInvitation) {
-    return Response.json({ error: "The payment-choice invitation could not be saved." }, { status: 500 });
+    return Response.json({ error: "The payment invitation could not be saved." }, { status: 500 });
   }
 
   const invitationUrl = new URL(`/payment-preference/${encodeURIComponent(token)}`, request.url).toString();
