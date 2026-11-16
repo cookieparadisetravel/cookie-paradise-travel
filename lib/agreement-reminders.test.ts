@@ -1,3 +1,4 @@
+import * as disclosures from "./travel-disclosures.ts";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
@@ -174,7 +175,7 @@ test("missing email configuration leaves travelers eligible for a later run", as
 });
 
 test("reminder email includes a signing link, expiration, and no-payment explanation", async () => {
-  const emailModule = await load("./mailersend-transactional.ts", { "cloudflare:workers": { env: { MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test" } }, "./consultation": { consultationBookingUrl } });
+  const emailModule = await load("./mailersend-transactional.ts", { "cloudflare:workers": { env: { MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test" } }, "./consultation": { consultationBookingUrl }, "./travel-disclosures": disclosures });
   const originalFetch = globalThis.fetch;
   let payload: Record<string, string> | undefined;
   globalThis.fetch = async (_url, options) => {

@@ -1,4 +1,4 @@
-import { and, eq, isNotNull, or } from "drizzle-orm";
+import { and, eq, inArray, isNotNull, or } from "drizzle-orm";
 import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { currentTravelerAgreement } from "@/lib/traveler-agreement";
@@ -38,7 +38,7 @@ export async function getAgreementReadiness(bookingRequestId: number, expectedPa
     ? eq(agreementAcceptances.agreementVersion, currentTravelerAgreement.version)
     : or(
       eq(agreementAcceptances.agreementVersion, currentTravelerAgreement.version),
-      and(eq(agreementAcceptances.agreementVersion, "1.0"), isNotNull(bookingRequests.squareDepositInvoiceId)),
+      and(inArray(agreementAcceptances.agreementVersion, ["1.0", "1.1"]), isNotNull(bookingRequests.squareDepositInvoiceId)),
     );
 
   const acceptedRecords = await db

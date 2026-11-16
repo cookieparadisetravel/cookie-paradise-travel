@@ -1,5 +1,6 @@
 import agreementV1 from "./traveler-agreement-v1-1.json" with { type: "json" };
 import executiveSummary from "./traveler-agreement-summary.json" with { type: "json" };
+import { travelDisclosures as d } from "./travel-disclosures.ts";
 
 export type AgreementSegment = {
   text: string;
@@ -31,9 +32,28 @@ export type AgreementDocument = {
 
 const approvedAgreementV1 = agreementV1 as AgreementDocument;
 
-// Version 1.1 applies the owner-requested deposit and two-calendar-month payment policy.
-// Each invitation stores the complete personalized document and its SHA-256 hash.
-export const currentTravelerAgreement: AgreementDocument = { ...approvedAgreementV1, executiveSummary };
+// Version 1.2 adds the owner-approved disclosures without rewriting prior snapshots.
+// Payment, cancellation, provider descriptions and other contractual terms are retained.
+const disclosureSection: AgreementSection = {
+  heading: "California travel disclosures",
+  level: 1,
+  blocks: [
+    paragraph(`${d.company} · ${d.address} · ${d.phone} · ${d.email}`),
+    paragraph(`${d.registration} · ${d.validity} ${d.approval}`),
+    { type: "paragraph", segments: [{ text: d.trust, strong: true }] },
+    { type: "paragraph", segments: [{ text: d.restitution, strong: true }] },
+    paragraph(d.refund),
+    paragraph(d.departure),
+    paragraph("Your personalized Trip summary and the Square invoice state the confirmed total, payments received, itemized balance and exact payment dates. The payment purpose is your Discover Southern Vietnam booking. Review these documents and the cancellation conditions below before paying. These notices do not waive any nonwaivable rights under applicable law."),
+  ],
+};
+export const currentTravelerAgreement: AgreementDocument = {
+  ...approvedAgreementV1,
+  version: "1.2",
+  effectiveDate: "November 16, 2026",
+  sections: [disclosureSection, ...approvedAgreementV1.sections],
+  executiveSummary,
+};
 
 export function buildPersonalizedTravelerAgreement(input: {
   travelerName: string;
@@ -53,7 +73,7 @@ export function buildPersonalizedTravelerAgreement(input: {
         ["Trip", "Discover Southern Vietnam — 8 days / 7 nights"],
         ["Occupancy", input.occupancy],
         ["Trip Price", money(input.tripPriceCents)],
-        ["Agreement", `Version ${approvedAgreementV1.version} — Effective ${approvedAgreementV1.effectiveDate}`],
+        ["Agreement", `Version ${currentTravelerAgreement.version} — Effective ${currentTravelerAgreement.effectiveDate}`],
       ],
     }],
   };
@@ -65,7 +85,7 @@ export function buildPersonalizedTravelerAgreement(input: {
 
   return {
     ...currentTravelerAgreement,
-    sections: [summary, ...approvedAgreementV1.sections, acceptance],
+    sections: [summary, ...currentTravelerAgreement.sections, acceptance],
   } satisfies AgreementDocument;
 }
 

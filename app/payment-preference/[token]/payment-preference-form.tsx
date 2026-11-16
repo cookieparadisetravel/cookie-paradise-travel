@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { CalendarClock, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
+import { TravelDisclosures } from "@/app/components/travel-disclosures";
 
 type Props = {
   token: string;
@@ -108,6 +109,7 @@ export function PaymentPreferenceForm({
         </div>
 
         {error && <p role="alert" className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-800">{error}</p>}
+        <TravelDisclosures />
         <button disabled={submitting} className="mt-6 inline-flex w-full items-center justify-center gap-2 rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto" type="submit">
           {submitting ? <><Loader2 className="h-4 w-4 animate-spin" /> Creating Square invoice…</> : "Continue to Square"}
         </button>

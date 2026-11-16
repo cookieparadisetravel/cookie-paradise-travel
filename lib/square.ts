@@ -3,6 +3,7 @@ import type { PaymentInstallment } from "@/lib/payment-schedule";
 import type { AutopayScheduleRequest } from "@/lib/square-autopay";
 import { getEarliestInvoiceDueDate } from "@/lib/square-invoice-state";
 import { getSquareCredentialValues } from "@/lib/square-config";
+import { travelDisclosureText, travelDisclosures } from "@/lib/travel-disclosures";
 
 export { autopayScheduleFingerprint } from "@/lib/square-autopay";
 
@@ -159,9 +160,10 @@ export async function createSquareDepositInvoice(input: {
         cash_app_pay: false,
       },
       title: input.paymentType === "deposit" ? "Discover Southern Vietnam — payment plan" : "Discover Southern Vietnam — full payment",
-      description: input.paymentType === "deposit"
+      description: (input.paymentType === "deposit"
         ? depositInvoiceDescription(input.partySize, initialAmount, bookingTotal, input.installments, input.finalPaymentDeadline)
-        : `Full payment selected for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`,
+        : `Full payment selected for ${input.partySize} traveler${input.partySize === 1 ? "" : "s"}: $${bookingTotal.toLocaleString("en-US", { minimumFractionDigits: 2 })}. The first $500 per traveler is the nonrefundable reservation-deposit portion, subject to the Traveler Agreement. No payment surcharge is added.`)
+        + `\n\nDeparture: ${formatInvoiceDate(input.departure)}. ${travelDisclosures.departure}\n\nPayment purpose: Discover Southern Vietnam booking. The itemized payment requests show amounts due now and later; Square updates payments received and the balance. Cancellation conditions are in the Traveler Agreement supplied and accepted before invoicing.\n\n${travelDisclosureText({ includeRefund: true })}`,
       ...(input.departure !== "flexible" ? { sale_or_service_date: input.departure } : {}),
       store_payment_method_enabled: input.allowStoredPaymentMethod,
     },

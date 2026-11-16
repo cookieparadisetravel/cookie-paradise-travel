@@ -11,10 +11,10 @@ import {
   parseAgreementDocument,
 } from "./traveler-agreement.ts";
 
-test("Agreement 1.1 contains the approved contact, cancellation and safety terms", () => {
+test("Agreement 1.2 contains the approved contact, cancellation and safety terms", () => {
   const canonical = canonicalizeAgreement(currentTravelerAgreement);
-  assert.equal(currentTravelerAgreement.version, "1.1");
-  assert.equal(currentTravelerAgreement.effectiveDate, "November 15, 2026");
+  assert.equal(currentTravelerAgreement.version, "1.2");
+  assert.equal(currentTravelerAgreement.effectiveDate, "November 16, 2026");
   assert.match(canonical, /3346 Cox Ln\., Columbus, IN 47203/u);
   assert.match(canonical, /trung@cookieparadise\.co/u);
   assert.match(canonical, /Package price per traveler/u);
@@ -28,7 +28,8 @@ test("includes the approved front-sheet summary without changing the full agreem
   const agreement = buildPersonalizedTravelerAgreement({
     travelerName: "Summary Traveler", departure: "2027-06-01", occupancy: "Shared double/twin room", tripPriceCents: 287_500,
   });
-  assert.deepEqual(agreement.sections.slice(1, -1), revisedAgreement.sections);
+  assert.equal(agreement.sections[1].heading, "California travel disclosures");
+  assert.deepEqual(agreement.sections.slice(2, -1), revisedAgreement.sections);
   const summary = agreement.executiveSummary;
   assert.ok(summary);
   assert.equal(summary.items.length, 12);
@@ -46,6 +47,22 @@ test("legacy saved agreements retain their exact contents and hash", async () =>
   assert.equal(parsed.executiveSummary, undefined);
   assert.equal(canonicalizeAgreement(parsed), saved);
   assert.equal(await hashAgreementDocument(parsed), createHash("sha256").update(saved).digest("hex"));
+});
+
+test("registration disclosures preserve existing contract terms and both historical versions", async () => {
+  const current = canonicalizeAgreement(currentTravelerAgreement);
+  assert.match(current, /CST 2176084-40/);
+  assert.match(current, /Registration valid November 23, 2026–November 22, 2027/);
+  assert.match(current, /This business has a trust account/);
+  assert.match(current, /not a participant in the California Travel Consumer Restitution Fund/);
+  assert.doesNotMatch(current, /EXO Travel/);
+  assert.deepEqual(currentTravelerAgreement.sections.slice(1), revisedAgreement.sections);
+  for (const historical of [originalAgreement, revisedAgreement]) {
+    const saved = JSON.stringify(historical);
+    const parsed = parseAgreementDocument(saved)!;
+    assert.equal(canonicalizeAgreement(parsed), saved);
+    assert.equal(await hashAgreementDocument(parsed), createHash("sha256").update(saved).digest("hex"));
+  }
 });
 
 test("builds a concise personalized agreement without an installment schedule", () => {

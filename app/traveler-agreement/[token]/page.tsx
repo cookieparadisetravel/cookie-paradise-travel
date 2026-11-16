@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, LockKeyhole, ShieldAlert } from "lucide-react";
 import { AgreementAcceptanceForm } from "./agreement-acceptance-form";
 import { getAgreementInvitation } from "@/lib/agreement-invitation";
+import { TravelDisclosures } from "@/app/components/travel-disclosures";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -31,7 +32,7 @@ export default async function TravelerAgreementPage({ params }: { params: Promis
         {(result.status === "invalid" || result.status === "revoked") && <StatusCard icon="alert" title="This agreement link is unavailable">The link is invalid, has been replaced or was revoked. Please contact Cookie Paradise Travel Company for a new secure link.</StatusCard>}
         {result.status === "expired" && <StatusCard icon="alert" title="This agreement link has expired">Please contact Cookie Paradise Travel Company to request a new secure link.</StatusCard>}
         {result.status === "accepted" && <StatusCard icon="check" title="Agreement already accepted">This secure link has already been used{result.acceptedAt ? ` on ${new Date(result.acceptedAt).toLocaleDateString("en-US", { dateStyle: "long" })}` : ""}. Contact Cookie Paradise Travel Company if you need assistance.</StatusCard>}
-        {result.status === "ready" && <AgreementAcceptanceForm token={token} agreement={result.agreement} traveler={result.invitation} />}
+        {result.status === "ready" && <><TravelDisclosures /><AgreementAcceptanceForm token={token} agreement={result.agreement} traveler={result.invitation} /></>}
       </div>
     </main>
   );

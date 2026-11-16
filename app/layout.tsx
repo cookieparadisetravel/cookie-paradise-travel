@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { WelcomeCreditPopup } from "./components/welcome-credit-popup";
+import { SiteRegistration } from "./components/site-registration";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://cookieparadisetravel.com"),
@@ -49,7 +50,7 @@ export default function RootLayout({
           rel="stylesheet"
         />
       </head>
-      <body className="antialiased">{children}<WelcomeCreditPopup /></body>
+      <body className="antialiased">{children}<SiteRegistration /><WelcomeCreditPopup /></body>
     </html>
   );
 }

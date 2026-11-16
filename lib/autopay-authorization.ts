@@ -2,7 +2,7 @@ import type { AgreementReadiness } from "./agreement-readiness.ts";
 import { currentTravelerAgreement } from "./traveler-agreement.ts";
 
 export const AUTOPAY_AUTHORIZATION_VERSION = "1.0";
-export const REQUIRED_AGREEMENT_VERSION = "1.1";
+export const REQUIRED_AGREEMENT_VERSION = "1.2";
 
 export function autopayAvailable(
   readiness: Pick<AgreementReadiness, "agreementActive" | "readyForInvoice">,

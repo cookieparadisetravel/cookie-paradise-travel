@@ -1,6 +1,7 @@
 "use client";
 
 import { getSalonPartner } from "@/lib/salon-referrals";
+import { travelDisclosures } from "@/lib/travel-disclosures";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -539,6 +540,13 @@ function InquiryProgressChecklist({ inquiry, onSectionChange }: { inquiry: Dashb
 function OverviewSection({ inquiry, guideRequest, salesProcess }: { inquiry: DashboardInquiry; guideRequest?: GuideLeadRow; salesProcess?: SalesProcess }) {
   return (
     <div className="space-y-5">
+      <details className="rounded-2xl border border-[var(--line)] bg-white p-4 text-black">
+        <summary className="cursor-pointer font-bold">California customer disclosure — before payment</summary>
+        <p className="mt-3 leading-7">For a customer located in California, disclose this orally as well as in writing before or when receiving payment:</p>
+        <p className="mt-3 border-l-4 border-[var(--gold)] pl-4 font-semibold leading-7">{travelDisclosures.restitution}</p>
+        <p className="mt-3 leading-7">Record when you gave the oral disclosure in the inquiry notes. The written notices appear on the payment-review page, future agreements and invoices. {travelDisclosures.registration} · {travelDisclosures.validity}</p>
+        <a className="mt-3 inline-block font-semibold underline" href="/travel-disclosures" target="_blank" rel="noreferrer">Open the customer disclosures</a>
+      </details>
       {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
       {inquiry.automatedBookingError && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><AlertCircle className="h-5 w-5" /> Automated booking needs attention</p><p className="mt-1 text-sm leading-6">{inquiry.automatedBookingError}</p></div>}
       {salesProcess && <InquirySalesPanel key={`${salesProcess.id}-${salesProcess.updatedAt}`} sale={salesProcess} />}

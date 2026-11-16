@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { consultationBookingUrl } from "./consultation";
+import { travelDisclosureEmailHtml, travelDisclosureText } from "./travel-disclosures";
 
 export async function sendInquiryReminderEmail(input: { toEmail: string; toName: string; reminderDay: 3 | 7; testPreview?: boolean }) {
   const message = input.reminderDay === 3
@@ -448,8 +449,8 @@ async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResul
       to: [{ email: input.toEmail, name: input.toName }],
       reply_to: { email: "trung@cookieparadise.co", name: "Trung Le" },
       subject: input.subject,
-      html: renderEmailDocument(input.html),
-      text: input.text,
+      html: renderEmailDocument(`${input.html}${travelDisclosureEmailHtml()}`),
+      text: `${input.text}\n\n${travelDisclosureText()}`,
       attachments: input.attachments,
     }),
   });

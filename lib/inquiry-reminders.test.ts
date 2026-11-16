@@ -1,3 +1,4 @@
+import * as disclosures from "./travel-disclosures.ts";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
@@ -174,7 +175,7 @@ type CalendarModule = { isCustomerConsultation(event: unknown, email: string): b
 const appointment = { status: "confirmed", summary: `${consultation.consultationTitle} (Customer)`, start: { dateTime: "2026-10-19T12:00:00Z" }, end: { dateTime: "2026-10-19T12:30:00Z" }, attendees: [{ email: "CUSTOMER@example.test" }] };
 
 test("calendar matching requires the consultation title, duration and exact booking email", async () => {
-  const m = await load<CalendarModule>("./consultation-calendar.ts", { "cloudflare:workers": { env: {} }, jose, "./consultation": consultation });
+  const m = await load<CalendarModule>("./consultation-calendar.ts", { "cloudflare:workers": { env: {} }, jose, "./consultation": consultation, "./travel-disclosures": disclosures });
   assert.equal(m.isCustomerConsultation(appointment, "customer@example.test"), true);
   assert.equal(m.isCustomerConsultation({ ...appointment, attendees: [], description: "**Booked by**\nCustomer\ncustomer@example.test\n\nTrip questions" }, "customer@example.test"), true);
   for (const event of [{ ...appointment, status: "cancelled" }, { ...appointment, summary: "Unrelated meeting" }, { ...appointment, end: { dateTime: "2026-10-19T13:00:00Z" } }, { ...appointment, attendees: [{ email: "othercustomer@example.test" }] }, { ...appointment, attendees: [{ email: "customer@example.test", organizer: true }] }]) {
@@ -185,7 +186,7 @@ test("calendar matching requires the consultation title, duration and exact book
 test("calendar API signs read-only assertions, paginates, rechecks events, and fails closed", async () => {
   const keys = await jose.generateKeyPair("RS256", { extractable: true });
   const runtime = { CONSULTATION_CALENDAR_ID: "calendar@example.test", GOOGLE_CALENDAR_SERVICE_ACCOUNT_JSON: JSON.stringify({ type: "service_account", client_email: "service@example.test", private_key: await jose.exportPKCS8(keys.privateKey) }) };
-  const m = await load<CalendarModule>("./consultation-calendar.ts", { "cloudflare:workers": { env: runtime }, jose, "./consultation": consultation });
+  const m = await load<CalendarModule>("./consultation-calendar.ts", { "cloudflare:workers": { env: runtime }, jose, "./consultation": consultation, "./travel-disclosures": disclosures });
   const originalFetch = globalThis.fetch;
   let tokens = 0, lookups = 0;
   let fail = false, malformed = false;
@@ -215,7 +216,7 @@ test("calendar API signs read-only assertions, paginates, rechecks events, and f
 });
 
 test("templates use the real consultation URL in HTML and text with safe customer names", async () => {
-  const m = await load<{ sendInquiryReminderEmail(email: Email): Promise<unknown> }>("./mailersend-transactional.ts", { "cloudflare:workers": { env: { MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test" } }, "./consultation": consultation });
+  const m = await load<{ sendInquiryReminderEmail(email: Email): Promise<unknown> }>("./mailersend-transactional.ts", { "cloudflare:workers": { env: { MAILERSEND_API_TOKEN: "test", MAILERSEND_FROM_EMAIL: "test@example.test" } }, "./consultation": consultation, "./travel-disclosures": disclosures });
   const originalFetch = globalThis.fetch;
   const payloads: { html: string; text: string; subject: string }[] = [];
   globalThis.fetch = async (_input, init) => { payloads.push(JSON.parse(String(init!.body))); return new Response(null, { status: 202 }); };
@@ -225,6 +226,10 @@ test("templates use the real consultation URL in HTML and text with safe custome
       assert.ok(p.html.includes(`href="${consultation.consultationBookingUrl}"`)); assert.ok(p.text.includes(consultation.consultationBookingUrl));
       assert.ok(p.html.includes("&lt;Customer&gt;")); assert.ok(!p.html.includes("<Customer>"));
       assert.ok(p.text.includes("30-minute consultation"));
+      assert.match(p.html, /CST 2176084-40/); assert.match(p.text, /CST 2176084-40/);
+      assert.match(p.html, /November 23, 2026–November 22, 2027/);
+      assert.match(p.text, /This business has a trust account/);
+      assert.match(p.text, /not a participant in the California Travel Consumer Restitution Fund/);
     }
     assert.notEqual(payloads[0].subject, payloads[1].subject);
     assert.ok(payloads.every((p) => !p.subject.includes("[TEST") && !p.html.includes("TEST PREVIEW")));

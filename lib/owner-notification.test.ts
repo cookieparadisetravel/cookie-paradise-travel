@@ -1,3 +1,4 @@
+import * as disclosures from "./travel-disclosures.ts";
 import assert from "node:assert/strict";
 import test from "node:test";
 import { loadModule } from "../test-support/lead-fixture.ts";
@@ -21,6 +22,7 @@ test("new website inquiries email the owner directly and preserve the webhook fa
   const email = await loadModule<typeof import("./mailersend-transactional")>("lib/mailersend-transactional.ts", {
     "cloudflare:workers": { env: runtime },
     "./consultation": { consultationBookingUrl: "https://example.test/consultation" },
+    "./travel-disclosures": disclosures,
   });
   const { sendOwnerInquiryNotification } = await loadModule<typeof import("./owner-notification")>("lib/owner-notification.ts", {
     "cloudflare:workers": { env: runtime },

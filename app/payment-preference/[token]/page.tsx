@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, LockKeyhole, ShieldAlert } from "lucide-react";
 import { getPaymentPreferenceInvitation } from "@/lib/payment-preference-invitation";
 import { PaymentPreferenceForm } from "./payment-preference-form";
+import { TravelDisclosures } from "@/app/components/travel-disclosures";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -36,6 +37,7 @@ export default async function PaymentPreferencePage({ params }: { params: Promis
         {result.status === "environment_mismatch" && <StatusCard icon="alert" title="Payment setup is unavailable">{result.message}</StatusCard>}
         {result.status === "expired" && <StatusCard icon="alert" title="This payment link has expired">Please contact Cookie Paradise Travel Company to request a new secure link.</StatusCard>}
         {result.status === "completed" && <StatusCard icon="check" title="Payment setup received">
+          <TravelDisclosures />
           <span>This secure link has already been used{result.completedAt ? ` on ${new Date(result.completedAt).toLocaleDateString("en-US", { dateStyle: "long" })}` : ""}. Your payment schedule is {result.paymentPreference === "full" ? "pay in full" : result.paymentPreference === "payment_plan" ? "deposit and monthly installments" : "recorded"}.</span>
           {result.invoiceUrl ? <a className="mx-auto mt-6 inline-flex rounded-full bg-[var(--orange)] px-6 py-3 font-bold text-white" href={result.invoiceUrl}>Open Square invoice</a> : <span className="mt-3 block">The payment schedule is recorded, but the Square invoice link is not available. Please contact Cookie Paradise Travel Company.</span>}
         </StatusCard>}
