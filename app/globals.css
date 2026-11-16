@@ -157,3 +157,21 @@ a { text-underline-offset: 4px; }
 .bright-home .availability-light > div { background: white; border-color: #d8d0c4; }
 .bright-home .availability-light p { color: #29251f; }
 .bright-home .availability-light [role="progressbar"] { background: #e9e3d8; }
+
+/* Destination photographs rotate inside a fixed frame without moving the page. */
+.destination-slideshow { min-width: 0; }
+.destination-slides { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 0 2.5rem 0 0; background: var(--cream); }
+.destination-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 900ms ease; }
+.destination-slide.is-current { opacity: 1; }
+.destination-slide img { width: 100%; height: 100%; object-fit: cover; }
+.destination-slide-caption { position: relative; min-height: 5rem; display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem 1rem; padding-top: 1rem; }
+.destination-slide-caption strong { display: block; font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; }
+.destination-slide-caption span { display: block; margin-top: .3rem; font-family: "Playfair Display", Georgia, serif; font-style: italic; }
+.destination-slide-caption a { font-size: .7rem; text-decoration: underline; }
+.destination-slide-controls { position: relative; display: flex; align-items: center; gap: .5rem; padding-top: .5rem; }
+.destination-slide-controls button { min-width: 44px; min-height: 44px; display: inline-flex; justify-content: center; align-items: center; gap: .5rem; border: 1px solid var(--line); border-radius: 999px; background: white; color: var(--ink); cursor: pointer; }
+.destination-slide-controls button:hover { background: var(--cream); }
+.destination-slide-controls span { min-width: 3rem; text-align: center; font-size: .85rem; }
+.destination-slide-controls .slideshow-toggle { margin-left: auto; padding: 0 1rem; font-size: .85rem; font-weight: 600; }
+@media (min-width: 768px) { .destination-slides { aspect-ratio: 5 / 4; } }
+@media (prefers-reduced-motion: reduce) { .destination-slide { transition: none; } }

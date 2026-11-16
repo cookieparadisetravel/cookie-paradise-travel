@@ -11,7 +11,9 @@ import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
 import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "./components/trip-availability";
-import { JourneyPhoto } from "./components/journey-photo";
+import { JourneyPhoto, photographs } from "./components/journey-photo";
+import { DestinationSlideshow } from "./components/destination-slideshow";
+import { LegacyJourneyCleanup, TripSectionLink } from "./components/trip-section-link";
 import { ConsultationLink } from "./components/consultation-link";
 import { BrandLogo } from "./components/brand-logo";
 import { TripGuideForm } from "./components/trip-guide-form";
@@ -121,16 +123,16 @@ const approvedSummary = (label: string) => {
     .replace(/\s*\(Sections? [^)]+\)/g, "");
 };
 const homepageFaqs = [
-  { question: "Do I need to be ready to book before we talk?", answer: "No. The free 30-minute Google Meet is a chance to ask about the itinerary, flights, rooms and whether the trip fits your plans. There is no obligation to book. You can also get the guide first or email Trung at trung@cookieparadise.co." },
+  { question: "Do I need to be ready to book before we talk?", answer: "No. The free 30-minute Google Meet is a chance to ask about the itinerary, flights, rooms and whether the trip fits your plans. There is no obligation to book. You can also download the trip itinerary and pricing PDF first or email Trung at trung@cookieparadise.co." },
   { question: "Where do I fly into and out of?", answer: "Arrive at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City for June 1, 2027. Depart from Da Nang International Airport (DAD), near Hoi An, on June 8. The listed domestic flight from Ho Chi Minh City to Hue (HUI) is included; international flights are extra. Discuss flight plans with Trung before purchasing." },
-  { question: "Can I join on my own, or share a room with my partner?", answer: "Solo travelers and couples can inquire. The $399 private-room supplement applies only to a single traveler who wants a room to themselves, subject to availability. Couples sharing a room can request a queen bed or separate beds. Ask Trung about room arrangements before booking." },
+  { question: "What are the room options for solo travelers, friends and couples?", answer: "The listed price is per person sharing a double or twin room. Friends can request separate beds; couples can request a queen bed or separate beds. If you are traveling solo, ask Trung about room arrangements. A room to yourself adds $399, subject to availability; a roommate match is not guaranteed." },
   { question: "What is the daily pace like?", answer: "The itinerary includes city and heritage-site walking, getting on and off boats, some early starts and full activity days, alongside free time. The Mekong village routes offer bicycle or buggy options. Talk with Trung about your preferred pace and any arrangements that need to be checked before booking." },
-  { question: "Who will host the trip?", answer: "The trip is created by Trung Le and hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides. Ask who is planned to host your departure when you speak with Trung." },
+  { question: "Who will host the trip?", answer: "The trip is created by Trung Le and hosted by Trung or another carefully selected Cookie Paradise Travel Company host. Ask who is planned to host your departure when you speak with Trung." },
   { question: "What are the deposit and payment terms?", answer: approvedSummary("Deposit and payments") },
   { question: "What happens if the minimum group is not reached?", answer: approvedSummary("Minimum group and company cancellation") + " Independently purchased international flights and other arrangements are not covered by this refund." },
   { question: "What if a major disruption affects the trip?", answer: approvedSummary("Changes and major disruptions") },
   { question: "What if I need to cancel?", answer: approvedSummary("If you cancel") },
-  { question: "What if June 2027 does not work for me?", answer: "June 1–8, 2027 is the currently open departure. Future dates have not been announced. You can still request the guide, choose a future departure as your interest, or book a call to discuss your plans." },
+  { question: "What if June 2027 does not work for me?", answer: "June 1–8, 2027 is the currently open departure. Future dates have not been announced. You can still request the itinerary and pricing PDF, choose a future departure as your interest, or book a call to discuss your plans." },
 ];
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {
@@ -140,6 +142,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
   const availability = await getPublicTripAvailability(vietnamDeparture.tripSlug, vietnamDeparture.departure, vietnamDeparture.capacity);
   return (
     <ReferralProvider partner={partner}>
+    <LegacyJourneyCleanup />
     <main className="bright-home min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
       <section id="top" className="overflow-hidden bg-[#faf8f3] text-[var(--ink)]">
       <header className="relative z-20 border-b border-black/10 bg-[#faf8f3] text-[var(--ink)]">
@@ -152,7 +155,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           </div>
           <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
-            <a className="hover:text-[var(--gold)]" href="#journey">The trip</a>
+            <TripSectionLink className="hover:text-[var(--gold)]">The trip</TripSectionLink>
             <a className="hover:text-[var(--gold)]" href="/fit">Private Vietnam Trips</a>
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing</a>
             <a className="hover:text-[var(--gold)]" href="/vietnam-trip-planning">Planning guide</a>
@@ -160,7 +163,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <ConsultationLink compact className="site-header-call" />
         </div>
         <nav className="flex items-center justify-center gap-6 border-t border-black/10 bg-[#faf8f3] px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
-          <a className="hover:text-[var(--gold)]" href="#journey">Group Trip</a>
+          <TripSectionLink className="hover:text-[var(--gold)]">Group Trip</TripSectionLink>
           <a className="text-[var(--ink)] hover:underline" href="/fit">Private Vietnam Trips</a>
         </nav>
       </header>
@@ -186,7 +189,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
               <a href="#guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/25 px-6 py-3 text-center text-sm font-bold hover:bg-black/5">Get the itinerary and pricing <ArrowRight className="h-4 w-4 shrink-0" /></a>
             </div>
             <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--ink)]">Free 30-minute Google Meet with Trung, your Columbus-based trip planner. Ask about flights, rooms and whether this trip fits your plans. No obligation to book.</p>
-            <a href="#journey" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#805018] underline underline-offset-4">Explore the journey <ArrowRight className="h-4 w-4" /></a>
+            <TripSectionLink className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#805018] underline underline-offset-4">Explore the trip <ArrowRight className="h-4 w-4" /></TripSectionLink>
           </div>
         </div>
       </section>
@@ -211,7 +214,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="mx-auto max-w-7xl">
           <h2 id="travel-options-title" className="font-serif text-3xl sm:text-4xl">Your Vietnam trip, your way</h2>
           <div className="mt-6 grid gap-6 text-base leading-7 md:grid-cols-2 md:gap-12">
-            <p><a href="#journey" className="font-bold underline">Vietnam small-group tours</a> bring you together with fellow travelers on a scheduled, hosted itinerary. Explore the June 2027 departure below.</p>
+            <p><TripSectionLink className="font-bold underline">Vietnam small-group tours</TripSectionLink> bring you together with fellow travelers on a scheduled, hosted itinerary. Explore the June 2027 departure below.</p>
             <p><a href="/fit" className="font-bold underline">Private Vietnam trips</a> are planned around your dates, companions and interests. Ask Trung for help with the whole journey or one arrangement.</p>
           </div>
           <p className="mt-6 text-base leading-7">Still deciding? <a href="/vietnam-trip-planning" className="font-semibold underline">Read the Vietnam trip planning guide</a> to compare travel styles, routes and practical questions.</p>
@@ -254,10 +257,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
       </section>
 
-      <section id="journey" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
+      <section id="trip-highlights" tabIndex={-1} aria-label="Vietnam trip highlights" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-16 sm:px-8 sm:py-20">
         <div className="story-intro">
-        <div className="max-w-3xl"><p className="eyebrow">Four places. One memorable journey.</p><h2 className="section-title">Picture yourself here.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted-ink)]">Food, local stories and shared experiences—from Southern Vietnam to the country&apos;s central coast. A personal group of no more than 15, hosted by Trung or a carefully selected Cookie Paradise Travel Company host with experienced local guides.</p></div>
-        <JourneyPhoto photo="skyline" className="story-skyline" sizes="(min-width: 1280px) 580px, (min-width: 768px) 47vw, 92vw" />
+        <div className="max-w-3xl"><p className="eyebrow">Four places. One memorable journey.</p><h2 className="section-title">Picture yourself here.</h2><p className="mt-5 text-lg leading-8 text-[var(--muted-ink)]">Taste sizzling street food, drift through palm-lined waterways and wander lantern-lit lanes. From vibrant Ho Chi Minh City to imperial Hue and the warm evenings of Hoi An, explore with no more than 15 travelers, hosted by Trung or a carefully selected Cookie Paradise Travel Company host.</p></div>
+        <DestinationSlideshow />
         </div>
         <div className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
@@ -265,7 +268,15 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             ["02", "Mekong Delta", "Travel sampan waterways, meet local makers and share a home-hosted lunch, with village paths along the way."],
             ["03", "Hue", "Discover imperial heritage and royal tombs, savor garden-house traditions and cruise the Perfume River at sunset."],
             ["04", "Hoi An", "Cross the Hai Van Pass, make a lantern, explore old-town lanes and join a hands-on culinary challenge."],
-          ].map(([number,title,description]) => <article key={number} className="rounded-3xl border border-[var(--line)] bg-white p-6"><p className="text-sm font-bold tracking-widest text-[var(--orange)]">{number}</p><h3 className="mt-5 font-serif text-2xl">{title}</h3><p className="mt-3 text-base leading-7 text-[var(--muted-ink)]">{description}</p></article>)}
+          ].map(([number,title,description], index) => {
+            const photo = [photographs.skyline, photographs.mekong, photographs.hue, photographs.street][index];
+            return <article key={number} className="overflow-hidden rounded-3xl border border-[var(--line)] bg-white">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`/travel/${photo.file}-640.webp`} alt={photo.alt} width={640} height={420} loading="lazy" decoding="async" className="aspect-[3/2] w-full object-cover" />
+              <div className="p-6"><p className="text-sm font-bold tracking-widest text-[var(--orange)]">{number}</p><h3 className="mt-3 font-serif text-2xl">{title}</h3><p className="mt-3 text-base leading-7 text-[var(--muted-ink)]">{description}</p>
+              <a href={photo.source} target="_blank" rel="noopener noreferrer" className="mt-4 inline-block text-xs text-[var(--muted-ink)] underline">Photo: {photo.photographer}</a></div>
+            </article>;
+          })}
         </div>
         <div className="mt-7 flex flex-wrap items-center gap-x-7 gap-y-4">
           <a href="#daily-schedule" className="inline-flex items-center gap-2 font-semibold underline decoration-[var(--gold)] decoration-2 underline-offset-4">See the full daily itinerary <ArrowRight className="h-4 w-4" /></a>
@@ -280,9 +291,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
             <p className="mt-7 text-5xl font-bold text-[#805018]">$2,875</p>
             <p className="mt-3 text-base leading-7 text-[var(--ink)]">Per traveler, sharing a room, at eight travelers.<br />June 1–8, 2027 · International airfare extra.</p>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]">
-              {approvedSummary("Price and room arrangements")}
-            </p>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due April 1, 2027.</p>
             <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
             <div className="mt-7 flex items-start gap-3 rounded-2xl border border-black/10 bg-white p-5 text-sm leading-6 text-[var(--ink)]">
               <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[#805018]" />
@@ -298,6 +307,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
               </div>
             ))}
             <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
+              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">How group pricing works</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
               Private-room supplement: <strong className="text-[var(--ink)]">$399</strong> for a single traveler who wants a room to themselves, subject to availability. Couples sharing a room can request a queen bed or separate beds. International airfare is not included.
             </div>
           </div>
@@ -332,8 +342,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         </div>
         </div>
         <div className="mt-10 grid gap-6 rounded-3xl border border-[var(--line)] bg-[var(--cream)] p-7 sm:grid-cols-2 sm:p-9">
-          <div><h3 className="font-serif text-2xl">Not included</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">International flights, travel insurance, Vietnam visa, personal expenses, gratuities, airport fast-track assistance and anything not specifically listed.</p></div>
-          <div><h3 className="font-serif text-2xl">A note about plans</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">Hotels, flight times, activities and routing may change because of local conditions or supplier requirements. Comparable arrangements will be used when practical.</p></div>
+          <div><h3 className="font-serif text-2xl">A few extras to budget for</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">International flights, travel insurance, personal spending, airport fast-track assistance and anything not specifically included are extra.</p>
+            <dl className="mt-5 space-y-4 text-base leading-7">
+              <div><dt className="font-bold">Vietnam e-visa: US$25 single entry</dt><dd>US$50 for multiple entry. These are government fees; eligibility and fees can change. <a href="https://evisa.gov.vn/" target="_blank" rel="noopener noreferrer" className="font-semibold underline">Check the official visa portal.</a></dd></div>
+              <div><dt className="font-bold">Tips: budget about US$40–60 per traveler</dt><dd>A planning estimate for the eight-day group trip, covering shared guide and driver tips, boats, porters and included meals. Tips are optional and based on service; we will share guidance before departure.</dd></div>
+            </dl>
+          </div>
+          <div><h3 className="font-serif text-2xl">A little flexibility, thoughtfully handled</h3><p className="mt-3 leading-7 text-[var(--muted-ink)]">Even a good itinerary can’t negotiate with the weather. Local conditions and supplier schedules sometimes mean adjusting a hotel, flight, activity or route. We’ll explain changes and use comparable arrangements when practical.</p><p className="mt-4 leading-7 text-[var(--muted-ink)]">For bigger disruptions, <a href="#faq" className="font-semibold underline">see the cancellation and refund answers below</a> and your Traveler Agreement.</p></div>
         </div>
       </section>
 
@@ -370,7 +385,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <div className="mt-8 rounded-3xl bg-[var(--navy)] p-7 text-white">
               <Compass className="h-8 w-8 text-[var(--gold)]" />
               <p className="mt-5 font-serif text-2xl">Thoughtfully hosted</p>
-              <p className="mt-3 leading-7 text-white/70">Each departure is hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides.</p>
+              <p className="mt-3 leading-7 text-white/70">Each departure is hosted by Trung or another carefully selected Cookie Paradise Travel Company host. Ask Trung who is planned to host your departure and what to expect along the way.</p>
             </div>
             <JourneyPhoto photo="hue" className="story-hue" sizes="(min-width: 1280px) 400px, (min-width: 1024px) 32vw, 92vw" />
           </div>
@@ -408,9 +423,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
 
       <section id="guide" className="border-y border-[var(--line)] bg-[var(--cream)] py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl items-start gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
-          <div><p className="eyebrow">Take the details with you</p><h2 className="section-title">Still exploring? Start with the guide.</h2>
+          <div><p className="eyebrow">Take the details with you</p><h2 className="section-title">Take the itinerary with you.</h2>
             <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">Save the itinerary and pricing, share it with your travel companion and come back with your questions. Request an emailed copy here without starting a booking.</p>
-            <a href={tripGuideUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center gap-2 font-semibold underline underline-offset-4">View the guide now (PDF) <ArrowRight className="h-4 w-4" /></a>
+            <a href={tripGuideUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center gap-2 font-semibold underline underline-offset-4">View the itinerary and pricing (PDF) <ArrowRight className="h-4 w-4" /></a>
             <p className="mt-6 text-base leading-7 text-[var(--muted-ink)]">Prefer to ask by email? Write to <a href="mailto:trung@cookieparadise.co" className="font-semibold underline">trung@cookieparadise.co</a>.</p>
             <JourneyPhoto photo="lanterns" className="story-guide-lanterns" sizes="(min-width: 1024px) 360px, (min-width: 640px) 50vw, 70vw" />
           </div>
@@ -422,7 +437,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <p className="eyebrow">When you are ready</p><h2 className="section-title">A clear next step, at your pace.</h2>
         <ol className="mt-9 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            ["01", "Talk or explore first", "Book a free 30-minute Google Meet, read the daily itinerary or get the guide. These steps do not create a reservation or payment obligation."],
+            ["01", "Talk or explore first", "Book a free 30-minute Google Meet, read the daily itinerary or download the itinerary and pricing PDF. These steps do not create a reservation or payment obligation."],
             ["02", "Request your spot", "When ready, send your departure, traveler and room details. Your request is reviewed before the booking can be confirmed."],
             ["03", "Review and sign", "Review your personalized Traveler Agreement. Each adult signs separately; a parent or guardian signs for a minor."],
             ["04", "Confirm your booking", "Confirmation requires our written acceptance, your signature and cleared deposit or required full payment. Payments are handled through a secure Square invoice."],

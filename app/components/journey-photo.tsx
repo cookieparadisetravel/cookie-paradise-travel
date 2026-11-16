@@ -1,4 +1,4 @@
-const photographs = {
+export const photographs = {
   skyline: {
     file: "ho-chi-minh-city", width: 1800, height: 1200,
     alt: "Ho Chi Minh City's illuminated waterfront skyline reflected in the river at night",
