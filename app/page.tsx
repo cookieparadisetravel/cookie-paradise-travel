@@ -198,7 +198,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div>
             <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
             <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
-            <p className="mt-5 text-base leading-7">The tour price is per person sharing a room. Your final price depends on the confirmed group size.</p>
+            <p className="mt-5 text-base leading-7">The tour price is per person sharing a room.</p>
             <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due April 1, 2027.</p>
             <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
             <div className="mt-7 flex flex-wrap gap-3"><BookingDialog triggerLabel="Request a spot" compact /><a href="#faq" className="inline-flex min-h-12 items-center px-2 text-sm font-semibold underline">Booking questions</a></div>
