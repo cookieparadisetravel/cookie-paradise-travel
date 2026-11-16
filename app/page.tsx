@@ -11,6 +11,7 @@ import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
 import { vietnamDeparture } from "@/lib/trip-availability";
 import { TripAvailability } from "./components/trip-availability";
+import { TripBudget } from "./components/trip-budget";
 import { JourneyPhoto, photographs } from "./components/journey-photo";
 import { DestinationSlideshow } from "./components/destination-slideshow";
 import { LegacyJourneyCleanup, TripSectionLink } from "./components/trip-section-link";
@@ -312,6 +313,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             </div>
           </div>
         </div>
+        <TripBudget />
       </section>
 
       <section id="included" className="mx-auto max-w-7xl px-5 py-20 sm:px-8 sm:py-28">

@@ -175,3 +175,7 @@ a { text-underline-offset: 4px; }
 .destination-slide-controls .slideshow-toggle { margin-left: auto; padding: 0 1rem; font-size: .85rem; font-weight: 600; }
 @media (min-width: 768px) { .destination-slides { aspect-ratio: 5 / 4; } }
 @media (prefers-reduced-motion: reduce) { .destination-slide { transition: none; } }
+
+/* Keep budget figures and supporting text legible on the light pricing card. */
+.bright-home .trip-budget { color: #171717; }
+.trip-budget summary:focus-visible { outline: 2px solid #805018; outline-offset: 5px; border-radius: .25rem; }
