@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = publicPageMetadata({
   title: "Private Vietnam Trips & Custom Tours | Cookie Paradise Travel",
-  description: "Spend less time planning your private Vietnam trip. Vietnam-born trip planner Trung Le designs your itinerary and coordinates hotels, private guides and transfers.",
+  description: "Spend less time planning your private Vietnam trip. Trung Le can design your itinerary and book flights, hotels, private guides and transfers.",
   path: "/fit",
   image: "/travel/fit-mu-cang-chai-1800.webp",
   imageAlt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam",
@@ -22,7 +22,8 @@ export const metadata = publicPageMetadata({
 const questions = [
   ["What if my dates or route are still undecided?", "A season and a rough idea of how long you can travel are enough for our first call. We’ll talk through which places fit comfortably in that time."],
   ["Can you arrange a special request?", "Tell me about the anniversary dinner, particular hotel or interest you’d like to build a day around. I’ll check availability and cost with you before adding it to the plan."],
-  ["What about flights, accessibility or dietary needs?", "Tell me which airport you’ll leave from, how far you’re comfortable walking and any food or accessibility needs. I’ll check what can be arranged and list it in your proposal, including any help with flights, visas or insurance. Please confirm your itinerary and bookings before buying airfare."],
+  ["Can you book my flights?", "Yes. I can book your flights to and from Vietnam as well as flights within the country. If you already have tickets, I can build the itinerary around them."],
+  ["Can you accommodate accessibility or dietary needs?", "Tell me how far you’re comfortable walking and what dietary or accessibility arrangements you need. I’ll check what can be arranged and include it in your proposal."],
   ["How is this different from the June 2027 group trip?", "On Discover Southern Vietnam, you join a hosted group on a scheduled departure. On a private trip, you choose your dates and travel solo or with your own companions. I’ll quote the itinerary for your party."],
 ];
 
@@ -58,7 +59,7 @@ export default async function FitTravelPage() {
       <div className="fit-hero-copy">
         <p className="fit-kicker">Private Vietnam travel</p>
         <h1 id="fit-title">Spend less time planning.<br /><em>Enjoy more of Vietnam.</em></h1>
-        <p className="fit-body">I’m Trung Le, a trip planner born and raised in Vietnam and now based in Indiana. Tell me what you’d love to experience. I’ll draw on my firsthand knowledge of the country and my local network to design your private itinerary and coordinate the hotels, guides and transfers you choose.</p>
+        <p className="fit-body">I’m Trung Le, a trip planner born and raised in Vietnam and now based in Indiana. Tell me what you’d love to experience. I’ll draw on my firsthand knowledge and local network to design your private itinerary. You can hand off as much as you like, including airline reservations, hotels, private guides and transfers.</p>
         <a className="fit-button fit-button-dark" href="#fit-plan">Start planning with Trung <ArrowRight size={18} aria-hidden="true" /></a>
         <p className="fit-small fit-hero-note">Free 30-minute consultation</p>
         <a className="fit-text-link fit-explore" href="#fit-value">See what I take care of <ArrowDown size={16} aria-hidden="true" /></a>
@@ -90,7 +91,7 @@ export default async function FitTravelPage() {
       <div>
         <p className="fit-kicker">Services &amp; pricing</p>
         <h2 id="fit-approach-title">Choose how much<br /><em>you’d like me to plan.</em></h2>
-        <div className="fit-service"><h3>Plan my whole trip</h3><p className="fit-body">I’ll put together your itinerary and coordinate the arrangements in your proposal. That can include hotels, airport pickups, travel between cities, private guides and experiences.</p></div>
+        <div className="fit-service"><h3>Plan my whole trip</h3><p className="fit-body">I’ll put together your itinerary and book the arrangements you approve, from international and domestic flights to hotels, airport pickups, private guides and experiences.</p></div>
         <div className="fit-service"><h3>Help with part of my trip</h3><p className="fit-body">I can work around the plans you already have, whether you want help with a few days in one region or a single arrangement like an airport transfer.</p></div>
       </div>
       <aside className="fit-quote" aria-labelledby="fit-quote-title">
@@ -98,7 +99,7 @@ export default async function FitTravelPage() {
         <h3 id="fit-quote-title">What will my<br />trip cost?</h3>
         <p className="fit-body">Your quote reflects your dates, hotels, experiences and the number of people traveling. If you’re weighing two routes or hotel options, I can show you how each choice changes the price.</p>
         <p className="fit-body">The first call is free. Before you decide, you’ll see what the price covers, any planning fees, when payments are due and the booking terms.</p>
-        <p className="fit-small">Flights, visas and insurance are included only if your proposal specifically lists them.</p>
+        <p className="fit-small">Your proposal will list any airfare, visa assistance or travel insurance included in your quote.</p>
       </aside>
     </section>
 
