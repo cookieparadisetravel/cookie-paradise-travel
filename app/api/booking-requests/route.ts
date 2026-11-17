@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     if (!firstName || firstName.length > 60 || !lastName || lastName.length > 60 || fullName.length > 121 || !emailSchema.safeParse(email).success) {
       return Response.json({ error: "Valid first name, last name and email are required." }, { status: 400 });
     }
-    if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 6) {
+    if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 8) {
       return Response.json({ error: "Please review the trip selections." }, { status: 400 });
     }
     if (!phone || phone.length > 40) {

@@ -1,12 +1,6 @@
-export const publishedPerTravelerPricesCents = [287_500, 267_500, 260_500, 250_000] as const;
+export const publishedPerTravelerPricesCents = [287_500] as const;
 export const privateRoomSupplementCents = 39_900;
 
-export const publishedTravelerCountByPriceCents: Record<typeof publishedPerTravelerPricesCents[number], number> = {
-  287_500: 8,
-  267_500: 10,
-  260_500: 12,
-  250_000: 15,
-};
 
 export function isPublishedPerTravelerPriceCents(value: number): value is typeof publishedPerTravelerPricesCents[number] {
   return publishedPerTravelerPricesCents.some((price) => price === value);
@@ -26,11 +20,11 @@ export function calculateExpectedBookingTotalCents({
   perTravelerPriceCents: number;
   privateRoomCount: number;
 }) {
-  if (!Number.isInteger(partySize) || partySize < 1 || partySize > 15) {
+  if (!Number.isInteger(partySize) || partySize < 1 || partySize > 8) {
     throw new Error("The traveler count is invalid.");
   }
   if (!isPublishedPerTravelerPriceCents(perTravelerPriceCents)) {
-    throw new Error("Choose one of the published per-traveler prices.");
+    throw new Error("The shared-room price is fixed at $2,875 per traveler.");
   }
   if (!Number.isInteger(privateRoomCount) || privateRoomCount < 0 || privateRoomCount > partySize) {
     throw new Error("The private-room supplement count is invalid.");

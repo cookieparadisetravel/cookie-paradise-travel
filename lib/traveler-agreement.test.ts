@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
+import fixedPriceAgreement from "./traveler-agreement-v1-3.json" with { type: "json" };
 import revisedAgreement from "./traveler-agreement-v1-1.json" with { type: "json" };
 import originalAgreement from "./traveler-agreement-v1.json" with { type: "json" };
 import {
@@ -11,10 +12,10 @@ import {
   parseAgreementDocument,
 } from "./traveler-agreement.ts";
 
-test("Agreement 1.2 contains the approved contact, cancellation and safety terms", () => {
+test("Agreement 1.3 contains the approved contact, cancellation and safety terms", () => {
   const canonical = canonicalizeAgreement(currentTravelerAgreement);
-  assert.equal(currentTravelerAgreement.version, "1.2");
-  assert.equal(currentTravelerAgreement.effectiveDate, "November 16, 2026");
+  assert.equal(currentTravelerAgreement.version, "1.3");
+  assert.equal(currentTravelerAgreement.effectiveDate, "November 17, 2026");
   assert.match(canonical, /3346 Cox Ln\., Columbus, IN 47203/u);
   assert.match(canonical, /trung@cookieparadise\.co/u);
   assert.match(canonical, /Package price per traveler/u);
@@ -29,7 +30,7 @@ test("includes the approved front-sheet summary without changing the full agreem
     travelerName: "Summary Traveler", departure: "2027-06-01", occupancy: "Shared double/twin room", tripPriceCents: 287_500,
   });
   assert.equal(agreement.sections[1].heading, "California travel disclosures");
-  assert.deepEqual(agreement.sections.slice(2, -1), revisedAgreement.sections);
+  assert.deepEqual(agreement.sections.slice(2, -1), fixedPriceAgreement.sections);
   const summary = agreement.executiveSummary;
   assert.ok(summary);
   assert.equal(summary.items.length, 12);
@@ -56,7 +57,7 @@ test("registration disclosures preserve existing contract terms and both histori
   assert.match(current, /This business has a trust account/);
   assert.match(current, /not a participant in the California Travel Consumer Restitution Fund/);
   assert.doesNotMatch(current, /EXO Travel/);
-  assert.deepEqual(currentTravelerAgreement.sections.slice(1), revisedAgreement.sections);
+  assert.deepEqual(currentTravelerAgreement.sections.slice(1), fixedPriceAgreement.sections);
   for (const historical of [originalAgreement, revisedAgreement]) {
     const saved = JSON.stringify(historical);
     const parsed = parseAgreementDocument(saved)!;
@@ -111,4 +112,16 @@ test("revised enrollment rules count current deposits and installments without r
   assert.match(agreementText, /no later than 75 days before departure/);
   assert.match(agreementText, /do not need to be prepaid to count toward minimum enrollment/);
   assert.doesNotMatch(agreementText, /fully paid travelers/);
+});
+
+test("current agreement has fixed pricing and a four guest minimum", () => {
+  const text = canonicalizeAgreement(currentTravelerAgreement);
+  assert.match(text, /at least four travelers/);
+  assert.match(text, /limited to eight guests/);
+  assert.match(text, /price does not change with group size/);
+  assert.match(text, /no later than 75 days before departure/);
+  assert.doesNotMatch(text, /80 days|2,675|2,605|2,500|enrollment tiers/);
+  for (let i = 0; i < revisedAgreement.sections.length; i++) {
+    if (![0, 3].includes(i)) assert.deepEqual(fixedPriceAgreement.sections[i], revisedAgreement.sections[i]);
+  }
 });

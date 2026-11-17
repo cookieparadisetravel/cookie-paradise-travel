@@ -323,7 +323,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
                 <Select value={partySize} onValueChange={(value) => setPartySize(value ?? "1")}>
                   <SelectTrigger className="field-input h-12 w-full"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {[1, 2, 3, 4, 5, 6].map((count) => <SelectItem key={count} value={String(count)}>{count}</SelectItem>)}
+                    {[1, 2, 3, 4, 5, 6, 7, 8].map((count) => <SelectItem key={count} value={String(count)}>{count}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

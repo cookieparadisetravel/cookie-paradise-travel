@@ -17,18 +17,13 @@ import { TripAvailability } from "../components/trip-availability";
 export const dynamic = "force-dynamic";
 export const metadata = publicPageMetadata({
   title: "Vietnam Small-Group Tour, June 2027 | Free Itinerary & Pricing",
-  description: "Discover Southern Vietnam, June 1–8, 2027: an 8-day tour for 8–15 travelers through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. See pricing, a full trip budget and the free itinerary.",
+  description: "Discover Southern Vietnam, June 1–8, 2027: an 8-day tour for 4–8 guests through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. See pricing, a full trip budget and the free itinerary.",
   path: "/vietnam",
   image: "/vietnam-hero-poster.webp",
   imageAlt: "Discover Southern Vietnam small-group tour",
 });
 
-const pricing = [
-  ["8 travelers", "$2,875"],
-  ["10 travelers", "$2,675"],
-  ["12 travelers", "$2,605"],
-  ["15 travelers", "$2,500"],
-];
+const pricing = [["4–8 guests", "$2,875"]];
 const inclusions = [
   { icon: Utensils, title: "Hotels & meals", description: "Seven hotel nights, seven breakfasts, five lunches and three dinners—including a home-hosted Mekong lunch and Hue royal dinner." },
   { icon: Plane, title: "Flights & transfers", description: "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers and private boats." },
@@ -64,14 +59,14 @@ export default async function VietnamTrip() {
           <div className="hero-essential-copy">
             <p className="mb-5 text-sm font-semibold uppercase tracking-[.14em] [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">Small-group Vietnam tour</p>
             <h1 id="vietnam-title" className="max-w-4xl font-serif text-[clamp(2.8rem,7vw,6rem)] font-normal leading-[1.08] tracking-[-.025em] [text-shadow:0_2px_16px_rgba(0,0,0,.65)]">Discover<br />Southern Vietnam</h1>
-            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 · 8 days · 8–15 travelers</p>
+            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 · 8 days · 4–8 guests</p>
             <a href="#get-guide" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-7 py-3 text-base font-bold text-[#171717] shadow-lg hover:bg-[#ffd078]">Get the itinerary & pricing <ArrowRight aria-hidden="true" size={18} /></a>
           </div>
           <a href="https://unsplash.com/photos/lzjlYsMGYXg" target="_blank" rel="noopener noreferrer" className="absolute bottom-4 right-5 text-xs underline underline-offset-2 [text-shadow:0_1px_5px_black]">Photo: Nguyen Minh</a>
         </div>
         <div className="mx-auto max-w-3xl px-5 py-10 text-center sm:px-8 sm:py-12">
           <p className="text-lg leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
-          <p className="mt-5 text-base leading-7"><strong className="text-2xl">$2,875 per traveler</strong> at eight travelers<br /><span className="text-sm">Shared room · International airfare extra</span></p>
+          <p className="mt-5 text-base leading-7"><strong className="text-2xl">$2,875 per traveler</strong> · fixed price<br /><span className="text-sm">Shared room · International airfare extra</span></p>
           <a href="#pricing" className="mt-5 inline-flex min-h-11 items-center gap-2 font-semibold text-[#805018] underline underline-offset-4">See the full trip budget <ArrowRight aria-hidden="true" size={17} /></a>
         </div>
       </section>
@@ -87,7 +82,7 @@ export default async function VietnamTrip() {
           </div>
           <div className="rounded-[2rem] border border-black/15 bg-white p-6 sm:p-8">
             <h3 className="font-serif text-2xl">Tour price per person</h3>
-            <p className="mt-2 text-base leading-7">Sharing a room · Group pricing tiers</p>
+            <p className="mt-2 text-base leading-7">Sharing a room · Same price for 4–8 guests</p>
             <dl className="mt-5 divide-y divide-black/10">{pricing.map(([group, price]) => <div key={group} className="flex items-baseline justify-between gap-4 py-4"><dt className="font-semibold">{group}</dt><dd className="font-serif text-3xl text-[#805018]">{price}</dd></div>)}</dl>
             <p className="mt-3 border-t border-black/15 pt-5 text-base leading-7">Private room: <strong>+$399</strong>, subject to availability.</p>
           </div>

@@ -8,7 +8,6 @@ import {
   inferPriceCheckSelection,
   privateRoomSupplementCents,
   publishedPerTravelerPricesCents,
-  publishedTravelerCountByPriceCents,
 } from "@/lib/trip-pricing";
 import type { PaymentPreferenceGeneratedDraft } from "./dashboard-types";
 import {
@@ -210,7 +209,7 @@ Cookie Paradise Travel Company`;
 
       {!invoiceExists && <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--cream)]/50 p-4">
         <p className="text-sm font-extrabold text-[var(--ink)]">Price accuracy check</p>
-        <p className="mt-1 text-xs leading-5 text-[var(--muted-ink)]">Select the applicable published price and supplements. The check uses this customer’s party size of {partySize}; it does not choose the enrollment tier for you.</p>
+        <p className="mt-1 text-xs leading-5 text-[var(--muted-ink)]">The shared-room price is fixed at $2,875 per traveler. Check any private-room supplements for this customer’s party of {partySize}.</p>
 
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <label className="block text-xs font-bold text-[var(--ink)]">
@@ -219,7 +218,7 @@ Cookie Paradise Travel Company`;
               setPerTravelerPriceCents(Number(event.target.value));
               setPriceMismatchConfirmed(false);
             }}>
-              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler ({publishedTravelerCountByPriceCents[price]} travelers)</option>)}
+              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler · fixed price</option>)}
             </select>
           </label>
           <label className="block text-xs font-bold text-[var(--ink)]">
