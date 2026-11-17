@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = publicPageMetadata({
   title: "Private Vietnam Trips & Custom Tours | Cookie Paradise Travel",
-  description: "Plan your first Vietnam trip with Trung Le, a Vietnam-born advisor based in Indiana. Get a private itinerary, handpicked hotel options and coordinated bookings.",
+  description: "Plan a private Vietnam trip with Trung Le, a Vietnam-born planner based in Indiana. Get a custom itinerary and help booking hotels, private guides and transfers.",
   path: "/fit",
   image: "/travel/fit-mu-cang-chai-1800.webp",
   imageAlt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam",
@@ -56,31 +56,48 @@ export default async function FitTravelPage() {
 
     <section id="fit-main" className="fit-hero fit-wrap" aria-labelledby="fit-title">
       <div className="fit-hero-copy">
-        <p className="fit-kicker">Private travel with Trung Le</p>
-        <h1 id="fit-title">Your first trip to Vietnam,<br /><em>personally planned.</em></h1>
-        <p className="fit-body">You can picture waking up on Ha Long Bay. Getting there means choosing a boat, a cabin and a night that fits the rest of your trip. Leave that research to me. I’m Trung Le, a Vietnam-born travel planner based in Indiana. I’ll show you where an extra night is worth more than another stop, then arrange the hotels, guides and transfers you choose.</p>
-        <a className="fit-button fit-button-dark" href="#fit-plan">Talk with Trung <ArrowRight size={18} aria-hidden="true" /></a>
-        <p className="fit-small fit-hero-note">Free 30-minute consultation · A custom quote before you book.</p>
-        <a className="fit-text-link fit-explore" href="#fit-approach">See the services and pricing <ArrowDown size={16} aria-hidden="true" /></a>
+        <p className="fit-kicker">Private Vietnam travel</p>
+        <h1 id="fit-title">Explore Vietnam.<br /><em>I’ll plan your trip.</em></h1>
+        <p className="fit-body">Tell me what you’d love to experience in Vietnam and how much time you have. I’m Trung Le. I grew up in Vietnam and now plan private trips from Indiana. I’ll recommend where to go, how long to stay and where it’s worth spending more. Then I’ll coordinate the hotels, guides and transfers you choose.</p>
+        <a className="fit-button fit-button-dark" href="#fit-plan">Start planning with Trung <ArrowRight size={18} aria-hidden="true" /></a>
+        <p className="fit-small fit-hero-note">Free 30-minute consultation</p>
+        <a className="fit-text-link fit-explore" href="#fit-value">See what I take care of <ArrowDown size={16} aria-hidden="true" /></a>
       </div>
       <div id="fit-hero-art" className="fit-hero-art">
         <JourneyPhoto photo="fitCafe" priority className="fit-hero-photo" sizes="(min-width: 1280px) 535px, (min-width: 768px) 45vw, 90vw" />
-
       </div>
+    </section>
+
+    <section id="fit-value" className="fit-wrap fit-section fit-process-section" aria-labelledby="fit-value-title">
+      <h2 id="fit-value-title">What you get when I plan your trip</h2>
+      <ul className="fit-process" role="list">
+        <li>
+          <h3>A route that fits your time off</h3>
+          <p className="fit-body">I’ll do the research and show you what fits. If you have ten days, I’ll account for the hours it takes to pack up, get to the airport and check in at the next hotel. You’ll see what each stop adds before you give up a day to reach it.</p>
+        </li>
+        <li>
+          <h3>Know what’s worth paying for</h3>
+          <p className="fit-body">I’ll match your hotel to how you want to spend your mornings and evenings. If history is what draws you to Vietnam, I can help you decide where to book a private guide, like in Hue, where a guide can explain how the imperial court lived.</p>
+        </li>
+        <li>
+          <h3>One person to handle the bookings</h3>
+          <p className="fit-body">I’ll coordinate the bookings you approve and make sure the pieces fit, from when your driver picks you up to when your boat boards. You’ll know what’s reserved, who’s meeting you and whom to contact during the trip.</p>
+        </li>
+      </ul>
     </section>
 
     <section id="fit-approach" className="fit-wrap fit-section fit-approach" aria-labelledby="fit-approach-title">
       <div>
         <p className="fit-kicker">Services &amp; pricing</p>
-        <h2 id="fit-approach-title">Leave the research<br /><em>and reservations to me.</em></h2>
-        <div className="fit-service"><h3>Plan my whole trip</h3><p className="fit-body">Tell me how many days you can take away and what you’d cross the Pacific to experience. I’ll work out the route, narrow the hotels to a few that suit you and recommend which days to spend with a private guide. Once you book, I coordinate the stays, drivers and experiences in your proposal. You have one person to call about how the pieces fit.</p></div>
-        <div className="fit-service"><h3>Help with part of my trip</h3><p className="fit-body">Already have flights or a favorite hotel booked? I can plan the days around them. That might mean a driver waiting when you land after the flight from the U.S., or a private guide who can walk you through Hue’s Imperial City and explain how the emperors lived.</p></div>
+        <h2 id="fit-approach-title">Choose how much<br /><em>you’d like me to plan.</em></h2>
+        <div className="fit-service"><h3>Plan my whole trip</h3><p className="fit-body">I’ll put together your itinerary and coordinate the arrangements in your proposal. That can include hotels, airport pickups, travel between cities, private guides and experiences.</p></div>
+        <div className="fit-service"><h3>Help with part of my trip</h3><p className="fit-body">I can work around the plans you already have, whether you want help with a few days in one region or a single arrangement like an airport transfer.</p></div>
       </div>
       <aside className="fit-quote" aria-labelledby="fit-quote-title">
         <p className="fit-kicker">Know what to expect</p>
         <h3 id="fit-quote-title">What will my<br />trip cost?</h3>
-        <p className="fit-body">Your quote reflects your dates, hotels, experiences and the number of people traveling. If you’re deciding between a suite in Hanoi and a balcony cabin on the bay, I can price both and explain what each adds to your trip.</p>
-        <p className="fit-body">The first call is free. Before you decide, you’ll see exactly what the price covers, any planning fees, when payments are due and the booking terms.</p>
+        <p className="fit-body">Your quote reflects your dates, hotels, experiences and the number of people traveling. If you’re weighing two routes or hotel options, I can show you how each choice changes the price.</p>
+        <p className="fit-body">The first call is free. Before you decide, you’ll see what the price covers, any planning fees, when payments are due and the booking terms.</p>
         <p className="fit-small">Flights, visas and insurance are included only if your proposal specifically lists them.</p>
       </aside>
     </section>
@@ -98,7 +115,7 @@ export default async function FitTravelPage() {
 
     <section id="fit-ideas" className="fit-inspiration" aria-labelledby="fit-ideas-title">
       <div className="fit-wrap fit-section">
-        <div className="fit-ideas-heading"><div><p className="fit-kicker">How local knowledge shapes your trip</p><h2 id="fit-ideas-title">Make the most of<br /><em>your days in Vietnam.</em></h2></div><p className="fit-body">A hotel address or a cruise departure time can shape an entire day. Here’s how I’d think through three choices for a first visit to northern Vietnam.</p></div>
+        <div className="fit-ideas-heading"><div><p className="fit-kicker">How local knowledge shapes your trip</p><h2 id="fit-ideas-title">Picture a few days<br /><em>in northern Vietnam.</em></h2></div><p className="fit-body">Here’s how I’d plan a cruise, a detour into the mountains or an unhurried morning in Hanoi.</p></div>
         <div className="fit-editorial-grid">
           <article id="fit-bay" className="fit-bay-story">
             <JourneyPhoto photo="fitBay" className="fit-bay-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" />
@@ -131,7 +148,7 @@ export default async function FitTravelPage() {
 
     <section id="fit-plan" className="fit-plan" aria-labelledby="fit-plan-title">
       <div className="fit-wrap fit-section fit-plan-grid">
-        <div><p className="fit-kicker">Free 30-minute consultation</p><h2 id="fit-plan-title">Let’s plan your<br /><em>first Vietnam trip.</em></h2><p className="fit-body">You can come to our first call with a single idea and a week on the calendar. We’ll talk through what fits, where I’d spend an extra night and what you’d like me to handle. Book a video call or send me a note. There’s no obligation to book.</p><div className="fit-plan-actions"><ConsultationLink /><a className="fit-email-link" href={emailHref}>Email Trung your trip ideas <ArrowUpRight size={17} aria-hidden="true" /></a></div><p className="fit-small">The email link opens a few editable prompts in your email app.</p><a className="fit-contact-address" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></div>
+        <div><p className="fit-kicker">Free 30-minute consultation</p><h2 id="fit-plan-title">Let’s plan your<br /><em>first Vietnam trip.</em></h2><p className="fit-body">Bring a rough idea of when you can travel and what you’re curious about. I’ll suggest what could fit and we can talk through how much you’d like me to handle.</p><div className="fit-plan-actions"><ConsultationLink /><a className="fit-email-link" href={emailHref}>Email Trung your trip ideas <ArrowUpRight size={17} aria-hidden="true" /></a></div><p className="fit-small">The email link opens a few editable prompts in your email app.</p><a className="fit-contact-address" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></div>
         <aside className="fit-conversation-note"><p className="fit-kicker">If you know, bring along…</p><ul><li>Your travel window and number of travelers</li><li>A few places or experiences you have in mind</li><li>Your budget and any existing plans</li></ul><p className="fit-body">Still figuring it out? That&apos;s what the conversation is for.</p>{partner && <div className="fit-referral-disclosure"><ReferralBrand /></div>}</aside>
       </div>
     </section>
