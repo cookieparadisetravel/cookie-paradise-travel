@@ -39,12 +39,7 @@ const itinerary = [
   ["08", "Depart Hoi An via Da Nang", "Breakfast and a private transfer to Da Nang International Airport (DAD) for your onward flight."],
 ];
 
-const pricing = [
-  ["8 travelers", "$2,875"],
-  ["10 travelers", "$2,675"],
-  ["12 travelers", "$2,605"],
-  ["15 travelers", "$2,500"],
-];
+const pricing = [["4–8 guests", "$2,875"]];
 
 const detailedItinerary = [
   {
@@ -175,14 +170,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="hero-essential-copy">
             <p className="mb-5 text-sm font-semibold uppercase tracking-[.14em] [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">Small-group Vietnam tour</p>
           <h1 className="max-w-4xl font-serif text-[clamp(2.8rem,7vw,6.5rem)] font-normal leading-[1.08] tracking-[-.025em] [text-shadow:0_2px_16px_rgba(0,0,0,.65)]">Discover<br />Southern Vietnam</h1>
-            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 · 8 days · 8–15 travelers</p>
+            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 · 8 days · 4–8 guests</p>
           </div>
           <span className="absolute bottom-5 right-6 text-xs text-white [text-shadow:0_1px_5px_black]">Imperial Hue, Vietnam</span>
         </div>
         <div className="mx-auto max-w-4xl px-5 py-12 text-center sm:px-8 sm:py-16">
           <div className="hero-trip-details">
             <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
-            <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler at eight travelers</span></p>
+            <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler · fixed price</span></p>
             <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <ConsultationLink />
@@ -199,7 +194,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div>
             <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
             <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
-            <p className="mt-5 text-base leading-7">The tour price is per person sharing a room.</p>
+            <p className="mt-5 text-base leading-7">Minimum 4, maximum 8 guests, plus your host. The fixed price is $2,875 per person sharing a room.</p>
             <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due April 1, 2027.</p>
             <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
             <div className="mt-7 flex flex-wrap gap-3"><BookingDialog triggerLabel="Request a spot" compact /><a href="#faq" className="inline-flex min-h-12 items-center px-2 text-sm font-semibold underline">Booking questions</a></div>
@@ -212,7 +207,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
               </div>
             ))}
             <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
-              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">How group pricing works</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
+              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">One fixed tour price</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
               Private room: <strong className="text-[var(--ink)]">+$399</strong>, subject to availability. <a href="#faq" className="font-semibold underline">See room options and booking terms.</a>
             </div>
           </div>

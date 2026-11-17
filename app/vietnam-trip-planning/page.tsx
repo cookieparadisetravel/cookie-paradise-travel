@@ -45,7 +45,7 @@ export default function VietnamTripPlanningPage() {
           <div className="mt-6 grid gap-8 md:grid-cols-2">
             <div>
               <h3 className="text-xl font-bold">Join a hosted small-group tour</h3>
-              <p className="mt-3">Choose this if you like a planned route, shared experiences and the company of fellow travelers. Discover Southern Vietnam is an eight-day journey for 8–15 travelers, with a company host and local guides.</p>
+              <p className="mt-3">Choose this if you like a planned route, shared experiences and the company of fellow travelers. Discover Southern Vietnam is an eight-day journey for 4–8 guests, with a company host and local guides.</p>
               <p className="mt-3">The scheduled departure has set dates and a shared itinerary. Check the daily activities and free time to see whether the pace suits you.</p>
               <a href="/" className="mt-4 inline-flex items-center gap-2 font-semibold underline">Explore the small-group tour <ArrowRight size={18} aria-hidden="true" /></a>
             </div>

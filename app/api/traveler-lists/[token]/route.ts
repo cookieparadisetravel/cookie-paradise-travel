@@ -24,7 +24,7 @@ const travelerSchema = z.object({
 });
 
 const submissionSchema = z.object({
-  travelers: z.array(travelerSchema).min(1).max(15),
+  travelers: z.array(travelerSchema).min(1).max(8),
 });
 
 export async function POST(request: Request, context: { params: Promise<{ token: string }> }) {

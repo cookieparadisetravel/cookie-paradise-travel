@@ -20,16 +20,9 @@ test("excludes sandbox, closed, waitlisted, refunded and canceled records", () =
     { partySize: -1 }, { partySize: 1.5 },
   ]) assert.equal(countBookedSpots([booking({ status: "reserved", ...changes })]), 0);
 });
-test("zero, full and over-capacity never produce negative remaining spots", () => {
-  assert.deepEqual(availabilitySummary(0, 15), { booked: 0, capacity: 15, remaining: 15, tierTarget: 8, full: false });
-  assert.equal(availabilitySummary(15, 15).full, true);
-  assert.deepEqual(availabilitySummary(17, 15), { booked: 17, capacity: 15, remaining: 0, tierTarget: 15, full: true });
-});
-
-test("advances the displayed tier immediately at each pricing threshold", () => {
-  for (const [booked, target] of [[0,8],[2,8],[7,8],[8,10],[9,10],[10,12],[11,12],[12,15],[14,15],[15,15],[17,15]]) {
-    assert.equal(availabilitySummary(booked, 15).tierTarget, target, `${booked} booked`);
-  }
-  // If a booking is closed, the display returns to the appropriate earlier tier.
-  assert.equal(availabilitySummary(7, 15).tierTarget, 8);
+test("eight guest capacity reports remaining places without pricing milestones", () => {
+  assert.deepEqual(availabilitySummary(0, 8), { booked: 0, capacity: 8, remaining: 8, full: false });
+  assert.deepEqual(availabilitySummary(4, 8), { booked: 4, capacity: 8, remaining: 4, full: false });
+  assert.equal(availabilitySummary(8, 8).full, true);
+  assert.deepEqual(availabilitySummary(9, 8), { booked: 9, capacity: 8, remaining: 0, full: true });
 });

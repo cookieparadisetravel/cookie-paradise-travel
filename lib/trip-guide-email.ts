@@ -9,7 +9,7 @@ export function buildTripGuideEmail(input: { firstName: string; timing: LeadTimi
   const timing = input.timing === "future"
     ? "You mentioned a future departure. This guide describes our June 1-8, 2027 trip; future dates have not been announced. You can still book a call to discuss your interests."
     : "Our next departure is June 1-8, 2027: eight days and seven nights through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An.";
-  const price = "The shared-room price is US$2,875 per traveler at eight travelers and decreases as the confirmed group grows. International airfare is not included.";
+  const price = "The shared-room price is fixed at US$2,875 per traveler. Each group has a minimum of 4 and maximum of 8 guests, plus your host; the price stays the same. International airfare is not included.";
   const assurance = "This is an information request. No payment was collected and no reservation has been confirmed.";
   return {
     subject: "Your Discover Southern Vietnam trip guide",

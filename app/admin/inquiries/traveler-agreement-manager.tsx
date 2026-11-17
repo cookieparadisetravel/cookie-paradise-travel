@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Link2, Loader2, MailCheck, Plus, ShieldCheck, UserRound } from "lucide-react";
 import type { AgreementInvitationDelivery } from "./dashboard-types";
-import { privateRoomSupplementCents, publishedPerTravelerPricesCents, publishedTravelerCountByPriceCents } from "@/lib/trip-pricing";
+import { privateRoomSupplementCents, publishedPerTravelerPricesCents } from "@/lib/trip-pricing";
 
 type Traveler = {
   id: number;
@@ -259,7 +259,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
               setPublishedBasePriceCents(Number(event.target.value));
               setPriceMismatchConfirmed(false);
             }}>
-              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler ({publishedTravelerCountByPriceCents[price]} travelers)</option>)}
+              {publishedPerTravelerPricesCents.map((price) => <option key={price} value={price}>{money(price)} per traveler · fixed price</option>)}
             </select>
           </label>
           {mismatchedTravelerIds.length === 0 && pricingComplete && <p className="mt-3 flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm font-bold text-emerald-950"><CheckCircle2 className="h-4 w-4" /> Every traveler price matches the published package price and occupancy.</p>}

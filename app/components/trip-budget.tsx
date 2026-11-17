@@ -17,7 +17,7 @@ export function TripBudget() {
             <p className="text-sm font-semibold uppercase tracking-[.1em]">Plan for the whole trip</p>
             <h3 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Your total budget from Indianapolis</h3>
             <p className="mt-5 text-[clamp(2rem,5vw,3rem)] font-bold leading-tight">{roundedTripBudget}</p>
-            <p className="mt-2 text-base leading-7">Estimated per person · Shared room · Eight travelers</p>
+            <p className="mt-2 text-base leading-7">Estimated per person · Shared room · 4–8 guests</p>
             <p className="mt-4 text-base leading-7">About <strong>{suggestedTripBudget} per person</strong> is a useful starting budget for the tour, economy flights and everyday travel expenses.</p>
           </div>
           <div>
@@ -39,7 +39,7 @@ export function TripBudget() {
             {tripBudget.map(item => <div key={item.label} className="grid grid-cols-[minmax(0,1fr)_auto] gap-x-4 gap-y-1 py-4"><dt className="text-base font-semibold">{item.label}</dt><dd className="text-base font-bold tabular-nums">{budgetRange(item.low, item.high)}</dd><dd className="col-span-2 max-w-3xl text-sm leading-6">{item.note}</dd></div>)}
             <div className="flex flex-wrap items-baseline justify-between gap-3 pt-5 text-lg font-bold"><dt>Estimated total · rounded</dt><dd className="tabular-nums">{roundedTripBudget}</dd></div>
           </dl>
-          <p className="mt-3 text-sm leading-6">Budget about $400 more for a private room, subject to availability, or about $400 less for the tour if the 15-traveler price tier is reached. See the exact room and group prices above. Premium upgrades, airport fast-track service, passport fees, individual medical costs and spending beyond these allowances require an additional budget.</p>
+          <p className="mt-3 text-sm leading-6">Budget about $400 more for a private room, subject to availability. The shared-room tour price stays $2,875 per person for groups of 4–8 guests. Premium upgrades, airport fast-track service, passport fees, individual medical costs and spending beyond these allowances require an additional budget.</p>
         </details>
 
         <details className="group mt-5 border-t border-black/15 pt-5">

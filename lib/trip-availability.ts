@@ -2,7 +2,8 @@ export const vietnamDeparture = {
   tripSlug: "vietnam-southern-charms-central-heritage",
   departure: "2027-06-01",
   label: "June 1, 2027",
-  capacity: 15,
+  minimum: 4,
+  capacity: 8,
 } as const;
 
 export type AvailabilityBooking = {
@@ -28,6 +29,5 @@ export function countBookedSpots(bookings: AvailabilityBooking[]) {
 
 export function availabilitySummary(booked: number, capacity: number) {
   const remaining = Math.max(0, capacity - booked);
-  const tierTarget = [8, 10, 12, capacity].find((tier) => tier <= capacity && tier > booked) ?? capacity;
-  return { booked, capacity, remaining, tierTarget, full: remaining === 0 };
+  return { booked, capacity, remaining, full: remaining === 0 };
 }

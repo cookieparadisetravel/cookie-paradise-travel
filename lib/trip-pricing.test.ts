@@ -7,7 +7,6 @@ import {
   isPublishedPerTravelerPriceCents,
   privateRoomSupplementCents,
   publishedPerTravelerPricesCents,
-  publishedTravelerCountByPriceCents,
 } from "./trip-pricing.ts";
 
 test("recognizes only the published per-traveler prices", () => {
@@ -15,7 +14,8 @@ test("recognizes only the published per-traveler prices", () => {
     assert.equal(isPublishedPerTravelerPriceCents(price), true);
   }
   assert.equal(isPublishedPerTravelerPriceCents(300_000), false);
-  assert.deepEqual(publishedPerTravelerPricesCents.map((price) => publishedTravelerCountByPriceCents[price]), [8, 10, 12, 15]);
+  assert.deepEqual(publishedPerTravelerPricesCents, [287_500]);
+  for (const price of [267_500, 260_500, 250_000]) assert.equal(isPublishedPerTravelerPriceCents(price), false);
 });
 
 test("uses the advertised price and only adds the private-room supplement when selected", () => {
@@ -41,11 +41,16 @@ test("rejects an invalid private-room supplement count", () => {
 
 test("restores a published price check from an existing booking total", () => {
   assert.deepEqual(inferPriceCheckSelection({
-    bookingTotalCents: (2 * 267_500) + privateRoomSupplementCents,
+    bookingTotalCents: (2 * 287_500) + privateRoomSupplementCents,
     partySize: 2,
     preferredPrivateRoomCount: 0,
   }), {
-    perTravelerPriceCents: 267_500,
+    perTravelerPriceCents: 287_500,
     privateRoomCount: 1,
   });
+});
+
+test("individual bookings are allowed and parties cannot exceed eight", () => {
+  for (const partySize of [1, 4, 8]) assert.equal(calculateExpectedBookingTotalCents({ partySize, perTravelerPriceCents: 287_500, privateRoomCount: 0 }), partySize * 287_500);
+  assert.throws(() => calculateExpectedBookingTotalCents({ partySize: 9, perTravelerPriceCents: 287_500, privateRoomCount: 0 }));
 });
