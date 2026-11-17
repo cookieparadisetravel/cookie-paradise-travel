@@ -13,17 +13,17 @@ export const dynamic = "force-dynamic";
 
 export const metadata = publicPageMetadata({
   title: "Private Vietnam Trips & Custom Tours | Cookie Paradise Travel",
-  description: "Plan a private Vietnam trip around your dates, interests and budget with Trung Le. Get help with a complete custom tour, hotels, transfers or local experiences.",
+  description: "Plan a private Vietnam trip with Trung Le. Get a route that fits your dates, help with hotels, guides and transfers, and a custom quote before you book.",
   path: "/fit",
   image: "/travel/fit-mu-cang-chai-1800.webp",
   imageAlt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam",
 });
 
 const questions = [
-  ["What if my dates or route are still undecided?", "Share your approximate travel window, the time you have available and the experiences you are drawn to. We can discuss the route and pace before you settle on the details."],
-  ["Can you arrange a special request?", "Tell Trung about family visits, celebrations, a particular restaurant or a place you want to see. We will explore what is possible and confirm availability and cost before adding it to your plan."],
-  ["What about flights, accessibility or dietary needs?", "Share your departure airport, walking comfort, dietary needs and any assistance you need during planning. Your proposal will identify what can be arranged, including any flights, visa help or insurance. Confirm your itinerary and booking details before purchasing flights."],
-  ["How is this different from the June 2027 group trip?", "Your private trip has its own dates, itinerary and quote. The scheduled Discover Southern Vietnam tour's dates, group-size requirements and published prices do not apply to a custom trip."],
+  ["What if my dates or route are still undecided?", "A season and a rough idea of how long you can travel are enough for our first call. We’ll talk through which places fit comfortably in that time."],
+  ["Can you arrange a special request?", "Tell me about the family visit, anniversary dinner or hometown stop you have in mind. I’ll check availability and cost with you before adding it to the plan."],
+  ["What about flights, accessibility or dietary needs?", "Tell me which airport you’ll leave from, how far you’re comfortable walking and any food or accessibility needs. I’ll check what can be arranged and list it in your proposal, including any help with flights, visas or insurance. Please confirm your itinerary and bookings before buying airfare."],
+  ["How is this different from the June 2027 group trip?", "On Discover Southern Vietnam, you join a hosted group on a scheduled departure. On a private trip, you choose your dates and travel solo or with your own companions. I’ll quote the itinerary for your party."],
 ];
 
 export default async function FitTravelPage() {
@@ -56,60 +56,60 @@ export default async function FitTravelPage() {
 
     <section id="fit-main" className="fit-hero fit-wrap" aria-labelledby="fit-title">
       <div className="fit-hero-copy">
-        <p className="fit-kicker">Your dates. Your own travel companions.</p>
-        <h1 id="fit-title">Private Vietnam trips,<br /><em>at your pace.</em></h1>
-        <p className="fit-body">Plan a Vietnam journey for yourself, a couple, family or friends. Work directly with Trung on a complete itinerary or the arrangements you need, shaped around your interests and budget.</p>
-        <a className="fit-button fit-button-dark" href="#fit-plan">Plan my Vietnam trip <ArrowRight size={18} aria-hidden="true" /></a>
+        <p className="fit-kicker">Private Vietnam trip planning</p>
+        <h1 id="fit-title">See Vietnam<br /><em>at your own pace.</em></h1>
+        <p className="fit-body">Want to visit family in Ho Chi Minh City and still have a week to explore? I’m Trung Le. Tell me who’s coming and what you’d love to do. I’ll help you decide which stops deserve another night, then arrange the stays, rides and guides you need.</p>
+        <a className="fit-button fit-button-dark" href="#fit-plan">Talk with Trung <ArrowRight size={18} aria-hidden="true" /></a>
         <p className="fit-small fit-hero-note">Free 30-minute consultation · A custom quote before you book.</p>
         <a className="fit-text-link fit-explore" href="#fit-approach">See the services and pricing <ArrowDown size={16} aria-hidden="true" /></a>
       </div>
       <div id="fit-hero-art" className="fit-hero-art">
         <JourneyPhoto photo="fitCafe" priority className="fit-hero-photo" sizes="(min-width: 1280px) 535px, (min-width: 768px) 45vw, 90vw" />
-        <span className="fit-margin-note" aria-hidden="true">A different way to see Vietnam</span>
+
       </div>
     </section>
 
     <section id="fit-approach" className="fit-wrap fit-section fit-approach" aria-labelledby="fit-approach-title">
       <div>
         <p className="fit-kicker">Services &amp; pricing</p>
-        <h2 id="fit-approach-title">Choose the help<br /><em>you need.</em></h2>
-        <div className="fit-service"><h3>A complete journey</h3><p className="fit-body">A route, hotels, transport, local guides and experiences brought together for your party.</p></div>
-        <div className="fit-service"><h3>The finishing touches</h3><p className="fit-body">Keep the plans you already have. Ask for a hotel, airport transfer, guide for a day or a special experience.</p></div>
+        <h2 id="fit-approach-title">What would you like<br /><em>me to plan?</em></h2>
+        <div className="fit-service"><h3>Plan my whole trip</h3><p className="fit-body">I’ll map out the nights in each place and the travel time between them. Then I’ll bring the hotels, transfers and guided visits together around the things you want time for, whether that’s dinner with relatives or a morning in Hue’s Imperial City.</p></div>
+        <div className="fit-service"><h3>Help with part of my trip</h3><p className="fit-body">Already booked your flights or staying with family? I can arrange a driver to meet you at the airport, a guide for a day in Hanoi or a few nights away between family visits. We’ll work around what you’ve booked.</p></div>
       </div>
       <aside className="fit-quote" aria-labelledby="fit-quote-title">
         <p className="fit-kicker">Know what to expect</p>
-        <h3 id="fit-quote-title">A quote built<br />around your trip.</h3>
-        <p className="fit-body">Your dates, trip length, number of travelers, hotels and experiences determine the cost.</p>
-        <p className="fit-body">The first consultation is free. Your proposal explains the price, any planning fees, inclusions, payment schedule and booking terms before you commit.</p>
+        <h3 id="fit-quote-title">What will my<br />trip cost?</h3>
+        <p className="fit-body">I’ll quote your private trip for your dates and the people traveling with you. The number of nights, hotel choices and activities all shape the price.</p>
+        <p className="fit-body">The first call is free. Before you decide, you’ll see exactly what the price covers, any planning fees, when payments are due and the booking terms.</p>
         <p className="fit-small">Flights, visas and insurance are included only if your proposal specifically lists them.</p>
       </aside>
     </section>
 
     <section id="fit-process" className="fit-wrap fit-section fit-process-section" aria-labelledby="fit-process-title">
-      <div className="fit-process-heading"><p className="fit-kicker">How it works</p><h2 id="fit-process-title">Turn your ideas<br /><em>into a plan.</em></h2></div>
+      <div className="fit-process-heading"><p className="fit-kicker">How it works</p><h2 id="fit-process-title">From our first call<br /><em>to booking.</em></h2></div>
       <ol className="fit-process">
         {[
-          ["01", "Tell Trung your priorities.", "Share your travel window, travelers, budget and any arrangements you have already made."],
-          ["02", "Refine your itinerary.", "Work through the route, pace, stays and experiences together."],
-          ["03", "Review your proposal.", "Check the arrangements, quote and terms, then decide whether to book."],
+          ["01", "Tell me about your trip.", "On our free 30-minute call, we’ll talk about who’s coming, your dates and budget, and the one thing you’d most like to do in Vietnam."],
+          ["02", "Shape the route together.", "I’ll suggest where to go and how long to stay. We can move a night, shorten a drive or leave an afternoon open while we work out what suits you."],
+          ["03", "Choose what to book.", "You’ll receive a written proposal with the arrangements and price. Once you approve it and meet the booking terms, I’ll coordinate the reservations it covers."],
         ].map(([number, title, text]) => <li key={number}><span className="fit-step-number" aria-hidden="true">{number}</span><h3>{title}</h3><p className="fit-body">{text}</p></li>)}
       </ol>
     </section>
 
     <section id="fit-ideas" className="fit-inspiration" aria-labelledby="fit-ideas-title">
       <div className="fit-wrap fit-section">
-        <div className="fit-ideas-heading"><div><p className="fit-kicker">A few possibilities</p><h2 id="fit-ideas-title">Find your<br /><em>kind of Vietnam.</em></h2></div><p className="fit-body">Combine these ideas, stay longer, or explore another part of the country.</p></div>
+        <div className="fit-ideas-heading"><div><p className="fit-kicker">A few possibilities</p><h2 id="fit-ideas-title">Where would you<br /><em>spend another day?</em></h2></div><p className="fit-body">Here are three ways we could spend part of a trip in northern Vietnam. Your route can also take you through central or southern Vietnam.</p></div>
         <div className="fit-editorial-grid">
           <article id="fit-bay" className="fit-bay-story">
             <JourneyPhoto photo="fitBay" className="fit-bay-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" />
-            <div className="fit-story-copy"><p className="fit-kicker">01 / Slow down</p><h3>Drift into a different rhythm.</h3><p className="fit-body">Cruise between Ha Long Bay’s limestone islands, with mist over the water and time to slow down.</p></div>
+            <div className="fit-story-copy"><p className="fit-kicker">Ha Long Bay</p><h3>Wake up on the bay.</h3><p className="fit-body">If you’d love to wake up among the limestone islands, we can plan an overnight cruise and time your transfer from Hanoi around boarding. Prefer to sleep in the city? We can look at a day cruise.</p></div>
           </article>
           <div className="fit-stories-right">
-            <article id="fit-terraces" className="fit-terrace-story"><div className="fit-story-copy"><p className="fit-kicker">02 / Follow the landscape</p><h3>Take the scenic way.</h3><p className="fit-body">Follow Mu Cang Chai’s rice terraces into the mountains, with a route timed to the season.</p></div><JourneyPhoto photo="fitTerraces" className="fit-terrace-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" /></article>
-            <article className="fit-city-story"><div className="fit-story-copy"><p className="fit-kicker">03 / Leave an evening open</p><h3>Make time for everyday Hanoi.</h3><p className="fit-body">Walk the Old Quarter, settle into a neighborhood café and leave an evening open to explore.</p></div></article>
+            <article id="fit-terraces" className="fit-terrace-story"><div className="fit-story-copy"><p className="fit-kicker">Mu Cang Chai</p><h3>Walk the rice terraces.</h3><p className="fit-body">Tell me whether you’d like to spend a morning walking the terraces or stop for photographs along the mountain roads. That choice helps us decide when to go and how many nights to stay.</p></div><JourneyPhoto photo="fitTerraces" className="fit-terrace-photo" sizes="(min-width: 1280px) 530px, (min-width: 768px) 45vw, 90vw" /></article>
+            <article className="fit-city-story"><div className="fit-story-copy"><p className="fit-kicker">Hanoi</p><h3>Find your breakfast in the Old Quarter.</h3><p className="fit-body">If your idea of a good morning is a bowl of phở followed by egg coffee, we can choose a hotel within walking distance and start your guided visit after breakfast.</p></div></article>
           </div>
         </div>
-        <p className="fit-small fit-ideas-note">Inspiration for your itinerary; experiences and availability are confirmed in your proposal.</p>
+        <p className="fit-small fit-ideas-note">Your proposal confirms which experiences are available for your dates.</p>
       </div>
     </section>
 
@@ -120,7 +120,7 @@ export default async function FitTravelPage() {
           <img src="/about-trung.jpg" alt="Trung Le, founder of Cookie Paradise Travel Company, at his Columbus bakery trailer" width={960} height={1280} loading="lazy" />
           <p className="fit-small">Trung Le · Founder &amp; Vietnam trip planner</p>
         </div>
-        <div><p className="fit-kicker"><MapPin size={14} aria-hidden="true" /> Columbus, Indiana · Connected to Vietnam</p><h2 id="fit-planner-title">Meet the person<br /><em>behind your plan.</em></h2><p className="fit-body">Born in Vietnam, Trung Le spent seven years living in Ho Chi Minh City before returning to Columbus, Indiana. He founded Cookie Paradise Travel Company to share the country he knows through its food, stories and everyday life.</p><p className="fit-body">Trung plans with you personally. Any accompanying host, local guides and in-country support are specified in your proposal.</p></div>
+        <div><p className="fit-kicker"><MapPin size={14} aria-hidden="true" /> Columbus, Indiana · Connected to Vietnam</p><h2 id="fit-planner-title">Plan directly<br /><em>with Trung.</em></h2><p className="fit-body">I was born in Vietnam and spent seven years living in Ho Chi Minh City. I now plan Vietnam trips from Columbus, Indiana. When we talk, tell me what draws you there. A dish you remember from childhood or a town where your grandparents lived gives us a place to start.</p><p className="fit-body">You’ll work with me on the plan. Your proposal will spell out who will meet you in Vietnam, including any local guides, accompanying host and in-country support.</p></div>
       </div>
     </section>
 
@@ -131,7 +131,7 @@ export default async function FitTravelPage() {
 
     <section id="fit-plan" className="fit-plan" aria-labelledby="fit-plan-title">
       <div className="fit-wrap fit-section fit-plan-grid">
-        <div><p className="fit-kicker">Your Vietnam starts with a conversation</p><h2 id="fit-plan-title">Start planning<br /><em>your Vietnam trip.</em></h2><p className="fit-body">Book a free 30-minute Google Meet with Trung, or send your ideas by email. There is no obligation to book.</p><div className="fit-plan-actions"><ConsultationLink /><a className="fit-email-link" href={emailHref}>Email Trung your trip ideas <ArrowUpRight size={17} aria-hidden="true" /></a></div><p className="fit-small">The email link opens a few editable prompts in your email app.</p><a className="fit-contact-address" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></div>
+        <div><p className="fit-kicker">Free 30-minute consultation</p><h2 id="fit-plan-title">What brings you<br /><em>to Vietnam?</em></h2><p className="fit-body">Tell me what you’re looking forward to, even if you haven’t picked dates. We can talk it through on Google Meet, or you can email me your ideas. There’s no obligation to book.</p><div className="fit-plan-actions"><ConsultationLink /><a className="fit-email-link" href={emailHref}>Email Trung your trip ideas <ArrowUpRight size={17} aria-hidden="true" /></a></div><p className="fit-small">The email link opens a few editable prompts in your email app.</p><a className="fit-contact-address" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></div>
         <aside className="fit-conversation-note"><p className="fit-kicker">If you know, bring along…</p><ul><li>Your travel window and number of travelers</li><li>A few places or experiences you have in mind</li><li>Your budget and any existing plans</li></ul><p className="fit-body">Still figuring it out? That&apos;s what the conversation is for.</p>{partner && <div className="fit-referral-disclosure"><ReferralBrand /></div>}</aside>
       </div>
     </section>
