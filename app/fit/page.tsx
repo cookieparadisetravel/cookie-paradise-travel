@@ -56,7 +56,7 @@ export default async function FitTravelPage() {
     <section id="fit-main" className="fit-hero fit-wrap" aria-labelledby="fit-title">
       <div className="fit-hero-copy">
         <p className="fit-kicker">Private Vietnam travel</p>
-        <h1 id="fit-title">Spend less time planning.<br /><em>Enjoy more of Vietnam.</em></h1>
+        <h1 id="fit-title">Let me do the planning,<br /><em>so you can spend time experiencing Vietnam.</em></h1>
         <p className="fit-body">I’m Trung Le, a Vietnam-born trip planner based in Indiana. I’ll use my firsthand knowledge and local contacts to design a private itinerary at your pace. Hand off as much of the research and booking as you’d like, including flights.</p>
         <ConsultationLink inverse className="mt-8" />
         <p className="fit-small fit-hero-note">30 minutes with Trung</p>
