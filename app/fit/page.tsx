@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
 
 export const metadata = publicPageMetadata({
   title: "Private Vietnam Trips & Custom Tours | Cookie Paradise Travel",
-  description: "Plan a private Vietnam trip with Trung Le, a Vietnam-born planner based in Indiana. Get a custom itinerary and help booking hotels, private guides and transfers.",
+  description: "Spend less time planning your private Vietnam trip. Vietnam-born trip planner Trung Le designs your itinerary and coordinates hotels, private guides and transfers.",
   path: "/fit",
   image: "/travel/fit-mu-cang-chai-1800.webp",
   imageAlt: "Golden rice terraces in the morning mist in Mu Cang Chai, Vietnam",
@@ -57,8 +57,8 @@ export default async function FitTravelPage() {
     <section id="fit-main" className="fit-hero fit-wrap" aria-labelledby="fit-title">
       <div className="fit-hero-copy">
         <p className="fit-kicker">Private Vietnam travel</p>
-        <h1 id="fit-title">Explore Vietnam.<br /><em>I’ll plan your trip.</em></h1>
-        <p className="fit-body">Tell me what you’d love to experience in Vietnam and how much time you have. I’m Trung Le. I grew up in Vietnam and now plan private trips from Indiana. I’ll recommend where to go, how long to stay and where it’s worth spending more. Then I’ll coordinate the hotels, guides and transfers you choose.</p>
+        <h1 id="fit-title">Spend less time planning.<br /><em>Enjoy more of Vietnam.</em></h1>
+        <p className="fit-body">I’m Trung Le, a trip planner born and raised in Vietnam and now based in Indiana. Tell me what you’d love to experience. I’ll draw on my firsthand knowledge of the country and my local network to design your private itinerary and coordinate the hotels, guides and transfers you choose.</p>
         <a className="fit-button fit-button-dark" href="#fit-plan">Start planning with Trung <ArrowRight size={18} aria-hidden="true" /></a>
         <p className="fit-small fit-hero-note">Free 30-minute consultation</p>
         <a className="fit-text-link fit-explore" href="#fit-value">See what I take care of <ArrowDown size={16} aria-hidden="true" /></a>
@@ -73,7 +73,7 @@ export default async function FitTravelPage() {
       <ul className="fit-process" role="list">
         <li>
           <h3>A route that fits your time off</h3>
-          <p className="fit-body">I’ll do the research and show you what fits. If you have ten days, I’ll account for the hours it takes to pack up, get to the airport and check in at the next hotel. You’ll see what each stop adds before you give up a day to reach it.</p>
+          <p className="fit-body">I’ll spend the time comparing routes and checking schedules. If you have ten days, I’ll account for the time it takes to get from one stop to the next and build in room to relax. You’ll get a plan that makes sense for the days you have.</p>
         </li>
         <li>
           <h3>Know what’s worth paying for</h3>
@@ -81,7 +81,7 @@ export default async function FitTravelPage() {
         </li>
         <li>
           <h3>One person to handle the bookings</h3>
-          <p className="fit-body">I’ll coordinate the bookings you approve and make sure the pieces fit, from when your driver picks you up to when your boat boards. You’ll know what’s reserved, who’s meeting you and whom to contact during the trip.</p>
+          <p className="fit-body">I’ll work with local guides, drivers and travel partners to coordinate the bookings you approve, from your airport pickup to your overnight cruise. You’ll know what’s reserved, who’s meeting you and whom to contact during the trip.</p>
         </li>
       </ul>
     </section>
