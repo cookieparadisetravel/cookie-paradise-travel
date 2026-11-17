@@ -123,8 +123,29 @@ export default function AdvisorNetworksPage() {
       <div><h2>Start with one network.</h2><p>Begin with CCRA, TRAVELSAVERS or Gifted Travel Network. Compare the cost and advisor access, then test one partnership and measure bookings before adding more. These starting options reflect clear inquiry routes, not guaranteed acceptance.</p></div>
     </div>
     <nav className="ws-network-jumps" aria-label="On this page">
-      <a href="#start-here">Start here</a><a href="#more-networks">More networks</a><a href="#associations">Trade associations</a><a href="#application-kit">Application checklist</a>
+      <a href="#accreditation">Accreditation follow-up</a><a href="#start-here">Start here</a><a href="#more-networks">More networks</a><a href="#associations">Trade associations</a><a href="#application-kit">Application checklist</a>
     </nav>
+
+    <section className="ws-network-section" aria-labelledby="accreditation">
+      <div className="ws-section-heading"><h2 id="accreditation">Accreditation follow-up</h2><span>Next step: confirm requirements</span></div>
+      <div className="ws-network-grid">
+        <article className="ws-network-card">
+          <div><p className="ws-eyebrow">RECOMMENDED OPTION TO INVESTIGATE</p><h3>ARC Verified Travel Consultant (VTC)</h3></div>
+          <p>A practical credential to investigate for Cookie Paradise’s U.S.-based travel business: an ARC agency number without direct airline-ticketing authority.</p>
+          <p><strong>Published application fee:</strong> $195, non-refundable. Confirm the current annual participation fee with ARC before applying. Allow up to 30 days after ARC receives a complete application.</p>
+          <p className="ws-network-note"><strong>First, ask Travel Leaders Network:</strong> Do tour suppliers need this credential, and is ARC VTC accepted for the relevant partnership? Agency membership and supplier partnership are separate routes; accreditation does not guarantee supplier acceptance.</p>
+          <a className="ws-button" href="https://www2.arccorp.com/products-participation/travel-agencies/vtc-participation/" target="_blank" rel="noopener noreferrer">Official ARC VTC program<ArrowUpRight size={16} aria-hidden="true"/><span className="sr-only"> (opens in a new tab)</span></a>
+        </article>
+        <div className="ws-network-panel"><h3>Documents to prepare after confirming fit</h3><ul>
+          <li>LLC formation documents and operating agreement.</li>
+          <li>EIN confirmation or Form W-9.</li>
+          <li>Required notarized personal-history forms, identification and work-authorization documentation for applicable owners and officers.</li>
+          <li>Applicable business licenses and Seller of Travel registration documents.</li>
+          <li>Bank signature card or bank letter identifying the account and authorized users.</li>
+        </ul><div className="ws-button-row"><a className="ws-text-button" href="https://www2.arccorp.com/globalassets/forms/vtc_application.pdf" target="_blank" rel="noopener noreferrer">Official application &amp; checklist (PDF)<span className="sr-only"> (opens in a new tab)</span></a></div><p className="ws-small">ARC questions: <a className="ws-text-button" href="mailto:ccchelp@arccorp.com">ccchelp@arccorp.com</a> · <a className="ws-text-button" href="tel:+18558168003">855-816-8003</a></p></div>
+      </div>
+      <div className="ws-network-pitch"><p className="ws-eyebrow">FOLLOW-UP MESSAGE FOR TRAVEL LEADERS NETWORK</p><blockquote>Cookie Paradise Travel Company LLC is a U.S.-based tour operator offering personally hosted, small-group Vietnam tours. We want Travel Leaders Network advisors to sell our tours. Should we apply through supplier relations rather than agency membership? What credentials do you require of tour suppliers, and would ARC Verified Travel Consultant status satisfy those requirements?</blockquote><div className="ws-button-row"><a className="ws-text-button" href="https://www.travelleadersnetwork.com/powerful-partnerships/" target="_blank" rel="noopener noreferrer">Travel Leaders Network partnerships<span className="sr-only"> (opens in a new tab)</span></a></div></div>
+    </section>
 
     <section className="ws-network-section" aria-labelledby="start-here">
       <div className="ws-section-heading"><h2 id="start-here">Start here</h2><span>3 starting options</span></div>
