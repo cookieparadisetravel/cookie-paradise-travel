@@ -73,7 +73,7 @@ const detailedItinerary = [
     day: "04", title: "Fly to Hue", meals: "Meals: Breakfast, Lunch",
     events: [
       ["Morning", "Airport transfer", "Transfer from the hotel to Tan Son Nhat International Airport (SGN)."],
-      ["11:05 AM–12:25 PM", "Flight to Hue", "Planned Vietnam Airlines flight VN1370 from Ho Chi Minh City (SGN) to Phu Bai International Airport (HUI), serving Hue. The airline may change the schedule."],
+      ["Late morning", "Flight to Hue", "Fly from Ho Chi Minh City (SGN) to Phu Bai International Airport (HUI), serving Hue. This domestic flight is included in your tour."],
       ["2:30–6:00 PM", "Imperial Hue", "Explore the Imperial Citadel and restored Kien Trung Palace, followed by Thien Mu Pagoda."],
       ["About 5:00 PM", "Perfume River sunset", "Board a private river cruise with a cocktail and canapés."],
     ],
@@ -118,6 +118,7 @@ const approvedSummary = (label: string) => {
     ?? "Please ask Trung for the current terms and review your personalized Traveler Agreement before booking.";
   // Homepage visitors need standalone explanations; agreement documents retain their references.
   return text
+    .replace("Itineraries and suppliers may change. ", "")
     .replace(", subject to Sections 4, 12 and 14", ", with exceptions for company cancellation and events beyond our control")
     .replace("For a force majeure cancellation", "For a cancellation caused by events beyond our control")
     .replace(/\s*\(Sections? [^)]+\)/g, "");
