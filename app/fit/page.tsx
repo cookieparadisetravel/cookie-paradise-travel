@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-html-link-for-pages -- Native navigation avoids the vinext client-router failure observed in production. */
 import { publicPageMetadata } from "@/lib/public-page-metadata";
 import { cookies } from "next/headers";
-import { ArrowDown, ArrowRight, ArrowUpRight, MapPin } from "lucide-react";
+import { ArrowRight, ArrowUpRight, MapPin } from "lucide-react";
 import { ConsultationLink } from "../components/consultation-link";
 import { BrandLogo } from "../components/brand-logo";
 import { JourneyPhoto } from "../components/journey-photo";
@@ -60,7 +60,6 @@ export default async function FitTravelPage() {
         <p className="fit-body">I’m Trung Le, a Vietnam-born trip planner based in Indiana. I’ll use my firsthand knowledge and local contacts to design a private itinerary at your pace. Hand off as much of the research and booking as you’d like, including flights.</p>
         <ConsultationLink inverse className="mt-8" />
         <p className="fit-small fit-hero-note">30 minutes with Trung</p>
-        <a className="fit-text-link fit-explore" href="#fit-approach">See services and pricing <ArrowDown size={16} aria-hidden="true" /></a>
       </div>
       <div id="fit-hero-art" className="fit-hero-art">
         <JourneyPhoto photo="fitCafe" priority className="fit-hero-photo" sizes="(min-width: 1280px) 535px, (min-width: 768px) 45vw, 90vw" />
