@@ -216,7 +216,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
 
       <section id="included" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-14 sm:px-8 sm:py-20">
         <p className="eyebrow">Included in the tour price</p>
-        <h2 className="section-title">The details, taken care of.</h2>
+        <h2 className="section-title">The details, handled.</h2>
         <div className="mt-8 grid items-center gap-8 lg:grid-cols-2 lg:gap-14">
       <figure className="homepage-life-photo inclusions-life-photo">
         <img
