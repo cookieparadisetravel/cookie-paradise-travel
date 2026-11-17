@@ -67,7 +67,6 @@ export default async function VietnamTrip() {
         <div className="mx-auto max-w-3xl px-5 py-10 text-center sm:px-8 sm:py-12">
           <p className="text-lg leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
           <p className="mt-5 text-base leading-7"><strong className="text-2xl">$2,875 per traveler</strong> · fixed price<br /><span className="text-sm">Shared room · International airfare extra</span></p>
-          <a href="#pricing" className="mt-5 inline-flex min-h-11 items-center gap-2 font-semibold text-[#805018] underline underline-offset-4">See the full trip budget <ArrowRight aria-hidden="true" size={17} /></a>
         </div>
       </section>
 

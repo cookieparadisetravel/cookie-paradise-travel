@@ -184,7 +184,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
               <a href="#guide" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-full border border-black/25 px-6 py-3 text-center text-sm font-bold hover:bg-black/5">Get the itinerary and pricing <ArrowRight className="h-4 w-4 shrink-0" /></a>
             </div>
             <p className="mt-4 max-w-xl text-sm leading-6 text-[var(--ink)]">Free 30-minute Google Meet with Trung · No obligation to book.</p>
-            <a href="#pricing" className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#805018] underline underline-offset-4">See the full trip budget <ArrowRight className="h-4 w-4" /></a>
           </div>
         </div>
       </section>
