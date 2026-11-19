@@ -47,10 +47,11 @@ export default async function FitTravelPage() {
           <ReferralBrand header />
         </div>
         <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Private travel navigation">
-          <a href="#fit-approach">Services &amp; pricing</a><a href="#fit-process">How it works</a><a href="#fit-planner">Meet Trung</a><a href="#fit-ideas">Trip ideas</a>
+          <a href="/why-vietnam">Why Vietnam?</a><a href="#fit-approach">Services &amp; pricing</a><a href="#fit-process">How it works</a><a href="#fit-planner">Meet Trung</a><a href="#fit-ideas">Trip ideas</a>
         </nav>
         <a className="site-header-call fit-header-plan" href="#fit-plan">Start planning <ArrowRight size={16} aria-hidden="true" /></a>
       </div>
+    <nav className="flex flex-wrap justify-center gap-5 px-5 pb-4 text-sm font-semibold xl:hidden" aria-label="Travel options"><a href="/">Small-group tour</a><a href="/why-vietnam">Why Vietnam?</a><a href="/fit" aria-current="page">Private trips</a></nav>
     </header>
 
     <section id="fit-main" className="fit-hero fit-wrap" aria-labelledby="fit-title">
