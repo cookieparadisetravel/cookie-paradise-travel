@@ -81,3 +81,7 @@
 .us-hero-copy{container-type:inline-size}
 .us-business-page .us-hero h1{font-size:min(4.15rem,8.5cqw);white-space:nowrap}
 .us-hero h1 em{white-space:normal}
+
+/* Keep the contact heading on two lines, with the italic phrase below. */
+.us-contact-grid>div:first-child{container-type:inline-size;min-width:0}
+.us-business-page #us-contact-title{font-size:min(3.2rem,7cqw);white-space:nowrap}
