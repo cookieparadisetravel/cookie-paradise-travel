@@ -9,3 +9,5 @@
 .why-reason-photo figcaption{display:flex;justify-content:space-between;flex-wrap:wrap;gap:.25rem 1rem;margin-top:.5rem;font-size:.75rem;line-height:1.5;color:#684316}
 .why-reason-photo figcaption a{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:900px){.why-food-photo{width:92%;margin-bottom:1.5rem}.why-landscape-photo{margin-top:1.5rem}}
+
+.why-coffee-photo{width:min(85%,21rem);margin:2rem 0 0 auto}
