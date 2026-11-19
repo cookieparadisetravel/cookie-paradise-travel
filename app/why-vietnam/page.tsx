@@ -30,7 +30,7 @@ export default function WhyVietnamPage() {
     <section id="why-content" className="why-wrap why-hero">
       <div><p className="why-kicker">Why Vietnam?</p><h1>Make the journey.<br /><em>Come home with more.</em></h1>
       <p className="why-lead">Go for the food. Stay for the scenery, the history, and the pleasure of discovering a different way to spend your day.</p>
-      <p>Vietnam brings regional cooking, UNESCO-listed heritage, dramatic landscapes and beach time into one country. You can build a trip around curiosity and comfort, with room for both memorable outings and slow mornings.</p>
+      <p>Vietnam combines world-renowned food, UNESCO-listed sites, dramatic landscapes, beautiful beaches, and a proud and complex history into one country. You can build a trip around curiosity and comfort, with room for both exploration and relaxation.</p>
       <div className="why-actions"><a className="why-button" href="/">Explore our small-group trip</a><a className="why-link" href="/fit">Plan a private trip</a></div></div>
       <JourneyPhoto photo="fitBay" priority sizes="(min-width: 900px) 50vw, 100vw" />
     </section>
