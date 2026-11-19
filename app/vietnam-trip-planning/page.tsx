@@ -22,6 +22,7 @@ export default function VietnamTripPlanningPage() {
           </a>
           <nav aria-label="Travel services" className="flex flex-wrap gap-x-6 gap-y-3 text-base font-semibold">
             <a className="underline" href="/">Small-group tours</a>
+            <a className="underline" href="/why-vietnam">Why Vietnam?</a>
             <a className="underline" href="/fit">Private trips</a>
           </nav>
         </div>
