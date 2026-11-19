@@ -22,6 +22,13 @@ const sources = {
 function Source({ href, children }: { href: string; children: React.ReactNode }) { return <a className="why-source" href={href} target="_blank" rel="noopener noreferrer">{children}<span className="sr-only"> (opens in a new tab)</span></a>; }
 
 const whyPhotos = {
+  dailyLife: {
+    url: "https://images.pexels.com/photos/34238545/pexels-photo-34238545.jpeg",
+    source: "https://www.pexels.com/photo/elderly-woman-relaxing-on-a-sidewalk-in-vietnam-34238545/",
+    photographer: "Thong Nguyen / Pexels", place: "Buôn Ma Thuột",
+    alt: "An older woman relaxing on a red stool along a leafy sidewalk in Buôn Ma Thuột, Vietnam",
+    width: 4724, height: 7087,
+  },
   bay: {
     url: "https://images.unsplash.com/photo-1643029891412-92f9a81a8c16",
     source: "https://unsplash.com/photos/boats-on-turquoise-ha-long-bay-kG7pOXbBfNs",
@@ -103,7 +110,7 @@ export default function WhyVietnamPage() {
       </div>
     </section>
     <section className="why-photo-band why-wrap" aria-label="Scenes from Vietnam"><JourneyPhoto photo="fitCafe" /></section>
-    <section className="why-longstay"><div className="why-wrap why-two-column"><div><p className="why-kicker">Thinking beyond a vacation?</p><h2>Visit first.<br /><em>Imagine the possibilities.</em></h2></div><div><p>If Vietnam is on your retirement shortlist, a first trip can help you understand how it feels to be there: the food, the climate, the neighborhoods and the daily rhythm.</p><p>Forbes included Vietnam in its 2026 list of places to retire abroad, naming Hanoi, Da Nang, Ho Chi Minh City and Hoi An. That makes it worth exploring in person.</p><p>Vietnam’s Immigration Department states that e-visas can be valid for up to 90 days, with single or multiple entries.</p><Source href={sources.forbes}>Forbes · Best Places to Retire Abroad, 2026</Source><Source href={sources.visa}>Vietnam Immigration Department · E-visa information</Source></div></div></section>
+    <section className="why-longstay" aria-labelledby="why-longstay-title"><div className="why-wrap why-two-column why-longstay-grid"><WhyPhoto photo="dailyLife" /><div className="why-longstay-copy"><p className="why-kicker">Thinking beyond a vacation?</p><h2 id="why-longstay-title">Visit first.<br /><em>Imagine the possibilities.</em></h2><p>If Vietnam is on your retirement shortlist, a first trip can help you understand how it feels to be there: the food, the climate, the neighborhoods and the daily rhythm.</p><p>Forbes included Vietnam in its 2026 list of places to retire abroad, naming Hanoi, Da Nang, Ho Chi Minh City and Hoi An. That makes it worth exploring in person.</p><p>Vietnam’s Immigration Department states that e-visas can be valid for up to 90 days, with single or multiple entries.</p><Source href={sources.forbes}>Forbes · Best Places to Retire Abroad, 2026</Source><Source href={sources.visa}>Vietnam Immigration Department · E-visa information</Source></div></div></section>
     <section className="why-wrap why-plan"><p className="why-kicker">Experience it with Trung</p><h2>Turn “Why Vietnam?”<br /><em>into “When can I go?”</em></h2><p>I was born in Vietnam, spent my first sixteen years in Yên Bái and Bình Dương, and later lived in Ho Chi Minh City for seven years. I’ll help you connect with the unique places and experiences in Vietnam that only a local can know.</p><div className="why-options"><article><h3>Join Discover Southern Vietnam</h3><p>Travel with me through Ho Chi Minh City (Saigon), the Mekong Delta, Hue and Hoi An in a group of 4–8 guests.</p><a className="why-button" href="/">See the itinerary and pricing</a></article><article><h3>Make the trip your own</h3><p>Want to include the north, add beach time or explore a possible longer stay? I can plan your route and handle as much of the booking as you need, including flights.</p><a className="why-button" href="/fit">Explore private trip planning</a></article></div></section>
     <footer className="why-wrap why-footer"><p>Sources checked November 18–19, 2026.</p><nav aria-label="Footer navigation"><a href="/">Small-group tour</a><a href="/fit">Private trips</a><a href="/vietnam-trip-planning">Travel planning guide</a><a href="/privacy">Privacy policy</a></nav><p>© 2026 Cookie Paradise Travel Company LLC</p></footer>
   </main>;

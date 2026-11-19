@@ -28,3 +28,12 @@
 .why-history-intro .journey-photo-frame{aspect-ratio:2/3}
 .why-page .why-bay-photo figcaption,.why-page .why-hue-photo figcaption{font-size:.75rem}
 @media(max-width:540px){.why-history-intro .why-hue-photo{margin-right:1rem}}
+
+/* Pair the quiet street portrait with the retirement introduction. */
+.why-longstay-grid{grid-template-columns:minmax(0,.75fr) minmax(0,1.25fr);align-items:center;gap:clamp(2rem,5vw,4.5rem)}
+.why-dailyLife-photo{width:100%;max-width:24rem;margin:0}
+.why-dailyLife-photo .journey-photo-frame{aspect-ratio:auto}
+.why-dailyLife-photo img{display:block;width:100%;height:auto}
+.why-page .why-dailyLife-photo figcaption{font-size:.75rem}
+.why-longstay-copy h2{margin-bottom:1.5rem}
+@media(max-width:900px){.why-longstay-grid{grid-template-columns:1fr}.why-longstay-copy{order:-1}.why-dailyLife-photo{width:85%;max-width:22rem}}
