@@ -76,3 +76,8 @@
 .us-skip:focus{top:1rem}
 @media(max-width:1000px){.us-hero{grid-template-columns:1fr;gap:2.5rem;padding-block:3rem}.us-hero-photo img{aspect-ratio:16/9;border-radius:3rem 0 0 0}.us-three{gap:1.5rem}.us-paths,.us-personal,.us-contact-grid{gap:2.5rem}.us-header-inner{flex-wrap:wrap}}
 @media(max-width:760px){.us-section{padding-block:3.25rem}.us-three,.us-paths,.us-styles,.us-process ol,.us-personal,.us-contact-grid{grid-template-columns:1fr;gap:2rem}.us-header-inner{gap:1.2rem}.us-header nav{gap:.65rem 1.2rem;font-size:.9375rem}.us-hero h1{font-size:clamp(2.45rem,8vw,3.8rem)}.us-hero-photo img{aspect-ratio:4/3}.us-section-heading{margin-bottom:2rem}.us-research-note{padding:1.5rem}.us-styles article{padding-left:1.1rem}.us-brief{padding:1.25rem}.us-footer{flex-direction:column;gap:1rem}.us-footer nav{gap:.75rem 1.3rem}}
+
+/* Keep the opening sentence on one line at the available column width. */
+.us-hero-copy{container-type:inline-size}
+.us-business-page .us-hero h1{font-size:min(4.15rem,8.5cqw);white-space:nowrap}
+.us-hero h1 em{white-space:normal}
