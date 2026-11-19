@@ -94,7 +94,7 @@ const detailedItinerary = [
     events: [
       ["8:30 AM–1:00 PM", "Farm-to-table challenge", "Take on a herb hunt, spring-roll showdown, Vietnamese rice-pancake challenge and mystery-box juice creation, followed by lunch."],
       ["Afternoon", "Free time", "Relax at the resort or explore Hoi An independently."],
-      ["During free time", "Optional 60-minute massage", "A body massage at Almanity is available as an optional add-on. Participation is not required, and timing is arranged separately."],
+      ["During free time", "Optional 60-minute massage", "Enjoy an optional 60-minute body massage at Almanity during your free time."],
       ["7:00 PM", "Farewell dinner", "Gather for a celebratory dinner with one glass of house wine."],
     ],
   },
@@ -324,7 +324,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="mt-4 max-w-4xl text-base leading-8 text-[var(--muted-ink)]">{item.answer}</p>
           </details>)}
         </div>
-        <p className="mt-5 text-sm leading-6 text-[var(--muted-ink)]">These answers are a summary. Your personalized Traveler Agreement contains the complete booking terms.</p>
+        <p className="mt-5 text-sm leading-6 text-[var(--muted-ink)]">Your personalized Traveler Agreement contains the complete booking terms.</p>
       </section>
 
       <section id="guide" className="border-y border-[var(--line)] bg-[var(--cream)] py-16 sm:py-20">

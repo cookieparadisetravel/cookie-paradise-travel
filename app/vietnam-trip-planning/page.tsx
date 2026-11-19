@@ -53,7 +53,7 @@ export default function VietnamTripPlanningPage() {
             <div>
               <h3 className="text-xl font-bold">Plan a private trip</h3>
               <p className="mt-3">Choose this if your dates, travel companions or particular interests come first. Plan a custom Vietnam tour for yourself, a couple, family or friends, or ask for help with one hotel, transfer, guide or experience.</p>
-              <p className="mt-3">Private travel does not automatically include Trung as your host. Your proposal explains the arrangements, guiding, support and price.</p>
+              <p className="mt-3">Your proposal sets out the itinerary, guides, support and price, including whether Trung joins as your host.</p>
               <a href="/fit" className="mt-4 inline-flex items-center gap-2 font-semibold underline">Explore private Vietnam trips <ArrowRight size={18} aria-hidden="true" /></a>
             </div>
           </div>
@@ -74,7 +74,7 @@ export default function VietnamTripPlanningPage() {
         <section id="practical-details" className="mt-14 scroll-mt-6" aria-labelledby="practical-title">
           <h2 id="practical-title" className="font-serif text-3xl leading-tight sm:text-4xl">Work through the practical details</h2>
           <div className="mt-6 space-y-7">
-            <div><h3 className="text-xl font-bold">Match flights to the route</h3><p className="mt-2">Our group itinerary begins in Ho Chi Minh City (SGN) and ends near Da Nang (DAD). The listed domestic flight to Hue is included; international flights are separate. Review arrival and departure plans with Trung before buying tickets. Private-trip flight arrangements depend on your proposal.</p></div>
+            <div><h3 className="text-xl font-bold">Match flights to the route</h3><p className="mt-2">Our group itinerary begins in Ho Chi Minh City (SGN) and ends near Da Nang (DAD). The listed domestic flight to Hue is included; international flights are separate. Review arrival and departure plans with Trung before buying tickets.</p></div>
             <div><h3 className="text-xl font-bold">Compare the full travel budget</h3><p className="mt-2">Read the <a className="underline" href="/#pricing">group tour pricing</a> and <a className="underline" href="/#included">inclusions</a> together. Allow separately for international airfare, travel insurance, visas, personal expenses, gratuities and anything the itinerary excludes. Ask about room arrangements and any supplement before choosing a room.</p></div>
             <div><h3 className="text-xl font-bold">Discuss the daily pace</h3><p className="mt-2">The group itinerary includes walking, boat boarding, some early starts and full activity days. Tell Trung about your walking comfort, dietary preferences and any assistance you would like checked. For a private journey, discuss the balance of planned activities and time on your own.</p></div>
           </div>

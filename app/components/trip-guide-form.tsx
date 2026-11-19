@@ -60,7 +60,6 @@ export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
       <p className="mt-4 leading-7">Thanks—your inquiry has been saved. {emailStatus === "sent" ? "The itinerary and pricing PDF has been emailed to you." : emailStatus === "already_requested" ? "If you requested the itinerary before, use the links below to open it again or book a call." : "Use the download below now. Email delivery was not confirmed; Trung can help with any questions."}</p>
       <a className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#593412] px-5 py-3 text-center font-bold text-white" href={tripGuideUrl} target="_blank" rel="noopener noreferrer"><Download size={18} /> Open itinerary and pricing (PDF)</a>
       <a className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#593412] px-5 py-3 text-center font-bold" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free 30-minute call <ArrowRight size={18} /></a>
-      <p className="mt-5 text-sm leading-6 text-[#6c6055]">No payment was collected. This is not a confirmed reservation.</p>
     </div> : <>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#84511e]">Start with the details</p>
       <h2 className="mt-3 font-serif text-3xl leading-tight">Email me the itinerary and pricing</h2>
