@@ -4,6 +4,7 @@ const siteUrl = "https://cookieparadisetravel.com";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
+    { url: `${siteUrl}/khao-sat-thi-truong-my`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/why-vietnam`, changeFrequency: "monthly", priority: 0.8 },
     { url: `${siteUrl}/vietnam-trip-planning`, changeFrequency: "monthly", priority: 0.7 },
     { url: `${siteUrl}/fit`, changeFrequency: "monthly", priority: 0.8 },

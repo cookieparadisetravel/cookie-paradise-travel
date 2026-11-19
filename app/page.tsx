@@ -148,13 +148,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             </a>
             <ReferralBrand header />
           </div>
-          <nav className="hidden items-center gap-4 text-sm font-semibold xl:flex" aria-label="Main navigation">
+          <nav className="hidden flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing &amp; budget</a>
             <a className="hover:text-[var(--gold)]" href="#included">What’s included</a>
             <TripSectionLink className="hover:text-[var(--gold)]">Itinerary</TripSectionLink>
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
             <a className="hover:text-[var(--gold)]" href="/why-vietnam">Why Vietnam?</a>
             <a className="hover:text-[var(--gold)]" href="/fit">Private trips</a>
+            <a className="hover:text-[var(--gold)]" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát Mỹ</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
@@ -163,6 +164,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <TripSectionLink className="hover:underline">Itinerary</TripSectionLink>
           <a className="hover:underline" href="/why-vietnam">Why Vietnam?</a>
           <a className="hover:underline" href="/fit">Private trips</a>
+          <a className="hover:underline" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát Mỹ</a>
         </nav>
       </header>
 
