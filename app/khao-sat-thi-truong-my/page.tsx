@@ -39,7 +39,7 @@ export default function UsBusinessTravelPage() {
     <a className="us-skip" href="#us-content">Đến nội dung chính</a>
     <header className="us-header"><div className="us-wrap us-header-inner">
       <a href="/" aria-label="Trang chủ Cookie Paradise Travel Company"><BrandLogo /></a>
-      <nav aria-label="Điều hướng"><a href="/why-vietnam">Du lịch Việt Nam</a><a href="/khao-sat-thi-truong-my" aria-current="page">Khảo sát Mỹ</a><a href="#trao-doi">Trao đổi với Trung</a></nav>
+      <nav aria-label="Điều hướng"><a href="/why-vietnam">Du lịch Việt Nam</a><a href="/khao-sat-thi-truong-my" aria-current="page">Khảo sát thị trường Mỹ</a><a href="#trao-doi">Trao đổi với Trung</a></nav>
     </div></header>
 
     <section id="us-content" className="us-wrap us-hero">

@@ -155,7 +155,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
             <a className="hover:text-[var(--gold)]" href="/why-vietnam">Why Vietnam?</a>
             <a className="hover:text-[var(--gold)]" href="/fit">Private trips</a>
-            <a className="hover:text-[var(--gold)]" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát Mỹ</a>
+            <a className="hover:text-[var(--gold)]" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát thị trường Mỹ</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
@@ -164,7 +164,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <TripSectionLink className="hover:underline">Itinerary</TripSectionLink>
           <a className="hover:underline" href="/why-vietnam">Why Vietnam?</a>
           <a className="hover:underline" href="/fit">Private trips</a>
-          <a className="hover:underline" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát Mỹ</a>
+          <a className="hover:underline" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát thị trường Mỹ</a>
         </nav>
       </header>
 
