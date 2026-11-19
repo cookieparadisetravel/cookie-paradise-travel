@@ -4,7 +4,7 @@ import { BrandLogo } from "../components/brand-logo";
 import { JourneyPhoto } from "../components/journey-photo";
 import "./why-vietnam.css";
 
-export const metadata = publicPageMetadata({ title: "Why Visit Vietnam? Food, Culture, Scenery & Value", description: "Discover six compelling reasons to travel to Vietnam, backed by UNESCO, MICHELIN and independent research. Explore small-group and private trips with Trung Le.", path: "/why-vietnam", image: "/travel/fit-ha-long-bay-1800.webp", imageAlt: "Limestone islands and boats in Ha Long Bay, Vietnam" });
+export const metadata = publicPageMetadata({ title: "Why Visit Vietnam? Food, Culture, Scenery & Value", description: "Discover six compelling reasons to travel to Vietnam, backed by UNESCO, MICHELIN and independent research. Explore small-group and private trips with Trung Le.", path: "/why-vietnam", image: "https://images.unsplash.com/photo-1643029891412-92f9a81a8c16?auto=format&fit=max&w=1800&q=85", imageAlt: "Turquoise water and boats surrounded by limestone towers in Ha Long Bay, Vietnam" });
 
 const sources = {
   michelin: "https://guide.michelin.com/en/article/michelin-guide-ceremony/michelin-guide-vietnam-2026",
@@ -21,6 +21,38 @@ const sources = {
 };
 function Source({ href, children }: { href: string; children: React.ReactNode }) { return <a className="why-source" href={href} target="_blank" rel="noopener noreferrer">{children}<span className="sr-only"> (opens in a new tab)</span></a>; }
 
+const whyPhotos = {
+  bay: {
+    url: "https://images.unsplash.com/photo-1643029891412-92f9a81a8c16",
+    source: "https://unsplash.com/photos/boats-on-turquoise-ha-long-bay-kG7pOXbBfNs",
+    photographer: "Marina Lobato / Unsplash", place: "Hạ Long Bay",
+    alt: "Turquoise water, boats and a sandy inlet surrounded by towering limestone islands in Hạ Long Bay",
+    width: 600, height: 293,
+  },
+  hue: {
+    url: "https://images.pexels.com/photos/37026118/pexels-photo-37026118/free-photo-of-traditional-vietnamese-gate-in-imperial-city-of-hue.jpeg",
+    source: "https://www.pexels.com/photo/traditional-vietnamese-gate-in-imperial-city-of-hue-37026118/",
+    photographer: "Pew Nguyen / Pexels", place: "Hue",
+    alt: "An ornate historic gate and curved brick walls beneath trees in Hue’s Imperial City",
+    width: 4160, height: 6240,
+  },
+} as const;
+
+function WhyPhoto({ photo, priority = false }: { photo: keyof typeof whyPhotos; priority?: boolean }) {
+  const item = whyPhotos[photo];
+  const url = (width: number) => `${item.url}?auto=${photo === "bay" ? "format" : "compress"}&fit=max&w=${width}&q=85`;
+  return <figure className={`journey-photo why-${photo}-photo`}>
+    <div className="journey-photo-frame">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={url(1280)} srcSet={[640, 1280, 1800].map(width => `${url(width)} ${width}w`).join(", ")}
+        sizes={photo === "bay" ? "(min-width: 1280px) 1184px, 92vw" : "(min-width: 900px) 32vw, 70vw"}
+        width={item.width} height={item.height} alt={item.alt}
+        loading={priority ? "eager" : "lazy"} fetchPriority={priority ? "high" : undefined} decoding="async" />
+    </div>
+    <figcaption><strong>{item.place}</strong><a href={item.source} target="_blank" rel="noopener noreferrer">Photo: {item.photographer}</a></figcaption>
+  </figure>;
+}
+
 export default function WhyVietnamPage() {
   return <main className="why-page">
     <a href="#why-content" className="why-skip">Skip to content</a>
@@ -33,7 +65,7 @@ export default function WhyVietnamPage() {
       <p className="why-lead">Go for the food. Stay for the scenery, the history, and the pleasure of discovering a different way to spend your day.</p>
       <p>Vietnam combines world-renowned food, UNESCO-listed sites, dramatic landscapes, beautiful beaches, and a proud and complex history into one country. You can build a trip around curiosity and comfort, with room for both exploration and relaxation.</p>
       <div className="why-actions"><a className="why-button" href="/">Explore our small-group trip</a><a className="why-link" href="/fit">Plan a private trip</a></div></div>
-      <JourneyPhoto photo="fitBay" priority sizes="(min-width: 900px) 50vw, 100vw" />
+      <WhyPhoto photo="bay" priority />
     </section>
     <section className="why-wrap why-reasons" aria-labelledby="why-reasons-title">
       <div className="why-section-heading"><p className="why-kicker">The reasons to go</p><h2 id="why-reasons-title">A destination worth<br /><em>getting to know.</em></h2><p>Here’s what makes Vietnam compelling—and the evidence behind it.</p></div>
@@ -70,7 +102,7 @@ export default function WhyVietnamPage() {
         </article>
       </div>
     </section>
-    <section className="why-photo-band why-wrap" aria-label="Scenes from Vietnam"><JourneyPhoto photo="hue" /><JourneyPhoto photo="fitCafe" /></section>
+    <section className="why-photo-band why-wrap" aria-label="Scenes from Vietnam"><WhyPhoto photo="hue" /><JourneyPhoto photo="fitCafe" /></section>
     <section className="why-longstay"><div className="why-wrap why-two-column"><div><p className="why-kicker">Thinking beyond a vacation?</p><h2>Visit first.<br /><em>Imagine the possibilities.</em></h2></div><div><p>If Vietnam is on your retirement shortlist, a first trip can help you understand how it feels to be there: the food, the climate, the neighborhoods and the daily rhythm.</p><p>Forbes included Vietnam in its 2026 list of places to retire abroad, naming Hanoi, Da Nang, Ho Chi Minh City and Hoi An. That makes it worth exploring in person.</p><p>Vietnam’s Immigration Department states that e-visas can be valid for up to 90 days, with single or multiple entries.</p><Source href={sources.forbes}>Forbes · Best Places to Retire Abroad, 2026</Source><Source href={sources.visa}>Vietnam Immigration Department · E-visa information</Source></div></div></section>
     <section className="why-wrap why-plan"><p className="why-kicker">Experience it with Trung</p><h2>Turn “Why Vietnam?”<br /><em>into “When can I go?”</em></h2><p>I was born in Vietnam, spent my first sixteen years in Yên Bái and Bình Dương, and later lived in Ho Chi Minh City for seven years. I’ll help you connect with the unique places and experiences in Vietnam that only a local can know.</p><div className="why-options"><article><h3>Join Discover Southern Vietnam</h3><p>Travel with me through Ho Chi Minh City (Saigon), the Mekong Delta, Hue and Hoi An in a group of 4–8 guests.</p><a className="why-button" href="/">See the itinerary and pricing</a></article><article><h3>Make the trip your own</h3><p>Want to include the north, add beach time or explore a possible longer stay? I can plan your route and handle as much of the booking as you need, including flights.</p><a className="why-button" href="/fit">Explore private trip planning</a></article></div></section>
     <footer className="why-wrap why-footer"><p>Sources checked November 18–19, 2026.</p><nav aria-label="Footer navigation"><a href="/">Small-group tour</a><a href="/fit">Private trips</a><a href="/vietnam-trip-planning">Travel planning guide</a><a href="/privacy">Privacy policy</a></nav><p>© 2026 Cookie Paradise Travel Company LLC</p></footer>
