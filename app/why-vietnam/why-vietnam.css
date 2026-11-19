@@ -10,4 +10,8 @@
 .why-reason-photo figcaption a{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:900px){.why-food-photo{width:92%;margin-bottom:1.5rem}.why-landscape-photo{margin-top:1.5rem}}
 
-.why-coffee-photo{width:min(85%,21rem);margin:2rem 0 0 auto}
+.why-coffee-intro{display:flow-root;margin-top:1.5rem}
+.why-page .why-coffee-intro>p{margin-top:0}
+.why-coffee-photo{float:left;width:42%;max-width:14rem;margin:0 1.25rem .75rem 0}
+.why-coffee-photo img{aspect-ratio:1/1;object-fit:cover;object-position:50% 80%}
+@media(max-width:540px){.why-coffee-photo{width:40%;margin-right:1rem}}
