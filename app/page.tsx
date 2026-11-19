@@ -148,18 +148,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             </a>
             <ReferralBrand header />
           </div>
-          <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Main navigation">
+          <nav className="hidden items-center gap-4 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing &amp; budget</a>
             <a className="hover:text-[var(--gold)]" href="#included">What’s included</a>
             <TripSectionLink className="hover:text-[var(--gold)]">Itinerary</TripSectionLink>
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
+            <a className="hover:text-[var(--gold)]" href="/why-vietnam">Why Vietnam?</a>
             <a className="hover:text-[var(--gold)]" href="/fit">Private trips</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
-        <nav className="flex items-center justify-center gap-5 border-t border-black/10 bg-[#faf8f3] px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
+        <nav className="flex flex-wrap items-center justify-center gap-5 border-t border-black/10 bg-[#faf8f3] px-4 py-3 text-sm font-semibold xl:hidden" aria-label="Travel options">
           <a className="hover:underline" href="#pricing">Pricing</a>
           <TripSectionLink className="hover:underline">Itinerary</TripSectionLink>
+          <a className="hover:underline" href="/why-vietnam">Why Vietnam?</a>
           <a className="hover:underline" href="/fit">Private trips</a>
         </nav>
       </header>
