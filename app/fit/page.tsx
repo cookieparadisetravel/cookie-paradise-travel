@@ -119,6 +119,21 @@ export default async function FitTravelPage() {
             <article className="fit-city-story"><div className="fit-story-copy"><p className="fit-kicker">Hanoi</p><h3>Find your breakfast in the Old Quarter.</h3><p className="fit-body">I can find you a hotel within a morning walk of phở and egg coffee, or a quieter base with a guide to show you the Old Quarter.</p></div></article>
           </div>
         </div>
+          <article aria-labelledby="fit-sapa-title" className="fit-planner-grid" style={{ marginTop: "4rem" }}>
+            <figure style={{ margin: 0, width: "100%", maxWidth: "24rem" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="https://images.pexels.com/photos/33925058/pexels-photo-33925058.jpeg?auto=compress&cs=tinysrgb&w=1280"
+                srcSet="https://images.pexels.com/photos/33925058/pexels-photo-33925058.jpeg?auto=compress&cs=tinysrgb&w=640 640w, https://images.pexels.com/photos/33925058/pexels-photo-33925058.jpeg?auto=compress&cs=tinysrgb&w=1280 1280w"
+                sizes="(min-width: 1024px) 384px, (min-width: 768px) 40vw, 80vw"
+                alt="Two women in traditional clothing sharing a laugh beside a village gate in Sapa, Vietnam"
+                width={2071} height={3100} loading="lazy" decoding="async"
+                style={{ display: "block", width: "100%", height: "auto" }}
+              />
+              <figcaption className="fit-small">Sapa, Vietnam · Photo by <a href="https://www.pexels.com/photo/ethnic-women-in-traditional-attire-lao-cai-33925058/" target="_blank" rel="noopener noreferrer" style={{ textDecoration: "underline" }}>Son Hoa Nguyen / Pexels</a></figcaption>
+            </figure>
+            <div className="fit-story-copy"><p className="fit-kicker">Sapa</p><h3 id="fit-sapa-title">Make room for local life.</h3><p className="fit-body">Tell me what interests you, and I’ll help you make time for village visits and the people you meet along the way.</p></div>
+          </article>
       </div>
     </section>
 
