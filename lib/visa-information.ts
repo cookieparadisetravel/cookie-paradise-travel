@@ -13,8 +13,6 @@ export const visaSections:VisaSection[] = [
     {key:"nationality",label:"Current nationality",required:true},
     {key:"nationalityAtBirth",label:"Nationality at birth",required:true},
     {key:"religion",label:"Religion",required:true,hint:'Enter “None” if you do not have a religion.'},
-    {key:"email",label:"Email",type:"email",required:true},
-    {key:"phone",label:"Telephone (include country code)",type:"tel",required:true},
     {key:"multipleNationalities",label:"Do you have more than one nationality?",options:yesNo,required:true},
     {key:"multipleNationalitiesDetails",label:"Other nationalities",type:"textarea",when:"multipleNationalities"},
   ]},
@@ -29,9 +27,13 @@ export const visaSections:VisaSection[] = [
     {key:"previousPassport",label:"Have you entered Vietnam using a different passport?",options:yesNo,required:true},
     {key:"previousPassportDetails",label:"Previous passport details",type:"textarea",when:"previousPassport",hint:"Passport number, full name, nationality and date of birth used."},
   ]},
-  {title:"Contact & emergency contact",fields:[
+  {title:"Your contact information",description:"Enter your own contact details and home address here.",fields:[
+    {key:"email",label:"Your email",type:"email",required:true},
+    {key:"phone",label:"Your telephone (include country code)",type:"tel",required:true},
     {key:"homeAddress",label:"Permanent residential address",type:"textarea",required:true,hint:"Include city, state/province, postal code and country."},
     {key:"contactAddress",label:"Contact address, if different",type:"textarea"},
+  ]},
+  {title:"Emergency contact",description:"Who should we contact if you need help during your trip? Enter that person’s details below.",fields:[
     {key:"emergencyName",label:"Emergency contact’s full name",required:true},
     {key:"emergencyRelationship",label:"Relationship to you",required:true},
     {key:"emergencyPhone",label:"Emergency contact’s telephone",type:"tel",required:true},
