@@ -23,7 +23,7 @@ import { publicPageMetadata } from "@/lib/public-page-metadata";
 export const dynamic = "force-dynamic";
 
 export const metadata = publicPageMetadata({
-  title: "Vietnam Small-Group Tours | Cookie Paradise Travel",
+  title: "Vietnam Small-Group Tours | Vietnam Guided Tours",
   description: "Explore Vietnam on a hosted small-group tour or plan a private trip with Trung Le. Discover Ho Chi Minh City, the Mekong Delta, Hue and Hoi An.",
   path: "/",
 });
