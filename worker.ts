@@ -70,12 +70,12 @@ const worker = {
       return heroVideoResponse(request, env.ASSETS);
     }
     const response=await handler.fetch(request, env, ctx);
-    if (path === "/visa-information" || path === "/api/visa-information" || path.startsWith("/start-booking/") || (path === "/admin" || path.startsWith("/admin/")) || path.startsWith("/api/admin/")) {
+    if ((path === "/visa-information" || path.startsWith("/visa-information/")) || path === "/api/visa-information" || path.startsWith("/start-booking/") || (path === "/admin" || path.startsWith("/admin/")) || path.startsWith("/api/admin/")) {
       const headers=new Headers(response.headers);
       headers.set("Cache-Control","private, no-store");
       headers.set("Referrer-Policy","no-referrer");
       headers.set("X-Robots-Tag","noindex, nofollow");
-      if(path === "/visa-information" || path === "/api/visa-information") {
+      if((path === "/visa-information" || path.startsWith("/visa-information/")) || path === "/api/visa-information") {
         headers.set("Content-Security-Policy", "frame-ancestors 'none'; form-action 'self'; object-src 'none'; base-uri 'self'");
         headers.set("X-Frame-Options", "DENY");
       }
