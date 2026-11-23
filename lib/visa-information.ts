@@ -46,7 +46,7 @@ export const visaSections:VisaSection[] = [
     {key:"employerAddress",label:"Company / school address",type:"textarea"},
     {key:"employerPhone",label:"Company / school telephone",type:"tel"},
   ]},
-  {title:"Your plans in Vietnam",description:"Dates may be provisional. Trung will confirm the visa validity dates, entry and exit points, and accommodation before applying. Leave details blank if they are not arranged yet.",fields:[
+  {title:"Your plans in Vietnam",description:"Dates may be provisional. Trung will confirm the visa validity dates, entry and exit points, and accommodation before applying.",fields:[
     {key:"plannedArrival",label:"Planned arrival in Vietnam",type:"date"},
     {key:"plannedDeparture",label:"Planned departure from Vietnam",type:"date"},
     {key:"datesConfirmed",label:"Are your travel dates confirmed?",options:["Not yet","Yes"],required:true},
