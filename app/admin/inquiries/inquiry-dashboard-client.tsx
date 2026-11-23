@@ -29,6 +29,7 @@ import { AutopayStopAction } from "./autopay-stop-action";
 import { PaymentPreferenceInvitationAction } from "./payment-preference-invitation-action";
 import { StatusSelect } from "./status-select";
 import { InquiryNotes } from "./inquiry-notes";
+import { VisaInformationPanel } from "./visa-information-panel";
 import { TravelerAgreementManager } from "./traveler-agreement-manager";
 import { TravelerListInvitationAction } from "./traveler-list-invitation-action";
 import type { DashboardInquiry, GeneratedInvitationDraft, PaymentPreferenceGeneratedDraft, SquareMode } from "./dashboard-types";
@@ -62,7 +63,7 @@ type Props = {
 
 type MainTab = "active" | "all" | "waitlist" | "closed";
 type AttentionFilter = GuideEmailBucket | "new" | "missing_travelers" | "agreements" | "invoice_issues" | null;
-type DetailSection = "overview" | "travelers" | "payments" | "activity";
+type DetailSection = "overview" | "travelers" | "visa" | "payments" | "activity";
 type SortOption = "attention" | "newest" | "oldest" | "departure" | "name";
 type ChecklistState = "complete" | "pending" | "error";
 
@@ -450,7 +451,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, guideRequest, s
           <InquiryProgressChecklist inquiry={inquiry} onSectionChange={onSectionChange} />
 
           <nav aria-label="Inquiry detail sections" className="mt-4 flex overflow-x-auto border-t border-[var(--line)]" role="tablist">
-            {(["overview", "travelers", "payments", "activity"] as const).map((value) => (
+            {(["overview", "travelers", "visa", "payments", "activity"] as const).map((value) => (
               <button aria-controls={`inquiry-panel-${value}`} aria-selected={section === value} id={`inquiry-tab-${value}`} key={value} className={`min-h-12 whitespace-nowrap border-b-2 px-3 text-sm font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[var(--gold)]/30 sm:px-5 ${section === value ? "border-[var(--gold)] text-[var(--ink)]" : "border-transparent text-[var(--muted-ink)]"}`} onClick={() => onSectionChange(value)} role="tab" type="button">{detailSectionLabel(value)}</button>
             ))}
           </nav>
@@ -472,6 +473,7 @@ function InquiryDetail({ acceptanceDate, backButtonRef, inquiry, guideRequest, s
               <TravelerAgreementManager key={`agreements-${inquiry.id}-${inquiry.travelers.length}-${inquiry.acceptedTravelerIds.join("-")}-${Object.values(inquiry.agreementInvitationDeliveries).map((delivery) => delivery.sentAt).join("-")}`} inquiryId={inquiry.id} expectedPartySize={inquiry.partySize} initialRoomPreference={inquiry.roomPreference} initialTravelers={inquiry.travelers} agreementActive={inquiry.agreementActive} acceptedTravelerIds={inquiry.acceptedTravelerIds} initialInvitationDeliveries={inquiry.agreementInvitationDeliveries} invoiceExists={Boolean(inquiry.squareDepositInvoiceId)} />
             </div>
           )}
+          {section === "visa" && <VisaInformationPanel key={inquiry.id} inquiryId={inquiry.id} />}
           {section === "payments" && (
             <div className="space-y-4">
               <SectionHeading description={`This inquiry belongs to Square ${inquiry.squareEnvironment === "sandbox" ? "Sandbox testing" : "Production"}. Site payment mode: ${squareMode === "sandbox" ? "Sandbox" : "Production"}. A saved preference is not a payment.`} title="Payments" />
@@ -791,7 +793,7 @@ function departureSortValue(value: string) { if (value === "flexible") return Nu
 function readableValue(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 function formatCurrency(cents: number) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(cents / 100); }
 function formatTimestamp(value: string | null) { if (!value) return "Not recorded"; const date = new Date(value); if (Number.isNaN(date.getTime())) return "Not recorded"; return date.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "America/Indiana/Indianapolis" }); }
-function detailSectionLabel(section: DetailSection) { return section[0].toUpperCase() + section.slice(1); }
+function detailSectionLabel(section: DetailSection) { return section === "visa" ? "Visa information" : section[0].toUpperCase() + section.slice(1); }
 function attentionFilterLabel(filter: Exclude<AttentionFilter, null>) {
   const guideLabels: Record<string,string> = { needs_guide: 'Needs guide · no send recorded', guide_sent: 'Guide sent', guide_review: 'Check email status or permission', guide_inactive: 'No email action' };
   if (guideLabels[filter]) return guideLabels[filter];

@@ -13,10 +13,10 @@ export const metadata = {
   },
 };
 
-type DetailSection = "overview" | "travelers" | "payments" | "activity";
+type DetailSection = "overview" | "travelers" | "visa" | "payments" | "activity";
 
 function isDetailSection(value: unknown): value is DetailSection {
-  return value === "overview" || value === "travelers" || value === "payments" || value === "activity";
+  return value === "visa" || value === "overview" || value === "travelers" || value === "payments" || value === "activity";
 }
 
 export default async function InquiryDetailPage({
