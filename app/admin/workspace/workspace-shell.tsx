@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import { Compass, ExternalLink, Focus, Gift, Globe, ImageIcon, Inbox, LayoutDashboard, Leaf, LogOut, Menu, Search, Settings2, Users, X } from "lucide-react";
+import { Compass, ExternalLink, Focus, Gift, Globe, ImageIcon, Inbox, LayoutDashboard, Leaf, LogOut, Menu, Plane, Search, Settings2, Users, X } from "lucide-react";
 import { WorkspaceProvider, useWorkspace } from "./inspiration";
 import type { WorkspacePhoto } from "./content";
 
-const links=[{href:"/admin/today",label:"Today",icon:LayoutDashboard},{href:"/admin/inquiries",label:"Inquiries",icon:Inbox},{href:"/admin/referrals",label:"Partnerships",icon:Users},{href:"/admin/advisor-networks",label:"Travel advisor networks",icon:Globe},{href:"/admin/prospects",label:"Web prospects",icon:Compass},{href:"/admin/welcome-credits",label:"Welcome credits",icon:Gift},{href:"/admin/inspiration",label:"Inspiration",icon:ImageIcon},{href:"/admin/tools",label:"Tools & integrations",icon:Settings2}];
+const links=[{href:"/admin/today",label:"Today",icon:LayoutDashboard},{href:"/admin/inquiries",label:"Inquiries",icon:Inbox},{href:"/admin/flight-watch",label:"Vietnam flight watch",icon:Plane},{href:"/admin/referrals",label:"Partnerships",icon:Users},{href:"/admin/advisor-networks",label:"Travel advisor networks",icon:Globe},{href:"/admin/prospects",label:"Web prospects",icon:Compass},{href:"/admin/welcome-credits",label:"Welcome credits",icon:Gift},{href:"/admin/inspiration",label:"Inspiration",icon:ImageIcon},{href:"/admin/tools",label:"Tools & integrations",icon:Settings2}];
 export function WorkspaceShell({children,photos}:{children:ReactNode;photos:WorkspacePhoto[]}){return <div className="owner-workspace"><WorkspaceProvider initialPhotos={photos}><Shell>{children}</Shell></WorkspaceProvider></div>;}
 function Shell({children}:{children:ReactNode}){
   const pathname=usePathname(),{focus,toggleFocus}=useWorkspace(),[open,setOpen]=useState(false),menuButton=useRef<HTMLButtonElement>(null),sidebar=useRef<HTMLElement>(null);
