@@ -24,6 +24,7 @@ type MailerSendAttachment = {
 };
 
 type SendEmailInput = {
+  privateLink?: boolean;
   toEmail: string;
   toName: string;
   subject: string;
@@ -31,6 +32,14 @@ type SendEmailInput = {
   text: string;
   attachments?: MailerSendAttachment[];
 };
+
+export function transactionalEmailConfigured() {
+  const runtime = env as unknown as Record<string, string | undefined>;
+  return Boolean(runtime.MAILERSEND_API_TOKEN?.trim() && runtime.MAILERSEND_FROM_EMAIL?.trim());
+}
+export async function sendVisaInformationEmail(input: SendEmailInput) {
+  return sendEmail({ ...input, privateLink: true });
+}
 
 export async function sendTripGuideEmailMessage(input: SendEmailInput) {
   return sendEmail(input);
@@ -452,6 +461,7 @@ async function sendEmail(input: SendEmailInput): Promise<TransactionalEmailResul
       html: renderEmailDocument(`${input.html}${travelDisclosureEmailHtml()}`),
       text: `${input.text}\n\n${travelDisclosureText()}`,
       attachments: input.attachments,
+      ...(input.privateLink ? { settings: { track_clicks: false, track_opens: false, track_content: false } } : {}),
     }),
   });
 

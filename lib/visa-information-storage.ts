@@ -2,6 +2,8 @@ import { env } from "cloudflare:workers";
 import { hashVisaToken, isVisaToken, newVisaToken, type VisaAnswers } from "./visa-information.ts";
 
 export const visaSchema=[
+`CREATE TABLE IF NOT EXISTS visa_information_emails (id TEXT PRIMARY KEY, booking_id INTEGER NOT NULL, traveler_id INTEGER NOT NULL, recipient_email TEXT NOT NULL, status TEXT NOT NULL, created_at TEXT NOT NULL, sent_at TEXT, message_id TEXT)`,
+`CREATE INDEX IF NOT EXISTS visa_emails_traveler ON visa_information_emails(traveler_id,created_at)`,
 `CREATE TABLE IF NOT EXISTS visa_information_requests (id TEXT PRIMARY KEY, traveler_id INTEGER NOT NULL REFERENCES travelers(id), booking_id INTEGER NOT NULL REFERENCES booking_requests(id), token_hash TEXT NOT NULL UNIQUE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL, completed_at TEXT, revoked_at TEXT, submission_id TEXT)`,
 `CREATE INDEX IF NOT EXISTS visa_requests_traveler ON visa_information_requests(traveler_id,created_at)`,
 `CREATE TABLE IF NOT EXISTS visa_information_submissions (traveler_id INTEGER PRIMARY KEY REFERENCES travelers(id), booking_id INTEGER NOT NULL REFERENCES booking_requests(id), submission_id TEXT NOT NULL, answers TEXT NOT NULL, received_at TEXT NOT NULL, consent_at TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'received', updated_at TEXT NOT NULL)`,
