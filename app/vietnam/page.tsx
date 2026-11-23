@@ -26,7 +26,7 @@ export const metadata = publicPageMetadata({
 const pricing = [["4–8 guests", "$2,875"]];
 const inclusions = [
   { icon: Utensils, title: "Hotels & meals", description: "Seven hotel nights, seven breakfasts, five lunches and three dinners—including a home-hosted Mekong lunch and Hue royal dinner." },
-  { icon: Plane, title: "Flights & transfers", description: "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers and private boats." },
+  { icon: Plane, title: "Flights, transfers & Vietnam visa", description: "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers, private boats and your Vietnam visa." },
   { icon: Users, title: "Guides & experiences", description: "English-speaking local guides, admission fees and scheduled activities, from a vintage-Jeep food tour to Hoi An’s culinary challenge." },
 ];
 const questions = [

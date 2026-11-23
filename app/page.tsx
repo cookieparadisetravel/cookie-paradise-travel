@@ -240,7 +240,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="divide-y divide-[var(--line)]">
             {[
               [Utensils, "Hotels & meals", "Seven hotel nights, seven breakfasts, five lunches and three dinners, including a home-hosted Mekong lunch and Hue royal dinner."],
-              [Plane, "Flights & transfers", "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers and private boats."],
+              [Plane, "Flights, transfers & Vietnam visa", "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers, private boats and your Vietnam visa."],
               [Users, "Guides & experiences", "English-speaking local guides, admission fees and all scheduled activities, from the Jeep food tour to Hoi An’s culinary challenge."],
             ].map(([Icon, title, text]) => {
               const ItemIcon = Icon as typeof Plane;

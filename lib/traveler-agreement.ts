@@ -1,4 +1,4 @@
-import agreementV1 from "./traveler-agreement-v1-3.json" with { type: "json" };
+import agreementV1 from "./traveler-agreement-v1-4.json" with { type: "json" };
 import executiveSummary from "./traveler-agreement-summary.json" with { type: "json" };
 import { travelDisclosures as d } from "./travel-disclosures.ts";
 
@@ -32,7 +32,7 @@ export type AgreementDocument = {
 
 const approvedAgreementV1 = agreementV1 as AgreementDocument;
 
-// Version 1.3 sets the approved fixed price and 4–8 guest group without rewriting prior snapshots.
+// Version 1.4 includes the Vietnam visa and simplifies exclusions without rewriting prior snapshots.
 // Payment, cancellation, provider descriptions and other contractual terms are retained.
 const disclosureSection: AgreementSection = {
   heading: "California travel disclosures",
@@ -49,8 +49,8 @@ const disclosureSection: AgreementSection = {
 };
 export const currentTravelerAgreement: AgreementDocument = {
   ...approvedAgreementV1,
-  version: "1.3",
-  effectiveDate: "November 17, 2026",
+  version: "1.4",
+  effectiveDate: "November 23, 2026",
   sections: [disclosureSection, ...approvedAgreementV1.sections],
   executiveSummary,
 };

@@ -33,3 +33,8 @@ Other costs sum to $700–$1,300. Midpoint rounded to hundreds: $5,800. All publ
 Remove separate DAD–SGN flight and SGN overnight/transfers. Included Hoi An–DAD transfer remains included. New estimate assumes same-day airline connections without extra hotel nights; actual schedules may require an added allowance. Does not claim a nonstop DAD–IND flight. Domestic SGN–Hue flight stays included in tour and is not double counted.
 
 Validation: arithmetic and multiples-of-100 check; TypeScript, component lint and production build; live summary and disclosures checked after deployment.
+
+
+## November 23, 2026 inclusion update
+
+Vietnam visa is included in the unchanged $2,875 tour price. The rounded $100 incidental allowance now covers tips and mobile data only. Airport fast-track assistance is no longer mentioned in public exclusions. The overall estimate remains rounded to whole hundreds. Earlier research above is retained as historical context.
