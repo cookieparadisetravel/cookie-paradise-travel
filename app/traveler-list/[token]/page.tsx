@@ -11,6 +11,7 @@ export const metadata: Metadata = {
 };
 
 const departureLabels: Record<string, string> = {
+  "2027-12-27": "December 27, 2027",
   "2027-06-01": "June 1, 2027",
   "2027-06-29": "June 29, 2027",
   "2027-07-27": "July 27, 2027",

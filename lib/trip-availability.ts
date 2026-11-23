@@ -1,10 +1,9 @@
-export const vietnamDeparture = {
-  tripSlug: "vietnam-southern-charms-central-heritage",
-  departure: "2027-06-01",
-  label: "June 1, 2027",
-  minimum: 4,
-  capacity: 8,
-} as const;
+export const vietnamDepartures = [
+  { tripSlug: "vietnam-southern-charms-central-heritage", departure: "2027-06-01", label: "June 1, 2027", dateRange: "June 1–8, 2027", endDate: "2027-06-08", timing: "june_2027", minimum: 4, capacity: 8 },
+  { tripSlug: "vietnam-southern-charms-central-heritage", departure: "2027-12-27", label: "December 27, 2027", dateRange: "December 27, 2027–January 3, 2028", endDate: "2028-01-03", timing: "december_2027", minimum: 4, capacity: 8 },
+] as const;
+export const vietnamDeparture = vietnamDepartures[0];
+export const isVietnamDeparture = (value: string) => vietnamDepartures.some(item => item.departure === value);
 
 export type AvailabilityBooking = {
   partySize: number;

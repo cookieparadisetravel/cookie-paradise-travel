@@ -13,6 +13,7 @@ export default async function StartBookingPage({params}:{params:Promise<{token:s
     trip=await env.DB!.prepare("SELECT departure,room_preference AS room,party_size AS partySize,seller_of_travel_state_resident AS sellerOfTravelStateResident,residence_state AS residenceState FROM booking_requests WHERE id=?")
       .bind(invitation.sale.bookingId).first<typeof trip>() ?? undefined;
   }
+  if (!trip && invitation?.sale.timing === "december_2027") trip = { departure: "2027-12-27", room: "shared", partySize: 1 };
   return <main className="min-h-screen bg-[var(--sand)] px-5 py-16 text-[var(--ink)]"><section className="mx-auto max-w-2xl rounded-3xl border border-[var(--line)] bg-white p-7 sm:p-10">
     <p className="text-xs font-bold uppercase tracking-widest text-[var(--orange)]">Cookie Paradise Travel Company</p>
     <h1 className="mt-4 font-serif text-4xl">{invitation?.completedAt ? "Your booking request has been received" : invitation ? "Continue your Vietnam booking" : "This booking link is unavailable"}</h1>

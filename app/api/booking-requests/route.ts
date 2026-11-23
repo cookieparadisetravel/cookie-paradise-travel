@@ -14,7 +14,7 @@ import { getSalesBookingInvitation, completeSalesBookingInvitation } from "@/lib
 import { sameOrigin } from "@/lib/lead-request";
 import { referralFromCookie } from "@/lib/salon-referrals";
 
-const validDepartures = new Set(["2027-06-01"]);
+import { isVietnamDeparture } from "@/lib/trip-availability";
 const validRooms = new Set(["shared", "private"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
 const validBookingIntents = new Set(["ready_to_book", "needs_information"]);
@@ -90,7 +90,7 @@ export async function POST(request: Request) {
     if (!firstName || firstName.length > 60 || !lastName || lastName.length > 60 || fullName.length > 121 || !emailSchema.safeParse(email).success) {
       return Response.json({ error: "Valid first name, last name and email are required." }, { status: 400 });
     }
-    if (!validDepartures.has(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 8) {
+    if (!isVietnamDeparture(departure) || !validRooms.has(room) || !Number.isInteger(partySize) || partySize < 1 || partySize > 8) {
       return Response.json({ error: "Please review the trip selections." }, { status: 400 });
     }
     if (!phone || phone.length > 40) {

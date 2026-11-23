@@ -200,7 +200,7 @@ test("guide email escapes names and accurately describes dates, price and lack o
   const m = await loadModule<{ buildTripGuideEmail(input: { firstName: string; timing: string; stopToken: string }): { html: string; text: string } }>("lib/trip-guide-email.ts", { "./consultation": consultation, "./trip-guide": guide, "./mailersend-transactional": { sendTripGuideEmailMessage: async () => ({}) } });
   const message = m.buildTripGuideEmail({ firstName: "<Traveler>", timing: "future", stopToken: uuid() });
   assert.ok(message.html.includes("&lt;Traveler&gt;")); assert.ok(!message.html.includes("<Traveler>"));
-  assert.match(message.text, /future dates have not been announced/); assert.match(message.text, /US\$2,875/); assert.match(message.text, /No payment was collected/);
+  assert.match(message.text, /December 27, 2027–January 3, 2028/); assert.match(message.text, /US\$2,875/); assert.match(message.text, /No payment was collected/);
 });
 
 test("public intake enforces origin, bounded bodies, explicit contact consent and Turnstile before persistence", async () => {
@@ -464,4 +464,15 @@ test("No follow-up permission still fulfills the requested guide exactly once, p
   assert.equal(saved.marketing_consent,0); assert.equal(saved.contact_consented_at,""); assert.equal(saved.guide_email_status,"sent");
   const pref=f.sqlite.prepare("SELECT contact_consent,followup_mode FROM trip_guide_submission_preferences LIMIT 1").get()!;
   assert.equal(pref.contact_consent,0); assert.equal(pref.followup_mode,"guide_only");
+});
+
+ test("December guide interest is retained and remains eligible after the June departure", async () => {
+  const f = await fixture();
+  await f.save({ ...leadInput(), timing: "december_2027", submittedAt: "2027-07-01T12:00:00Z" });
+  assert.equal(f.sqlite.prepare("SELECT travel_timing FROM trip_guide_leads").get()!.travel_timing, "december_2027");
+  const before = f.emails.length;
+  await f.run(new Date("2027-07-04T12:00:00Z"));
+  assert.equal(f.emails.length, before + 1);
+  await f.run(new Date("2027-12-27T12:00:00Z"));
+  assert.equal(f.emails.length, before + 1);
 });

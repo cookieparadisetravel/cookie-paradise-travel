@@ -1,5 +1,6 @@
 "use client";
 
+import { vietnamDepartures, isVietnamDeparture } from "@/lib/trip-availability";
 import { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, CheckCircle2, Loader2, X } from "lucide-react";
 import {
@@ -90,7 +91,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
   const [status, setStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [departure, setDeparture] = useState(initialTrip?.departure==="2027-06-01" ? initialTrip.departure : "2027-06-01");
+  const [departure, setDeparture] = useState(initialTrip?.departure && isVietnamDeparture(initialTrip.departure) ? initialTrip.departure : vietnamDepartures[0].departure);
   const [room, setRoom] = useState(initialTrip?.room==="private" ? "private" : "shared");
   const [partySize, setPartySize] = useState(String(initialTrip?.partySize || 1));
   const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">(bookingInvitationToken ? "ready_to_book" : "");
@@ -289,7 +290,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
               <DialogClose className="absolute right-3 top-3 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-white/70" aria-label="Close request form">
                 <X className="h-5 w-5" />
               </DialogClose>
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Discover Southern Vietnam • 2027</p>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[var(--gold)]">Discover Southern Vietnam</p>
               <DialogTitle className="font-serif text-3xl">{bookingInvitationToken ? "Complete your booking request" : "Request a place"}</DialogTitle>
               <DialogDescription className="text-sm leading-6 text-white/70">
                 Tell us which departure works for you. No payment is collected and this form does not confirm a reservation.
@@ -314,7 +315,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
                     data-field="departure"
                   ><SelectValue placeholder="Choose a date" /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="2027-06-01">June 1, 2027</SelectItem>
+                    {vietnamDepartures.map(item => <SelectItem key={item.departure} value={item.departure}>{item.dateRange}</SelectItem>)}
                   </SelectContent>
                 </Select>
                 {fieldErrors.departure && <span id="departure-error" className="mt-1 text-xs font-semibold text-red-700">{fieldErrors.departure}</span>}

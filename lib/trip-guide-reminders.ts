@@ -24,7 +24,7 @@ const candidatesSql = `WITH latest AS (
   FROM latest l WHERE julianday(?) - julianday(l.cycle_at) >= 3
   AND l.status IN ('new','contacted','considering') AND l.current_timing!='future' AND l.consultation_booked_at IS NULL
   AND l.followup_mode='automatic' AND l.current_contact_consent=1
-  AND substr(?,1,10) < '2027-06-01'
+  AND substr(?,1,10) < CASE WHEN l.current_timing='june_2027' THEN '2027-06-01' ELSE '2027-12-27' END
   AND NOT EXISTS (SELECT 1 FROM booking_requests b WHERE lower(trim(b.email))=l.email AND b.square_environment='production'
     AND (b.status!='closed' OR julianday(coalesce((SELECT max(created_at) FROM inquiry_followup_history
       WHERE booking_request_id=b.id AND event='closed'),b.created_at))>=julianday(l.cycle_at)))

@@ -15,7 +15,7 @@ export function TripBudget() {
         <div className="grid gap-8 lg:grid-cols-[1fr_1.2fr] lg:gap-12">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[.1em]">Plan for the whole trip</p>
-            <h3 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Your total budget from Indianapolis</h3>
+            <h3 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Your June trip budget from Indianapolis</h3>
             <p className="mt-5 text-[clamp(2rem,5vw,3rem)] font-bold leading-tight">{roundedTripBudget}</p>
             <p className="mt-2 text-base leading-7">Estimated per person · Shared room · 4–8 guests</p>
             <p className="mt-4 text-base leading-7">About <strong>{suggestedTripBudget} per person</strong> is a useful starting budget for the tour, economy flights and everyday travel expenses.</p>

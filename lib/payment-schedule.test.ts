@@ -207,3 +207,11 @@ test("identifies when the standard payment schedule must require full payment", 
   assert.equal(isFullPaymentRequired("2027-06-01", "2027-04-01"), true);
   assert.equal(getFinalPaymentDeadline("2027-06-01", "2026-10-01"), "2027-04-01");
 });
+
+test("December departure uses its own October deadline and installments total the trip price", () => {
+  const plan = createCheckedPaymentPlan({ bookingTotalCents: 287500, partySize: 1, departure: "2027-12-27", acceptanceDate: "2026-11-23" });
+  assert.equal(plan.initialAmountCents, 50000);
+  assert.equal(plan.finalPaymentDeadline, "2027-10-27");
+  assert.equal(plan.installments.at(-1)?.dueDate, "2027-10-27");
+  assert.equal(plan.installments.length, 12);
+});

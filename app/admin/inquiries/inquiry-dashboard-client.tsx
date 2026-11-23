@@ -93,6 +93,7 @@ type GeneratedLinkCache = {
 };
 
 const departureLabels: Record<string, string> = {
+  "2027-12-27": "December 27, 2027",
   "2027-06-01": "Jun 1, 2027",
   "2027-06-29": "Jun 29, 2027",
   "2027-07-27": "Jul 27, 2027",

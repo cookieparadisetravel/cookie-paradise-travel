@@ -6,9 +6,9 @@ const escape = (text: string) => text.replace(/[&<>"']/g, c => ({ "&": "&amp;", 
 const bodyStyle = "font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000";
 export function buildTripGuideEmail(input: { firstName: string; timing: LeadTiming; stopToken: string; includeReminders?: boolean }) {
   const stopUrl = `https://cookieparadisetravel.com/trip-guide/stop/${encodeURIComponent(input.stopToken)}`;
-  const timing = input.timing === "future"
-    ? "You mentioned a future departure. This guide describes our June 1-8, 2027 trip; future dates have not been announced. You can still book a call to discuss your interests."
-    : "Our next departure is June 1-8, 2027: eight days and seven nights through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An.";
+  const timing = input.timing === "december_2027"
+    ? "You selected December 27, 2027–January 3, 2028. Our eight-day itinerary visits Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. Your selected departure runs across New Year."
+    : "Choose June 1–8, 2027 or December 27, 2027–January 3, 2028 for eight days and seven nights through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. You can book a call to discuss either date or a future trip.";
   const price = "The shared-room price is fixed at US$2,875 per traveler. Each group has a minimum of 4 and maximum of 8 guests, plus your host; the price stays the same. International airfare is not included.";
   const assurance = "This is an information request. No payment was collected and no reservation has been confirmed.";
   return {

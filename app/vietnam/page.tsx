@@ -11,13 +11,13 @@ import { ReferralBrand, ReferralProvider } from "../components/referral-brand";
 import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
 import { consultationBookingUrl } from "@/lib/consultation";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
-import { vietnamDeparture } from "@/lib/trip-availability";
+import { vietnamDepartures } from "@/lib/trip-availability";
 import { TripAvailability } from "../components/trip-availability";
 
 export const dynamic = "force-dynamic";
 export const metadata = publicPageMetadata({
-  title: "Vietnam Small-Group Tour, June 2027 | Free Itinerary & Pricing",
-  description: "Discover Southern Vietnam, June 1–8, 2027: an 8-day tour for 4–8 guests through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. See pricing, a full trip budget and the free itinerary.",
+  title: "Vietnam Small-Group Tours, June & December 2027 | Itinerary & Pricing",
+  description: "Discover Southern Vietnam, June 1–8, 2027 or December 27, 2027–January 3, 2028: an 8-day tour for 4–8 guests through Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. See pricing, a full trip budget and the free itinerary.",
   path: "/vietnam",
   image: "/vietnam-hero-poster.webp",
   imageAlt: "Discover Southern Vietnam small-group tour",
@@ -30,15 +30,15 @@ const inclusions = [
   { icon: Users, title: "Guides & experiences", description: "English-speaking local guides, admission fees and scheduled activities, from a vintage-Jeep food tour to Hoi An’s culinary challenge." },
 ];
 const questions = [
-  ["Which flights should I book?", "Plan to arrive in Ho Chi Minh City at Tan Son Nhat International Airport (SGN) on June 1, 2027, and depart from Da Nang International Airport (DAD), near Hoi An, on June 8. Your U.S. departure and arrival dates depend on the flight schedule. Confirm flight plans with Trung before purchasing."],
+  ["Which flights should I book?", "Plan to arrive in Ho Chi Minh City at Tan Son Nhat International Airport (SGN) on June 1 or December 27, 2027, and depart from Da Nang International Airport (DAD), near Hoi An, on June 8, 2027 or January 3, 2028, respectively. Your U.S. departure and arrival dates depend on the flight schedule. Confirm flight plans with Trung before purchasing."],
   ["Can couples share a room?", "Yes. Couples can request a queen bed or separate beds, subject to availability. The private-room supplement is for a traveler who wants a room to themselves."],
   ["Who hosts the trip?", "Your departure will be hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides. Ask Trung who is planned for your trip."],
-  ["What if June 2027 does not work for me?", "Choose ‘A future departure’ on the itinerary form. We can discuss your interests; future group departure dates have not been announced. Private trips can be planned around your own dates."],
+  ["Which departure dates can I choose?", "Choose June 1–8, 2027 or December 27, 2027–January 3, 2028. Each departure has its own group of 4–8 guests. Private trips can also be planned around your own dates."],
 ];
 
 export default async function VietnamTrip() {
   const partner = getSalonPartner((await cookies()).get(REFERRAL_COOKIE)?.value);
-  const availability = await getPublicTripAvailability(vietnamDeparture.tripSlug, vietnamDeparture.departure, vietnamDeparture.capacity);
+  const availabilities = await Promise.all(vietnamDepartures.map(item => getPublicTripAvailability(item.tripSlug, item.departure, item.capacity)));
 
   return <ReferralProvider partner={partner}>
     <main className="bright-home min-h-screen bg-[var(--sand)] text-[#171717]">
@@ -59,7 +59,7 @@ export default async function VietnamTrip() {
           <div className="hero-essential-copy">
             <p className="mb-5 text-sm font-semibold uppercase tracking-[.14em] [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">Small-group Vietnam tour</p>
             <h1 id="vietnam-title" className="max-w-4xl font-serif text-[clamp(2.8rem,7vw,6rem)] font-normal leading-[1.08] tracking-[-.025em] [text-shadow:0_2px_16px_rgba(0,0,0,.65)]">Discover<br />Southern Vietnam</h1>
-            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 · 8 days · 4–8 guests</p>
+            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 or December 27, 2027–January 3, 2028 · 8 days · 4–8 guests</p>
             <a href="#get-guide" className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[var(--gold)] px-7 py-3 text-base font-bold text-[#171717] shadow-lg hover:bg-[#ffd078]">Get the itinerary & pricing <ArrowRight aria-hidden="true" size={18} /></a>
           </div>
           <a href="https://unsplash.com/photos/lzjlYsMGYXg" target="_blank" rel="noopener noreferrer" className="absolute bottom-4 right-5 text-xs underline underline-offset-2 [text-shadow:0_1px_5px_black]">Photo: Nguyen Minh</a>
@@ -75,9 +75,9 @@ export default async function VietnamTrip() {
           <div>
             <p className="text-sm font-semibold uppercase tracking-[.12em] text-[#805018]">Price & payment</p>
             <h2 id="pricing-title" className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">Plan your trip with the full picture.</h2>
-            <p className="mt-5 max-w-xl text-lg leading-8"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance in monthly installments, with the final payment due April 1, 2027—two months before departure.</p>
-            <div className="availability-light"><TripAvailability availability={availability} label={vietnamDeparture.label} /></div>
-            <div className="mt-6 flex flex-wrap items-center gap-5"><BookingDialog triggerLabel="Request a spot" compact /><a href="/#faq" className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">Cancellation & booking terms</a></div>
+            <p className="mt-5 max-w-xl text-lg leading-8"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance in monthly installments, with the final payment due two months before departure: April 1 for the June trip or October 27 for the December trip.</p>
+            <div className="availability-light grid gap-4">{vietnamDepartures.map((item, index) => <div key={item.departure}><TripAvailability availability={availabilities[index]} label={item.dateRange} /><BookingDialog triggerLabel={`Request ${index === 0 ? "June" : "December"} departure`} compact initialTrip={{ departure: item.departure, room: "shared", partySize: 1 }} /></div>)}</div>
+            <div className="mt-6 flex flex-wrap items-center gap-5"><a href="/#faq" className="inline-flex min-h-11 items-center text-sm font-semibold underline underline-offset-4">Cancellation & booking terms</a></div>
           </div>
           <div className="rounded-[2rem] border border-black/15 bg-white p-6 sm:p-8">
             <h3 className="font-serif text-2xl">Tour price per person</h3>
