@@ -1,3 +1,4 @@
+import { requiresResidencyReview, hasClearedCaliforniaResidencyHold, RESIDENCY_REVIEW_HOLD_MESSAGE } from "@/lib/residency-review";
 import { env } from "cloudflare:workers";
 import { and, eq, isNotNull, isNull, notExists, sql } from "drizzle-orm";
 import { getSquareBookingEnvironmentError } from "@/lib/square-config";
@@ -58,8 +59,8 @@ export async function startAutomatedReadyToBookFlow(input: {
   if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return "not_requested" as const;
 
   try {
-    if (inquiry.sellerOfTravelStateResident) {
-      await setAutomationState(input.inquiryId, "blocked", "Seller-of-travel residency screening requires owner review before agreements or payment steps are sent.");
+    if (requiresResidencyReview(inquiry)) {
+      await setAutomationState(input.inquiryId, "blocked", RESIDENCY_REVIEW_HOLD_MESSAGE);
       return "blocked" as const;
     }
 
@@ -86,8 +87,8 @@ export async function continueAutomatedBookingAfterTravelerList(input: {
   const [inquiry] = await db.select().from(bookingRequests)
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
-  if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || inquiry.sellerOfTravelStateResident) return;
-  if (inquiry.automatedBookingStatus !== "traveler_list_sent") return;
+  if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || requiresResidencyReview(inquiry)) return;
+  if (inquiry.automatedBookingStatus !== "traveler_list_sent" && !hasClearedCaliforniaResidencyHold(inquiry)) return;
   if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return;
 
   try {
@@ -107,7 +108,7 @@ export async function continueAutomatedBookingAfterAgreement(input: {
   const [inquiry] = await db.select().from(bookingRequests)
     .where(eq(bookingRequests.id, input.inquiryId))
     .limit(1);
-  if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || inquiry.sellerOfTravelStateResident) return;
+  if (!inquiry || inquiry.bookingIntent !== "ready_to_book" || requiresResidencyReview(inquiry)) return;
   if (getSquareBookingEnvironmentError(inquiry.squareEnvironment, env as unknown as Record<string, string | undefined>)) return;
 
   const readiness = await getAgreementReadiness(inquiry.id, inquiry.partySize);
@@ -120,7 +121,7 @@ export async function continueAutomatedBookingAfterAgreement(input: {
   }).where(and(
     eq(bookingRequests.id, inquiry.id),
     eq(bookingRequests.bookingIntent, "ready_to_book"),
-    eq(bookingRequests.automatedBookingStatus, "agreements_sent"),
+    eq(bookingRequests.automatedBookingStatus, hasClearedCaliforniaResidencyHold(inquiry) ? "blocked" : "agreements_sent"),
   )).returning({ id: bookingRequests.id });
   if (claimed.length === 0) return;
 

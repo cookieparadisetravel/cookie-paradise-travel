@@ -26,7 +26,7 @@ export async function sendDueAgreementReminders(now = new Date()) {
     eq(bookingRequests.squareEnvironment, "production"),
     inArray(bookingRequests.status, ["new", "considering", "booking_in_progress", "reserved", "contacted", "qualified"]),
     or(eq(bookingRequests.departure, "flexible"), gt(bookingRequests.departure, timestamp.slice(0, 10))),
-    eq(bookingRequests.sellerOfTravelStateResident, false),
+    or(eq(bookingRequests.sellerOfTravelStateResident, false), sql`upper(trim(${bookingRequests.residenceState})) = 'CA'`),
     isNotNull(bookingRequests.companyAcceptedAt),
     isNotNull(bookingRequests.companyAcceptedBy),
     isNull(agreementInvitations.acceptedAt),

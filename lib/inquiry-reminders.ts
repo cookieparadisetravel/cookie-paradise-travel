@@ -24,7 +24,7 @@ const candidatesSql = `WITH initial AS (
           WHERE lower(trim(closed.email))=lower(trim(b.email)) AND closed.square_environment='production' AND closed.status='closed'),0)
       ORDER BY julianday(first.created_at), first.id LIMIT 1)
     AND julianday(?) - julianday(b.created_at) >= 3
-    AND b.contact_consent = 1 AND b.seller_of_travel_state_resident = 0
+    AND b.contact_consent = 1 AND (b.seller_of_travel_state_resident = 0 OR upper(trim(b.residence_state)) = 'CA')
     AND b.status IN ('new', 'considering', 'contacted')
     AND (b.departure = 'flexible' OR b.departure > substr(?, 1, 10))
     AND NOT EXISTS (SELECT 1 FROM booking_requests other

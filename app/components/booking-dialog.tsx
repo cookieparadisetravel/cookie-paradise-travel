@@ -462,7 +462,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
                       }
                     }}
                   />
-                  <span><strong>I live in a state that may require seller-of-travel registration.</strong><br /><span className="text-[var(--muted-ink)]">Check if you live in CA, FL, HI, MD, or WA.</span></span>
+                  <span><strong>I live in California, Florida, Hawaii, Maryland, or Washington.</strong><br /><span className="text-[var(--muted-ink)]">Select your state below.</span></span>
                 </label>
                 {sellerOfTravelStateResident && (
                   <div className="field-label mt-4">State of residence <span className="text-red-700">*</span>

@@ -222,3 +222,14 @@ test("storage initializes before use and remains compatible with later migration
   assert.ok(sqlite.prepare("PRAGMA index_list(agreement_reminders)").all().some((row) => row.name === "agreement_reminders_token_hash_unique" && row.unique === 1));
   sqlite.close();
 });
+
+
+test("California can receive agreement reminders while other flagged states remain held", async () => {
+  const f = await fixture();
+  for (const state of ["CA", "FL", "HI", "MD", "WA"]) {
+    const { id } = await f.add();
+    f.sqlite.prepare("UPDATE booking_requests SET seller_of_travel_state_resident=1,residence_state=? WHERE id=?").run(state, id);
+  }
+  assert.deepEqual(await f.run(), { sent: 1, failed: 0 });
+  assert.equal(f.emails[0].toEmail, "recorded1@example.test");
+});

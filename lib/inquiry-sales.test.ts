@@ -239,14 +239,14 @@ test("booking API uses the handoff once, retains the original referral, and leav
     "@/db/schema":schema,"@/db":{getDb:()=>db},"drizzle-orm":builders,"cloudflare:workers":{env:f.runtime},zod:{z},
     "@/lib/mailerlite":{addConsentedSubscriber:async()=>{throw new Error("No new marketing consent");}},
     "@/lib/owner-notification":{sendOwnerInquiryNotification:async(value:{referralCode:string})=>{assert.equal(value.referralCode,"columbus-uppercuts");notifications++;return "sent";}},
-    "@/lib/booking-automation":{startAutomatedReadyToBookFlow:async(value:{inquiryId:number})=>{automationCalls++;const row=f.sqlite.prepare("SELECT seller_of_travel_state_resident,residence_state FROM booking_requests WHERE id=?").get(value.inquiryId)!;assert.equal(row.seller_of_travel_state_resident,1);assert.equal(row.residence_state,"CA");f.sqlite.prepare("UPDATE booking_requests SET automated_booking_status='blocked' WHERE id=?").run(value.inquiryId);return "blocked";}},
+    "@/lib/booking-automation":{startAutomatedReadyToBookFlow:async(value:{inquiryId:number})=>{automationCalls++;const row=f.sqlite.prepare("SELECT seller_of_travel_state_resident,residence_state FROM booking_requests WHERE id=?").get(value.inquiryId)!;assert.equal(row.seller_of_travel_state_resident,1);assert.equal(row.residence_state,"FL");f.sqlite.prepare("UPDATE booking_requests SET automated_booking_status='blocked' WHERE id=?").run(value.inquiryId);return "blocked";}},
     "@/lib/safe-error":safe,"@/lib/square-config":{getSquareEnvironment:()=>"production"},"@/lib/salon-referrals":referrals,
     "@/lib/inquiry-sales":f.sales,"@/lib/inquiry-booking-invitations":f.invitations,"@/lib/lead-request":requestHelpers,
   });
   const original=globalThis.fetch;
   globalThis.fetch=async()=>Response.json({success:true,action:"booking_inquiry"});
   try {
-    const post=()=>route.POST(new Request("https://example.test/api/booking-requests",{method:"POST",headers:{Origin:"https://example.test","Content-Type":"application/json",cookie:"cp_travel_referral=gossip-nails"},body:JSON.stringify({...input,sellerOfTravelStateResident:true,residenceState:"CA",contactConsent:true,bookingIntent:"ready_to_book",turnstileToken:"test",bookingInvitationToken:token})}));
+    const post=()=>route.POST(new Request("https://example.test/api/booking-requests",{method:"POST",headers:{Origin:"https://example.test","Content-Type":"application/json",cookie:"cp_travel_referral=gossip-nails"},body:JSON.stringify({...input,sellerOfTravelStateResident:true,residenceState:"FL",contactConsent:true,bookingIntent:"ready_to_book",turnstileToken:"test",bookingInvitationToken:token})}));
     const response=await post();assert.equal(response.status,201);assert.equal((await response.json() as {automationStatus:string}).automationStatus,"blocked");
     const repeat=await post();assert.equal(repeat.status,200);assert.equal((await repeat.json() as {automationStatus:string}).automationStatus,"blocked");
     assert.equal(automationCalls,1);assert.equal(notifications,1);assert.equal(f.sqlite.prepare("SELECT count(*) n FROM booking_requests").get()!.n,1);

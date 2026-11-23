@@ -388,3 +388,14 @@ test("closing a full inquiry also suppresses duplicates submitted before closure
   f.add("customer@example.test","2026-11-02T12:00:00Z");
   await f.run(new Date("2026-11-05T12:00:00Z")); assert.equal(f.emails.length,1);
 });
+
+
+test("California inquiry follow-up is allowed while other flagged states remain held", async () => {
+  const f = await fixture();
+  for (const state of ["CA", "FL", "HI", "MD", "WA"]) {
+    const id = f.add(`${state.toLowerCase()}@example.test`);
+    f.sqlite.prepare("UPDATE booking_requests SET seller_of_travel_state_resident=1,residence_state=? WHERE id=?").run(state, id);
+  }
+  await f.run();
+  assert.deepEqual(f.emails.map(e => e.toEmail), ["ca@example.test"]);
+});

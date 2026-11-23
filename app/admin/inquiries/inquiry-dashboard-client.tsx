@@ -1,5 +1,7 @@
 "use client";
 
+import { requiresResidencyReview, hasClearedCaliforniaResidencyHold } from "@/lib/residency-review";
+
 import { getSalonPartner } from "@/lib/salon-referrals";
 import { travelDisclosures } from "@/lib/travel-disclosures";
 
@@ -384,7 +386,7 @@ function InquiryList({ entries, onOpen, onOpenGuide }: { entries: InquiryFeedEnt
                 <p className="truncate text-sm text-[var(--muted-ink)]">{inquiry.email}</p>
                 {entry.guide && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Guide requested · {guideEmailState(entry.guide).label}</p>}
                 {inquiry.referralCode && <p className="mt-1 text-xs font-bold text-[var(--orange)]">Referred by {getSalonPartner(inquiry.referralCode)?.name ?? inquiry.referralCode}</p>}
-                {inquiry.sellerOfTravelStateResident && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[0.68rem] font-extrabold text-red-800"><ShieldAlert className="h-3 w-3" /> Review {inquiry.residenceState ?? "state"} residency</p>}
+                {requiresResidencyReview(inquiry) && <p className="mt-1 inline-flex items-center gap-1 rounded-full bg-red-100 px-2 py-0.5 text-[0.68rem] font-extrabold text-red-800"><ShieldAlert className="h-3 w-3" /> Review {inquiry.residenceState ?? "state"} residency</p>}
               </div>
               <div className="grid grid-cols-2 gap-3 xl:block">
                 <MobileLabel>Departure / party</MobileLabel>
@@ -547,8 +549,8 @@ function OverviewSection({ inquiry, guideRequest, salesProcess }: { inquiry: Das
         <p className="mt-3 leading-7">Record when you gave the oral disclosure in the inquiry notes. The written notices appear on the payment-review page, future agreements and invoices. {travelDisclosures.registration} · {travelDisclosures.validity}</p>
         <a className="mt-3 inline-block font-semibold underline" href="/travel-disclosures" target="_blank" rel="noreferrer">Open the customer disclosures</a>
       </details>
-      {inquiry.sellerOfTravelStateResident && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
-      {inquiry.automatedBookingError && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><AlertCircle className="h-5 w-5" /> Automated booking needs attention</p><p className="mt-1 text-sm leading-6">{inquiry.automatedBookingError}</p></div>}
+      {requiresResidencyReview(inquiry) && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><ShieldAlert className="h-5 w-5" /> Seller-of-travel screening required</p><p className="mt-1 text-sm leading-6">The customer reported residence in {stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "a regulated state"}. Review registration requirements before proceeding with a sale.</p></div>}
+      {inquiry.automatedBookingError && !hasClearedCaliforniaResidencyHold(inquiry) && <div className="rounded-2xl border border-red-300 bg-red-50 p-4 text-red-950"><p className="flex items-center gap-2 font-bold"><AlertCircle className="h-5 w-5" /> Automated booking needs attention</p><p className="mt-1 text-sm leading-6">{inquiry.automatedBookingError}</p></div>}
       {salesProcess && <InquirySalesPanel key={`${salesProcess.id}-${salesProcess.updatedAt}`} sale={salesProcess} />}
       <section className="rounded-2xl border border-[var(--line)] bg-white p-4 sm:p-5">
         <SectionHeading description="Information submitted with the inquiry." title="Overview" />
@@ -562,7 +564,7 @@ function OverviewSection({ inquiry, guideRequest, salesProcess }: { inquiry: Das
           <InfoItem label="Room preference">{readableValue(inquiry.roomPreference)}</InfoItem>
           <InfoItem label="Referral partner">{getSalonPartner(inquiry.referralCode)?.name ?? "Direct inquiry"}</InfoItem>
           <InfoItem label="Customer intent">{bookingIntentLabel(inquiry.bookingIntent)}</InfoItem>
-          <InfoItem label="Automated booking">{automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>
+          <InfoItem label="Automated booking">{hasClearedCaliforniaResidencyHold(inquiry) ? "Ready to continue" : automationStatusLabel(inquiry.automatedBookingStatus)}</InfoItem>
           <InfoItem label="Trip contact consent">{inquiry.contactConsent ? "Recorded" : "Not recorded"}</InfoItem>
           <InfoItem label="Marketing consent">{inquiry.marketingConsent ? "Recorded" : "Not given"}</InfoItem>
           <InfoItem label="Payment environment">Square {inquiry.squareEnvironment === "sandbox" ? "Sandbox" : "Production"}</InfoItem>
@@ -736,9 +738,9 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
 
   return [
     { label: "Inquiry received", detail: `Submitted ${formatTimestamp(inquiry.createdAt)}.`, state: "complete", section: "activity" },
-    inquiry.sellerOfTravelStateResident
+    requiresResidencyReview(inquiry)
       ? { label: "Residency screening", detail: `Review ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the reported state"} requirements.`, state: "error", section: "overview" }
-      : { label: "Residency screening", detail: "No regulated-state flag was reported.", state: "complete", section: "overview" },
+      : { label: "Residency screening", detail: inquiry.residenceState === "CA" ? "California residence recorded; automatic booking is available." : "No residency review is required.", state: "complete", section: "overview" },
     travelerItem,
     agreementItem,
     inquiry.confirmedBookingTotalCents && inquiry.confirmedBookingTotalCents > 0
@@ -755,7 +757,7 @@ function progressChecklistFor(inquiry: DashboardInquiry): ChecklistItem[] {
 function workflowFor(inquiry: DashboardInquiry): { label: string; detail: string; actionLabel: string; section: DetailSection; blocked: boolean } {
   if (inquiry.paymentEnvironmentError) return { label: "Review payment environment", detail: inquiry.paymentEnvironmentError, actionLabel: "Review payments", section: "payments", blocked: true };
   if (inquiry.travelers.length > inquiry.partySize) return { label: "Resolve traveler-count mismatch", detail: `${inquiry.travelers.length} traveler records exist for a party of ${inquiry.partySize}. Agreement and payment steps remain blocked until the extra record is resolved.`, actionLabel: "Review travelers", section: "travelers", blocked: true };
-  if (inquiry.sellerOfTravelStateResident) return { label: "Review residency screening", detail: `Review seller-of-travel requirements for ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the customer's state"} before proceeding with a sale.`, actionLabel: "Review overview", section: "overview", blocked: true };
+  if (requiresResidencyReview(inquiry)) return { label: "Review residency screening", detail: `Review seller-of-travel requirements for ${stateLabels[inquiry.residenceState ?? ""] ?? inquiry.residenceState ?? "the customer's state"} before proceeding with a sale.`, actionLabel: "Review overview", section: "overview", blocked: true };
   if (inquiry.bookingIntent === "needs_information") return { label: "Follow up with customer", detail: "The customer asked for more information instead of starting the booking flow.", actionLabel: "Review overview", section: "overview", blocked: false };
   if (inquiry.bookingIntent === "ready_to_book" && inquiry.automatedBookingStatus === "paused") return { label: "Contact when production booking opens", detail: "The customer is ready to book, but automatic agreements and payments are temporarily paused until the production payment system is ready.", actionLabel: "Review overview", section: "overview", blocked: true };
   if (inquiry.bookingIntent === "ready_to_book" && inquiry.automatedBookingStatus === "error") return { label: "Review automated booking", detail: inquiry.automatedBookingError ?? "An automated booking step did not finish.", actionLabel: "Review overview", section: "overview", blocked: true };
@@ -831,7 +833,7 @@ function compareInquiries(a: DashboardInquiry, b: DashboardInquiry, sort: SortOp
 function attentionScore(inquiry: DashboardInquiry) {
   let score = 0;
   if (hasInvoiceIssue(inquiry)) score += 50;
-  if (inquiry.sellerOfTravelStateResident) score += 40;
+  if (requiresResidencyReview(inquiry)) score += 40;
   if (hasMissingTravelerDetails(inquiry)) score += 30;
   if (hasIncompleteAgreements(inquiry)) score += 20;
   if (inquiry.status === "new") score += 10;
