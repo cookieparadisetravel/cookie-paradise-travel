@@ -19,17 +19,17 @@ export function DepartureOptions({ availabilities }: { availabilities: TripAvail
         return <article key={item.departure} className="flex flex-col rounded-2xl border border-black/15 bg-white p-5 sm:p-6">
           <h4 className="text-lg font-bold leading-7">{item.dateRange}</h4>
           <p className="mt-3 text-base font-semibold text-[#805018]">{availability
-            ? availability.full ? "Fully booked" : `${availability.remaining} of ${item.capacity} spots available`
+            ? availability.full ? "Fully booked" : `${availability.remaining} of ${item.capacity} seats available`
             : "Contact Trung for current availability"}</p>
           <div className="mt-3">
-            <p className="text-sm font-semibold">{availability ? `${availability.booked} of ${item.capacity} spots booked` : "Booking progress unavailable"}</p>
+            <p className="text-sm font-semibold">{availability ? `${availability.booked} of ${item.capacity} seats booked` : "Booking progress unavailable"}</p>
             <div
               role="progressbar"
-              aria-label={`${item.dateRange}: guest spots booked`}
+              aria-label={`${item.dateRange}: guest seats booked`}
               aria-valuemin={0}
               aria-valuemax={item.capacity}
               aria-valuenow={availability ? Math.min(availability.booked, item.capacity) : undefined}
-              aria-valuetext={availability ? `${availability.booked} of ${item.capacity} spots booked` : "Current availability unavailable"}
+              aria-valuetext={availability ? `${availability.booked} of ${item.capacity} seats booked` : "Current availability unavailable"}
               className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#e9e3d8]"
             >
               {availability && <div className="h-full rounded-full bg-[#b47a26]" style={{ width: `${Math.min(100, availability.booked / item.capacity * 100)}%` }} />}

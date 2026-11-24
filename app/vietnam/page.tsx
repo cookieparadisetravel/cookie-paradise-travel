@@ -1,3 +1,4 @@
+import { SouthernRouteMap } from "../components/southern-route-map";
 /* eslint-disable @next/next/no-html-link-for-pages -- Native navigation avoids the vinext client-router failure observed in production. */
 /* eslint-disable @next/next/no-img-element -- Responsive photographs are served as pre-sized local WebP files. */
 import { publicPageMetadata } from "@/lib/public-page-metadata";
@@ -87,6 +88,8 @@ export default async function VietnamTrip() {
         <DepartureOptions availabilities={availabilities} />
         <TripBudget />
       </section>
+
+      <section aria-label="Your Southern Vietnam route" className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16"><SouthernRouteMap /></section>
 
       <section aria-labelledby="included-title" className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16">
         <div className="grid items-center gap-9 lg:grid-cols-2 lg:gap-14">

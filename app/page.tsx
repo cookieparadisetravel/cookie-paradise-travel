@@ -1,3 +1,4 @@
+import { SouthernRouteMap } from "./components/southern-route-map";
 import {
   ArrowRight, ChevronDown, Plane, Users, Utensils,
 } from "lucide-react";
@@ -118,7 +119,7 @@ const approvedSummary = (label: string) => {
     .replace(/\s*\(Sections? [^)]+\)/g, "");
 };
 const homepageFaqs = [
-  { question: "How do I reserve a place?", answer: "Choose your departure in the pricing section and request a spot. Trung will review your plans and send a personalized Traveler Agreement and secure Square invoice. Your booking is confirmed only after our written acceptance, the required signatures and cleared deposit or required full payment. Submitting the form does not take a payment or confirm a reservation." },
+  { question: "How do I reserve a place?", answer: "Choose your departure in the pricing section and request a seat. Trung will review your plans and send a personalized Traveler Agreement and secure Square invoice. Your booking is confirmed only after our written acceptance, the required signatures and cleared deposit or required full payment. Submitting the form does not take a payment or confirm a reservation." },
   { question: "Where do I fly into and out of?", answer: "Arrive at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City on the first day of your selected departure. Depart from Da Nang International Airport (DAD), near Hoi An, on day eight. The exact start and end dates are shown for each departure. The listed domestic flight from Ho Chi Minh City to Hue (HUI) is included; international flights are extra. Discuss flight plans with Trung before purchasing." },
   { question: "What are the room options for solo travelers, friends and couples?", answer: "The listed price is per person sharing a double or twin room. Friends can request separate beds; couples can request a queen bed or separate beds. If you are traveling solo, ask Trung about room arrangements. A room to yourself adds $399, subject to availability; a roommate match is not guaranteed." },
   { question: "What is the daily pace like?", answer: "The itinerary includes city and heritage-site walking, getting on and off boats, some early starts and full activity days, alongside free time. The Mekong village routes offer bicycle or buggy options. Talk with Trung about your preferred pace and any arrangements that need to be checked before booking." },
@@ -249,6 +250,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       </section>
 
       <section id="itinerary" tabIndex={-1} aria-labelledby="itinerary-title" className="mx-auto max-w-7xl scroll-mt-6 px-5 py-14 sm:px-8 sm:py-20">
+        <div className="mb-12 sm:mb-16"><SouthernRouteMap /></div>
         <div className="grid gap-12 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
           <div className="lg:self-start">
             <p className="eyebrow">The daily itinerary</p>
