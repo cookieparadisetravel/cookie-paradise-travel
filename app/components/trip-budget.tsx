@@ -33,6 +33,11 @@ export function TripBudget() {
           </div>
         </div>
 
+        <section aria-label="Flight booking assistance" className="mt-7 rounded-2xl bg-[var(--cream)] p-5 sm:p-6">
+          <h3 className="font-serif text-2xl font-semibold">Your flights, taken care of.</h3>
+          <p className="mt-3 text-base leading-7">Book your Vietnam trip with me, and I’ll help find and arrange flights that fit your itinerary. You pay the airfare with no markup or additional booking fee from me.</p>
+        </section>
+
         <details className="group mt-7 border-t border-black/15 pt-5">
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 text-base font-bold [&::-webkit-details-marker]:hidden">See the full budget breakdown<ChevronDown aria-hidden="true" className="h-5 w-5 shrink-0 transition-transform group-open:rotate-180" /></summary>
           <dl className="mt-4 divide-y divide-black/10">
