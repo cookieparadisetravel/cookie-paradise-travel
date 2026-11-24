@@ -179,6 +179,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="mx-auto max-w-4xl px-5 py-12 text-center sm:px-8 sm:py-16">
           <div className="hero-trip-details">
             <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
+            <div className="mx-auto mt-8 max-w-2xl">
+              <h2 className="font-serif text-3xl leading-tight text-[var(--ink)] sm:text-4xl">Your Vietnam trip starts with someone you know.</h2>
+              <p className="mt-4 text-base leading-7 text-[var(--ink)] sm:text-lg sm:leading-8">I’ll help arrange your flights, take care of your Vietnam e-visa, and help you prepare before we travel together. With no more than eight guests and monthly payments available, you can spend less time sorting out the details and more time looking forward to Vietnam.</p>
+            </div>
             <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler · fixed price</span></p>
             <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
