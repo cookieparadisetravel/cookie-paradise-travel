@@ -179,10 +179,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="mx-auto max-w-4xl px-5 py-12 text-center sm:px-8 sm:py-16">
           <div className="hero-trip-details">
             <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
-            <div className="mx-auto mt-8 max-w-2xl">
-              <h2 className="font-serif text-3xl leading-tight text-[var(--ink)] sm:text-4xl">Your Vietnam trip starts with someone you know.</h2>
-              <p className="mt-4 text-base leading-7 text-[var(--ink)] sm:text-lg sm:leading-8">I’ll help arrange your flights, take care of your Vietnam e-visa, and help you prepare before we travel together. With no more than eight guests and monthly payments available, you can spend less time sorting out the details and more time looking forward to Vietnam.</p>
-            </div>
             <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler · fixed price</span></p>
             <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
@@ -293,14 +289,14 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       </section>
 
       <section id="about" className="scroll-mt-6 border-b border-[var(--line)] bg-white py-14 sm:py-20">
-        <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 sm:px-8 lg:grid-cols-[.65fr_1.35fr] lg:gap-16">
+        <div className="mx-auto grid max-w-7xl items-start gap-10 px-5 sm:px-8 lg:grid-cols-[.65fr_1.35fr] lg:gap-8 xl:grid-cols-[.65fr_1fr_.9fr] xl:gap-10">
           <div className="relative mx-auto w-full max-w-sm pr-4">
             <div className="absolute bottom-0 right-0 top-4 w-[92%] rounded-[2rem] bg-[var(--gold)]" aria-hidden="true" />
             <img src="/about-trung.jpg" alt="Trung Le seated in front of the yellow Cookie Paradise bakery trailer" className="relative aspect-[4/5] w-full rounded-[2rem] object-cover object-center shadow-lg" width={960} height={1280} loading="lazy" />
           </div>
           <div>
             <p className="eyebrow">A local connection to Vietnam</p>
-            <h2 className="section-title">Meet Trung, your Vietnam trip planner.</h2>
+            <h2 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Meet Trung, your Vietnam trip planner.</h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Born in Vietnam and now based in Columbus, Indiana, Trung Le spent seven years living in Ho Chi Minh City. He is the founder of Cookie Paradise Travel Company and co-owner of the local Cookie Paradise bakery.</p>
             <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Trung created this itinerary to share the food, everyday life and places he knows. Your departure will be hosted by Trung or another carefully selected Cookie Paradise Travel Company host; ask who is planned for your trip.</p>
             <details className="mt-6 max-w-2xl rounded-2xl border border-[var(--line)] px-5 py-4">
@@ -316,6 +312,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
 
             </details>
           </div>
+          <aside aria-labelledby="trung-value-title" className="rounded-[2rem] border border-[#805018]/20 border-t-4 border-t-[#805018] bg-[#faf8f3] p-7 text-[var(--ink)] shadow-sm sm:p-8 lg:col-start-2 xl:col-start-auto">
+            <h3 id="trung-value-title" className="font-serif text-3xl leading-tight">Your Vietnam trip starts with someone you know.</h3>
+            <p className="mt-5 text-base leading-8">I’ll help arrange your flights, take care of your Vietnam e-visa, and help you prepare before we travel together. With no more than eight guests and monthly payments available, you can spend less time sorting out the details and more time looking forward to Vietnam.</p>
+          </aside>
         </div>
       </section>
 
