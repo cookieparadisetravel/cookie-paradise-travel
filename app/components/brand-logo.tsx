@@ -1,7 +1,7 @@
 import { travelCompanyPath } from "./brand-logo-subtitle";
 
 /** Preserve the supplied wordmark and use a solid subtitle color for its surface. */
-export function BrandLogo({ footer = false, surface = "light", tagline = false }: { footer?: boolean; surface?: "light" | "dark"; tagline?: boolean }) {
+export function BrandLogo({ footer = false, surface = "light", tagline = false, homeHref }: { footer?: boolean; surface?: "light" | "dark"; tagline?: boolean; homeHref?: string }) {
   const logo = <svg
     className={`company-logo${footer ? " company-logo--footer" : ""}`}
     viewBox="25 187 1230 279" width={1230} height={279}
@@ -12,9 +12,10 @@ export function BrandLogo({ footer = false, surface = "light", tagline = false }
     </svg>
     <path d={travelCompanyPath} fill={surface === "dark" ? "#ffffff" : "#000000"} fillRule="evenodd" aria-hidden="true" />
   </svg>;
-  if (!tagline) return logo;
+  const wordmark = homeHref ? <a href={homeHref} aria-label="Cookie Paradise Travel Company home">{logo}</a> : logo;
+  if (!tagline) return wordmark;
   return <span className={`brand-signature brand-signature--${surface}`}>
-    {logo}
+    {wordmark}
     <span className="brand-signature__tagline">Vietnam travels, made easy.</span>
   </span>;
 }

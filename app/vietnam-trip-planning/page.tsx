@@ -17,9 +17,9 @@ export default function VietnamTripPlanningPage() {
       <a href="#planning-content" className="sr-only focus:not-sr-only focus:block focus:bg-white focus:p-4 focus:text-black">Skip to content</a>
       <header className="bg-[var(--navy)] px-5 py-6 text-white sm:px-8">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-6">
-          <a href="/" className="flex flex-col items-start gap-3" aria-label="Cookie Paradise Travel Company home">
-            <BrandLogo surface="dark" tagline />
-          </a>
+          <span className="flex flex-col items-start gap-3">
+            <BrandLogo surface="dark" tagline homeHref="/" />
+          </span>
           <nav aria-label="Travel services" className="flex flex-wrap gap-x-6 gap-y-3 text-base font-semibold">
             <a className="underline" href="/">Small-group tours</a>
             <a className="underline" href="/why-vietnam">Why Vietnam?</a>

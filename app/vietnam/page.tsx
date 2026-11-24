@@ -45,7 +45,7 @@ export default async function VietnamTrip() {
       <header className="border-b border-black/10 bg-[#faf8f3]">
         <div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-5 sm:px-8">
           <div className="site-header-brand flex min-w-0 items-center gap-4">
-            <a href="/" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home"><BrandLogo surface="light" tagline /></a>
+            <span className="site-header-home flex min-w-0 flex-col items-start gap-2"><BrandLogo surface="light" tagline homeHref="/" /></span>
             <ReferralBrand header />
           </div>
           <a className="site-header-call rounded-full border border-black/25 px-4 py-2 text-sm font-semibold hover:bg-black/5" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Talk with Trung <span aria-hidden="true">↗</span></a>

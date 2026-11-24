@@ -143,9 +143,9 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       <header className="relative z-20 border-b border-black/10 bg-[#faf8f3] text-[var(--ink)]">
         <div className="site-header-bar mx-auto flex min-h-20 max-w-[96rem] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
-            <a href="#top" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
-              <BrandLogo surface="light" tagline />
-            </a>
+            <span className="site-header-home flex min-w-0 flex-col items-start gap-2">
+              <BrandLogo surface="light" tagline homeHref="#top" />
+            </span>
             <ReferralBrand header />
           </div>
           <nav className="site-header-nav hidden items-center justify-end gap-x-4 text-sm font-semibold xl:flex" aria-label="Main navigation">

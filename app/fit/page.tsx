@@ -41,9 +41,9 @@ export default async function FitTravelPage() {
     <header className="fit-header text-white">
       <div className="site-header-bar mx-auto flex max-w-7xl items-center justify-between gap-5 px-5 py-5 sm:px-8">
         <div className="site-header-brand flex min-w-0 items-center gap-4">
-          <a href="/" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
-            <BrandLogo surface="dark" tagline />
-          </a>
+          <span className="site-header-home flex min-w-0 flex-col items-start gap-2">
+            <BrandLogo surface="dark" tagline homeHref="/" />
+          </span>
           <ReferralBrand header />
         </div>
         <nav className="hidden items-center gap-6 text-sm font-semibold xl:flex" aria-label="Private travel navigation">

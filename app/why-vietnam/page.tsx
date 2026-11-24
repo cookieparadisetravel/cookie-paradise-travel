@@ -64,7 +64,7 @@ export default function WhyVietnamPage() {
   return <main className="why-page">
     <a href="#why-content" className="why-skip">Skip to content</a>
     <header className="why-header"><div className="why-wrap why-header-inner">
-      <a href="/" aria-label="Cookie Paradise Travel Company home"><BrandLogo surface="light" tagline /></a>
+      <BrandLogo surface="light" tagline homeHref="/" />
       <nav aria-label="Main navigation"><a href="/">Small-group tour</a><a href="/why-vietnam" aria-current="page">Why Vietnam?</a><a href="/fit">Private trips</a></nav>
     </div></header>
     <section id="why-content" className="why-wrap why-hero">
