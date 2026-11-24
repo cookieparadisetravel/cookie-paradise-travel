@@ -65,6 +65,13 @@ a { text-underline-offset: 4px; }
   .brand-signature__tagline { font-size: 1rem; margin-top: .6rem; padding-top: .45rem; }
   .company-logo--footer { width: 18rem; }
 }
+/* Reserve the desktop call button's column so it cannot wrap below the logo. */
+@media (min-width: 1280px) {
+  .site-header-bar { display: grid; grid-template-columns: 14rem minmax(0, 1fr) auto; gap: 1.25rem; }
+  .site-header-brand { min-width: 0; flex-wrap: wrap; }
+  .site-header-nav { flex-wrap: nowrap; gap: clamp(.625rem, 1vw, 1.25rem); white-space: nowrap; }
+  .site-header-call { justify-self: end; white-space: nowrap; }
+}
 .site-header-logo { height: auto; width: 8rem; flex-shrink: 0; }
 @media (min-width: 640px) { .site-header-logo { height: 1.75rem; width: auto; } }
 @media (min-width: 1024px) { .site-header-logo { height: 2rem; } }

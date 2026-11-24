@@ -141,21 +141,20 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
     <main className="bright-home min-h-screen overflow-x-hidden bg-[var(--sand)] text-[var(--ink)]">
       <section id="top" className="overflow-hidden bg-[#faf8f3] text-[var(--ink)]">
       <header className="relative z-20 border-b border-black/10 bg-[#faf8f3] text-[var(--ink)]">
-        <div className="site-header-bar mx-auto flex min-h-20 max-w-7xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
+        <div className="site-header-bar mx-auto flex min-h-20 max-w-[96rem] flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-8">
           <div className="site-header-brand flex items-center gap-3">
             <a href="#top" className="site-header-home flex min-w-0 flex-col items-start gap-2" aria-label="Cookie Paradise Travel Company home">
               <BrandLogo surface="light" tagline />
             </a>
             <ReferralBrand header />
           </div>
-          <nav className="hidden flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-semibold xl:flex" aria-label="Main navigation">
+          <nav className="site-header-nav hidden items-center justify-end gap-x-4 text-sm font-semibold xl:flex" aria-label="Main navigation">
             <a className="hover:text-[var(--gold)]" href="#pricing">Pricing &amp; budget</a>
             <a className="hover:text-[var(--gold)]" href="#included">What’s included</a>
             <TripSectionLink className="hover:text-[var(--gold)]">Itinerary</TripSectionLink>
             <a className="hover:text-[var(--gold)]" href="#about">Meet Trung</a>
             <a className="hover:text-[var(--gold)]" href="/why-vietnam">Why Vietnam?</a>
             <a className="hover:text-[var(--gold)]" href="/fit">Private trips</a>
-            <a className="hover:text-[var(--gold)]" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát thị trường Mỹ</a>
           </nav>
           <ConsultationLink compact className="site-header-call" />
         </div>
@@ -164,7 +163,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <TripSectionLink className="hover:underline">Itinerary</TripSectionLink>
           <a className="hover:underline" href="/why-vietnam">Why Vietnam?</a>
           <a className="hover:underline" href="/fit">Private trips</a>
-          <a className="hover:underline" href="/khao-sat-thi-truong-my" lang="vi">Khảo sát thị trường Mỹ</a>
         </nav>
       </header>
 
