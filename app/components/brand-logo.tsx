@@ -15,6 +15,6 @@ export function BrandLogo({ footer = false, surface = "light", tagline = false }
   if (!tagline) return logo;
   return <span className={`brand-signature brand-signature--${surface}`}>
     {logo}
-    <span className="brand-signature__tagline">Vietnam, your way.</span>
+    <span className="brand-signature__tagline">Vietnam travels, made easy.</span>
   </span>;
 }
