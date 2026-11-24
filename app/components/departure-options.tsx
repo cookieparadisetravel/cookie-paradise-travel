@@ -21,6 +21,20 @@ export function DepartureOptions({ availabilities }: { availabilities: TripAvail
           <p className="mt-3 text-base font-semibold text-[#805018]">{availability
             ? availability.full ? "Fully booked" : `${availability.remaining} of ${item.capacity} spots available`
             : "Contact Trung for current availability"}</p>
+          <div className="mt-3">
+            <p className="text-sm font-semibold">{availability ? `${availability.booked} of ${item.capacity} spots booked` : "Booking progress unavailable"}</p>
+            <div
+              role="progressbar"
+              aria-label={`${item.dateRange}: guest spots booked`}
+              aria-valuemin={0}
+              aria-valuemax={item.capacity}
+              aria-valuenow={availability ? Math.min(availability.booked, item.capacity) : undefined}
+              aria-valuetext={availability ? `${availability.booked} of ${item.capacity} spots booked` : "Current availability unavailable"}
+              className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#e9e3d8]"
+            >
+              {availability && <div className="h-full rounded-full bg-[#b47a26]" style={{ width: `${Math.min(100, availability.booked / item.capacity * 100)}%` }} />}
+            </div>
+          </div>
           <p className="mb-5 mt-2 text-sm leading-6">Final payment due {dateLabel(deadline)}.</p>
           <div className="mt-auto"><BookingDialog triggerLabel={availability?.full ? "Ask about the waitlist" : `Request ${item.label.replace(", 2027", "")}`} compact initialTrip={{ departure: item.departure, room: "shared", partySize: 1 }} /></div>
         </article>;
