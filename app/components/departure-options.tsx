@@ -10,7 +10,7 @@ const dateLabel = (value: string) => new Date(`${value}T12:00:00Z`).toLocaleDate
 export function DepartureOptions({ availabilities }: { availabilities: TripAvailabilityValue[] }) {
   return <section aria-labelledby="departure-options-title" className="mx-auto mt-12 max-w-7xl px-5 sm:px-8">
     <h3 id="departure-options-title" className="font-serif text-3xl sm:text-4xl">Choose your departure.</h3>
-    <p className="mt-3 max-w-3xl text-base leading-7">Six summer dates and a year-end trip. Every departure follows the same eight-day itinerary, with its own group of 4–8 guests at $2,875 per person sharing a room.</p>
+    <p className="mt-3 max-w-3xl text-base leading-7">Choose from six summer departures or our year-end trip.</p>
     <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {vietnamDepartures.map((item, index) => {
         const availability = availabilities[index];
@@ -19,10 +19,9 @@ export function DepartureOptions({ availabilities }: { availabilities: TripAvail
         return <article key={item.departure} className="flex flex-col rounded-2xl border border-black/15 bg-white p-5 sm:p-6">
           <h4 className="text-lg font-bold leading-7">{item.dateRange}</h4>
           <p className="mt-3 text-base font-semibold text-[#805018]">{availability
-            ? availability.full ? "Fully booked" : `${availability.remaining} of ${item.capacity} seats available`
+            ? availability.full ? "Fully booked" : `${availability.remaining} ${availability.remaining === 1 ? "seat" : "seats"} available`
             : "Contact Trung for current availability"}</p>
           <div className="mt-3">
-            <p className="text-sm font-semibold">{availability ? `${availability.booked} of ${item.capacity} seats booked` : "Booking progress unavailable"}</p>
             <div
               role="progressbar"
               aria-label={`${item.dateRange}: guest seats booked`}
@@ -30,7 +29,7 @@ export function DepartureOptions({ availabilities }: { availabilities: TripAvail
               aria-valuemax={item.capacity}
               aria-valuenow={availability ? Math.min(availability.booked, item.capacity) : undefined}
               aria-valuetext={availability ? `${availability.booked} of ${item.capacity} seats booked` : "Current availability unavailable"}
-              className="mt-2 h-2.5 overflow-hidden rounded-full bg-[#e9e3d8]"
+              className="h-2.5 overflow-hidden rounded-full bg-[#e9e3d8]"
             >
               {availability && <div className="h-full rounded-full bg-[#b47a26]" style={{ width: `${Math.min(100, availability.booked / item.capacity * 100)}%` }} />}
             </div>

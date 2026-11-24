@@ -64,18 +64,17 @@ export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
     </div> : <>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#84511e]">Start with the details</p>
       <h2 className="mt-3 font-serif text-3xl leading-tight">Email me the itinerary and pricing</h2>
-      <p className="mt-3 text-sm leading-6 text-[#6c6055]">The daily itinerary, pricing and what&apos;s included—plus an invitation to talk it through with Trung.</p>
+      <p className="mt-3 text-sm leading-6 text-[#6c6055]">Get the daily schedule, meals and included experiences in one PDF.</p>
       <form onSubmit={event => { void submit(event); }} className="mt-6 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Full Name<input className={inputClass} name="fullName" autoComplete="name" required maxLength={121} /></label><label className="text-sm font-semibold">Email<input className={inputClass} name="email" type="email" autoComplete="email" required maxLength={180} /></label></div>
         <div className={`grid gap-4 ${showCity ? "sm:grid-cols-2" : ""}`}>{showCity && <label className="text-sm font-semibold">Your city<select className={inputClass} name="city" defaultValue="" required><option value="" disabled>Select a city</option>{leadCities.map(city => <option key={city}>{city}</option>)}</select></label>}<label className="text-sm font-semibold">Travel interest<select className={inputClass} name="timing" defaultValue="not_sure" required>{vietnamDepartures.map(item => <option key={item.timing} value={item.timing}>{item.dateRange}</option>)}<option value="not_sure">I&apos;m still deciding</option><option value="future">A future departure</option></select></label></div>
         <label className="block text-sm font-semibold">Phone <span className="font-normal text-[#6c6055]">(optional; no automated texts)</span><input className={inputClass} name="phone" type="tel" autoComplete="tel" maxLength={40} /></label>
         <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-        <p className="text-sm leading-6">By clicking “Send my itinerary,” you sign up for the itinerary PDF and occasional Vietnam travel inspiration and trip updates from Cookie Paradise Travel Company. You can unsubscribe anytime.</p>
+        <p className="text-sm leading-6">By clicking “Send my itinerary,” you ask Trung at Cookie Paradise Travel Company to email you the itinerary PDF, follow up about this trip (including up to two consultation reminders if you haven&apos;t booked a call), and send occasional Vietnam travel inspiration and trip updates. You can unsubscribe anytime.</p>
         <div ref={widget} className="min-h-[140px] max-w-full overflow-hidden min-[401px]:min-h-[65px]" />
         {(error || verificationError) && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm leading-6 text-red-900">{error || verificationError}</p>}
         <button disabled={status === "saving" || !token} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#593412] px-4 py-3 font-bold text-white transition hover:bg-[#75481b] disabled:cursor-wait disabled:opacity-60">{status === "saving" ? <><Loader2 className="animate-spin" size={18} /> Saving your request...</> : <>Send my itinerary <ArrowRight size={18} /></>}</button>
-        <p className="text-sm leading-6">By selecting &ldquo;Send my itinerary,&rdquo; you ask Trung to email the itinerary PDF and contact you about this trip, including up to two consultation reminders if you haven&apos;t booked a call.</p>
-        <p className="text-xs leading-5 text-[#6c6055]">No payment or booking obligation. We respect your <a className="underline" href="/privacy">privacy</a>. Prefer to talk first? <a className="font-semibold underline" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free 30-minute call.</a></p>
+        <p className="text-xs leading-5 text-[#6c6055]">No payment or booking obligation. Read our <a className="underline" href="/privacy">privacy policy</a>.</p>
       </form>
     </>}
   </div>;

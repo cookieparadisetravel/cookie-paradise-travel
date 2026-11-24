@@ -195,7 +195,6 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div>
             <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
             <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
-            <p className="mt-5 text-base leading-7">Minimum 4, maximum 8 guests, plus your host. The fixed price is $2,875 per person sharing a room.</p>
             <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due two months before your selected departure. See each date’s final payment deadline below.</p>
             <div className="mt-7 flex flex-wrap gap-3"><a href="#faq" className="inline-flex min-h-12 items-center px-2 text-sm font-semibold underline">Booking questions</a></div>
           </div>
@@ -254,8 +253,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="grid gap-12 lg:grid-cols-[.7fr_1.3fr] lg:gap-20">
           <div className="lg:self-start">
             <p className="eyebrow">The daily itinerary</p>
-            <h2 id="itinerary-title" className="section-title">Picture your eight days in Vietnam.</h2>
-            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Sizzling street food, palm-lined waterways, royal gardens and lantern-lit lanes. Open any day for its schedule and meals.</p>
+            <h2 id="itinerary-title" className="section-title">Explore your eight-day itinerary.</h2>
+            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Open each day for activities and meals.</p>
             <DestinationSlideshow />
           </div>
           <div id="daily-schedule" className="scroll-mt-6 space-y-4">
@@ -335,7 +334,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       <section id="guide" className="border-y border-[var(--line)] bg-[var(--cream)] py-16 sm:py-20">
         <div className="mx-auto grid max-w-7xl items-start gap-10 px-5 sm:px-8 lg:grid-cols-[1fr_1.05fr] lg:gap-16">
           <div><p className="eyebrow">Your next step</p><h2 className="section-title">Let’s plan your Vietnam trip.</h2>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">Talk through your plans with Trung on a free 30-minute Google Meet, or take the itinerary with you and decide in your own time.</p>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--muted-ink)]">Talk through your plans with Trung, or take the itinerary with you and decide in your own time.</p>
             <div className="mt-6"><ConsultationLink /></div>
             <a href={tripGuideUrl} target="_blank" rel="noopener noreferrer" className="mt-6 inline-flex min-h-12 items-center gap-2 font-semibold underline underline-offset-4">View the itinerary and pricing (PDF) <ArrowRight className="h-4 w-4" /></a>
             <p className="mt-6 text-base leading-7 text-[var(--muted-ink)]">Prefer to ask by email? Write to <a href="mailto:trung@cookieparadise.co" className="font-semibold underline">trung@cookieparadise.co</a>.</p>
