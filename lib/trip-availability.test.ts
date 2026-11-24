@@ -27,11 +27,13 @@ test("eight guest capacity reports remaining places without pricing milestones",
   assert.deepEqual(availabilitySummary(9, 8), { booked: 9, capacity: 8, remaining: 0, full: true });
 });
 
-test("only the two open departures are accepted, including the trip across New Year", () => {
-  assert.ok(isVietnamDeparture("2027-06-01"));
-  assert.ok(isVietnamDeparture("2027-12-27"));
-  assert.equal(isVietnamDeparture("2027-06-29"), false);
-  assert.equal(isVietnamDeparture("2028-01-03"), false);
-  const trip = vietnamDepartures.find(item => item.departure === "2027-12-27")!;
-  assert.equal((Date.parse(trip.endDate) - Date.parse(trip.departure)) / 86400000 + 1, 8);
+test("all six summer departures and the year-end trip are accepted with eight-day itineraries", () => {
+  const dates = ["2027-06-01", "2027-06-15", "2027-06-29", "2027-07-13", "2027-07-27", "2027-08-10", "2027-12-27"];
+  assert.deepEqual(vietnamDepartures.map(item => item.departure), dates);
+  for (const trip of vietnamDepartures) {
+    assert.ok(isVietnamDeparture(trip.departure));
+    assert.equal((Date.parse(trip.endDate) - Date.parse(trip.departure)) / 86400000 + 1, 8);
+    assert.equal(trip.capacity, 8);
+  }
+  for (const date of ["2027-06-02", "2027-08-17", "2028-01-03"]) assert.equal(isVietnamDeparture(date), false);
 });

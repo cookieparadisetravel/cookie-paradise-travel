@@ -1,7 +1,9 @@
+import { vietnamDepartures, departureForTiming } from "./trip-availability.ts";
+
 export const tripGuideUrl = "https://cookieparadisetravel.com/vietnam-trip-guide.pdf";
 export const tripGuideLandingUrl = "https://cookieparadisetravel.com/vietnam";
 export const leadCities = ["Columbus", "Franklin", "Bloomington", "Other"] as const;
-export const leadTimings = ["june_2027", "december_2027", "not_sure", "future"] as const;
+export const leadTimings = [vietnamDepartures[0].timing, ...vietnamDepartures.slice(1).map(item => item.timing), "not_sure", "future"] as const;
 export const leadStages = ["new", "considering", "booking_in_progress", "waitlist", "closed"] as const;
 export type LeadTiming = typeof leadTimings[number];
 export type LeadSource = "website" | "meta";
@@ -31,8 +33,25 @@ export function attributionFromSearch(search: string) {
   });
 }
 export function guideTimingLabel(value: string) {
-  return value === "june_2027" ? "June 1-8, 2027" : value === "december_2027" ? "December 27, 2027–January 3, 2028" : value === "future" ? "A future departure" : "Still deciding";
+  return departureForTiming(value)?.dateRange ?? (value === "future" ? "A future departure" : "Still deciding");
 }
 export function leadStageLabel(value: string) {
   return ({ new: "New", contacted: "Contacted", consultation_booked: "Considering", considering: "Considering", booking_in_progress: "Booking in progress", waitlist: "Waitlist", reserved: "Reserved", closed: "Closed" } as Record<string, string>)[value] ?? value;
+}
+
+// Preserve old month-only answers while matching specific new dates first.
+export function timingFromInterest(value: string): LeadTiming {
+  const selected = value.trim().toLowerCase();
+  if (selected.includes("future")) return "future";
+  const exact = vietnamDepartures.find(item => item.timing === selected || item.departure === selected);
+  if (exact) return exact.timing;
+  const words = selected.replace(/[_–—-]/g, " ");
+  const dated = vietnamDepartures.find(item => {
+    const [month, day] = item.label.toLowerCase().replace(",", "").split(" ");
+    return new RegExp(`\\b${month}\\s+${day}(?!\\d)`).test(words);
+  });
+  if (dated) return dated.timing;
+  if (/^december(?: 2027)?$/.test(words)) return "december_2027";
+  if (/^june(?: 2027)?$/.test(words)) return "june_2027";
+  return "not_sure";
 }

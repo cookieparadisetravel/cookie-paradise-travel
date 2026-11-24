@@ -1,15 +1,14 @@
 import {
   ArrowRight, ChevronDown, Plane, Users, Utensils,
 } from "lucide-react";
-import { BookingDialog } from "./components/booking-dialog";
 import { MobileBookBar } from "./components/mobile-book-bar";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
 import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
-import { vietnamDepartures } from "@/lib/trip-availability";
-import { TripAvailability } from "./components/trip-availability";
+import { vietnamDepartures, departureDateSummary, totalGuestCapacity } from "@/lib/trip-availability";
+import { DepartureOptions } from "./components/departure-options";
 import { TripBudget } from "./components/trip-budget";
 import { JourneyPhoto } from "./components/journey-photo";
 import { DestinationSlideshow } from "./components/destination-slideshow";
@@ -119,15 +118,15 @@ const approvedSummary = (label: string) => {
     .replace(/\s*\(Sections? [^)]+\)/g, "");
 };
 const homepageFaqs = [
-  { question: "How do I reserve a place?", answer: "Choose ‘Request a spot’ in the pricing section. Trung will review your plans and send a personalized Traveler Agreement and secure Square invoice. Your booking is confirmed only after our written acceptance, the required signatures and cleared deposit or required full payment. Submitting the form does not take a payment or confirm a reservation." },
-  { question: "Where do I fly into and out of?", answer: "Arrive at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City on June 1 or December 27, 2027. Depart from Da Nang International Airport (DAD), near Hoi An, on June 8, 2027 or January 3, 2028, respectively. The listed domestic flight from Ho Chi Minh City to Hue (HUI) is included; international flights are extra. Discuss flight plans with Trung before purchasing." },
+  { question: "How do I reserve a place?", answer: "Choose your departure in the pricing section and request a spot. Trung will review your plans and send a personalized Traveler Agreement and secure Square invoice. Your booking is confirmed only after our written acceptance, the required signatures and cleared deposit or required full payment. Submitting the form does not take a payment or confirm a reservation." },
+  { question: "Where do I fly into and out of?", answer: "Arrive at Tan Son Nhat International Airport (SGN) in Ho Chi Minh City on the first day of your selected departure. Depart from Da Nang International Airport (DAD), near Hoi An, on day eight. The exact start and end dates are shown for each departure. The listed domestic flight from Ho Chi Minh City to Hue (HUI) is included; international flights are extra. Discuss flight plans with Trung before purchasing." },
   { question: "What are the room options for solo travelers, friends and couples?", answer: "The listed price is per person sharing a double or twin room. Friends can request separate beds; couples can request a queen bed or separate beds. If you are traveling solo, ask Trung about room arrangements. A room to yourself adds $399, subject to availability; a roommate match is not guaranteed." },
   { question: "What is the daily pace like?", answer: "The itinerary includes city and heritage-site walking, getting on and off boats, some early starts and full activity days, alongside free time. The Mekong village routes offer bicycle or buggy options. Talk with Trung about your preferred pace and any arrangements that need to be checked before booking." },
   { question: "What are the deposit and payment terms?", answer: approvedSummary("Deposit and payments") },
   { question: "What happens if the minimum group is not reached?", answer: approvedSummary("Minimum group and company cancellation") + " Independently purchased international flights and other arrangements are not covered by this refund." },
   { question: "What if a major disruption affects the trip?", answer: approvedSummary("Changes and major disruptions") },
   { question: "What if I need to cancel?", answer: approvedSummary("If you cancel") },
-  { question: "Which departure dates can I choose?", answer: "Choose June 1–8, 2027 or December 27, 2027–January 3, 2028. Each departure has its own group of 4–8 guests and the same $2,875 shared-room price. If neither date works, book a call to discuss a private trip or your interest in future departures." },
+  { question: "Which departure dates can I choose?", answer: `Choose from ${departureDateSummary}. Each departure has its own group of 4–8 guests and the same $2,875 shared-room price. If none of these dates works, book a call to discuss a private trip or future departures.` },
 ];
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {
@@ -172,7 +171,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="hero-essential-copy">
             <p className="mb-5 text-sm font-semibold uppercase tracking-[.14em] [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">Small-group Vietnam tour</p>
           <h1 className="max-w-4xl font-serif text-[clamp(2.8rem,7vw,6.5rem)] font-normal leading-[1.08] tracking-[-.025em] [text-shadow:0_2px_16px_rgba(0,0,0,.65)]">Discover<br />Southern Vietnam</h1>
-            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">June 1–8, 2027 or December 27, 2027–January 3, 2028 · 8 days · 4–8 guests</p>
+            <p className="mt-6 text-base font-semibold leading-7 sm:text-xl [text-shadow:0_2px_8px_rgba(0,0,0,.9)]">Summer &amp; December 2027 · 8 days · 4–8 guests</p>
           </div>
           <span className="absolute bottom-5 right-6 text-xs text-white [text-shadow:0_1px_5px_black]">Imperial Hue, Vietnam</span>
         </div>
@@ -196,8 +195,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="eyebrow" style={{ color: "#805018" }}>Small group, shared value</p>
             <h2 className="section-title text-[var(--ink)]">Your Vietnam trip, clearly priced.</h2>
             <p className="mt-5 text-base leading-7">Minimum 4, maximum 8 guests, plus your host. The fixed price is $2,875 per person sharing a room.</p>
-            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due two months before departure: April 1 for the June trip or October 27 for the December trip.</p>
-            <div className="availability-light grid gap-4">{vietnamDepartures.map((item, index) => <div key={item.departure}><TripAvailability availability={availabilities[index]} label={item.dateRange} /><BookingDialog triggerLabel={`Request ${index === 0 ? "June" : "December"} departure`} compact initialTrip={{ departure: item.departure, room: "shared", partySize: 1 }} /></div>)}</div>
+            <p className="mt-6 max-w-xl text-lg leading-8 text-[var(--ink)]"><strong>$500 nonrefundable deposit per traveler.</strong> Pay the balance monthly, with the final payment due two months before your selected departure. See each date’s final payment deadline below.</p>
             <div className="mt-7 flex flex-wrap gap-3"><a href="#faq" className="inline-flex min-h-12 items-center px-2 text-sm font-semibold underline">Booking questions</a></div>
           </div>
           <div className="overflow-hidden rounded-[2rem] border border-black/10 bg-white">
@@ -213,6 +211,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             </div>
           </div>
         </div>
+        <DepartureOptions availabilities={availabilities} />
         <TripBudget />
       </section>
 
@@ -360,7 +359,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="text-sm sm:text-right"><p>cookieparadisetravel.com</p><p className="mt-2"><a className="underline hover:text-white" href="mailto:trung@cookieparadise.co">trung@cookieparadise.co</a></p><p className="mt-2"><a className="underline hover:text-white" href="/fit">Private Vietnam trips</a></p><p className="mt-2"><a className="underline hover:text-white" href="/vietnam-trip-planning">Vietnam trip planning guide</a></p><p className="mt-2"><a className="underline hover:text-white" href="/privacy">Privacy Policy</a></p><p className="mt-2">© 2026 Cookie Paradise Travel Company LLC</p></div>
         </div>
       </footer>
-      <MobileBookBar availability={availabilities.every(item => item?.full) ? { booked: 16, capacity: 16, remaining: 0, full: true } : null} />
+      <MobileBookBar availability={availabilities.every(item => item?.full) ? { booked: totalGuestCapacity, capacity: totalGuestCapacity, remaining: 0, full: true } : null} />
     </main>
     </ReferralProvider>
   );

@@ -57,3 +57,9 @@ test("renewed guide requests resurface using their latest activity while retaini
   const attached=buildInquiryFeed([booking()], [{ ...lead, booking_id: 1 }])[0];
   assert.equal(feedCreatedAt(attached),renewed); assert.equal(feedIsNew(attached),false);
 });
+
+
+test("guide leads map every new summer interest to its exact departure", () => {
+  const dates = [["june_15_2027", "2027-06-15"], ["june_29_2027", "2027-06-29"], ["july_13_2027", "2027-07-13"], ["july_27_2027", "2027-07-27"], ["august_10_2027", "2027-08-10"]] as const;
+  for (const [timing, departure] of dates) assert.equal(feedDeparture(buildInquiryFeed([], [guide({ travel_timing: timing })])[0]), departure);
+});

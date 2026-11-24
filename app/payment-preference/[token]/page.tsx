@@ -1,3 +1,4 @@
+import { departureLabels } from "@/lib/trip-availability";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, LockKeyhole, ShieldAlert } from "lucide-react";
@@ -11,12 +12,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-const departureLabels: Record<string, string> = {
-  "2027-12-27": "December 27, 2027",
-  "2027-06-01": "June 1, 2027",
-  "2027-06-29": "June 29, 2027",
-  "2027-07-27": "July 27, 2027",
-};
+
 
 export default async function PaymentPreferencePage({ params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;

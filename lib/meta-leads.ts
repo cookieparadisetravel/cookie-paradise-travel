@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { boundedText, emptyAttribution, type LeadTiming } from "./trip-guide.ts";
+import { boundedText, emptyAttribution, timingFromInterest } from "./trip-guide.ts";
 
 export async function verifyMetaSignature(raw: string, signature: string | null, secret: string) {
   if (!/^sha256=[0-9a-f]{64}$/i.test(signature ?? "")) return false;
@@ -29,7 +29,7 @@ export function mapMetaLead(raw: unknown, expected: { id: string; formId: string
   const email = z.string().trim().toLowerCase().email().max(180).parse(fields.get("email"));
   if (!firstName) throw new Error("A first name is required.");
   const selected = fields.get(expected.timingField ?? "travel_interest")?.toLowerCase() ?? "";
-  const timing: LeadTiming = selected.includes("future") ? "future" : selected.includes("december") ? "december_2027" : selected.includes("june") ? "june_2027" : "not_sure";
+  const timing = timingFromInterest(selected);
   const city = boundedText(fields.get("city"), 80) || "Not provided";
   return { firstName, email, phone: boundedText(fields.get("phone_number"), 40), city, timing, contactConsent: permission === "yes", marketingConsent: false,
     source: "meta" as const, submissionId: `meta:${lead.id}`, formId: lead.form_id, submittedAt: new Date(lead.created_time).toISOString(), referralCode: null,

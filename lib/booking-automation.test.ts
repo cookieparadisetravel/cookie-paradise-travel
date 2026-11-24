@@ -118,3 +118,15 @@ test("December California booking preserves departure through agreement and paym
   assert.deepEqual(f.emails.map(e => e.kind), ["agreement", "payment"]);
   assert.equal(f.sqlite.prepare("SELECT departure FROM booking_requests").get()!.departure, "2027-12-27");
 });
+
+
+test("summer bookings retain their departure through agreement and payment setup", async () => {
+  for (const departure of ["2027-06-15", "2027-06-29", "2027-07-13", "2027-07-27", "2027-08-10"]) {
+    const f = await fixture();
+    f.sqlite.prepare("UPDATE booking_requests SET departure=?").run(departure);
+    assert.equal(await f.start(), "agreements_sent");
+    f.sign(); await f.afterAgreement();
+    assert.deepEqual(f.emails.map(e => e.kind), ["agreement", "payment"]);
+    assert.equal(f.sqlite.prepare("SELECT departure FROM booking_requests").get()!.departure, departure);
+  }
+});

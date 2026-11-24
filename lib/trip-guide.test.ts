@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { readFileSync } from "node:fs";
 import { z } from "zod";
+import * as departures from "./trip-availability.ts";
 import * as guide from "./trip-guide.ts";
 import * as requests from "./lead-request.ts";
 import * as consultation from "./consultation.ts";
@@ -32,7 +33,7 @@ async function fixture() {
     "./mailerlite": { addConsentedSubscriber: async (input: unknown, options: unknown) => { subscriptions.push({ input, options }); return "synced"; } },
   });
   const reminders = await loadModule<{ sendDueTripGuideReminders(now: Date): Promise<unknown> }>("lib/trip-guide-reminders.ts", {
-    "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./followup-history": history,
+    "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./followup-history": history, "./trip-availability.ts": departures,
     "./inquiry-reminder-storage": { ensureInquiryReminderStorage: async () => {} }, "./consultation": consultation,
     "./consultation-calendar": { hasBookedConsultation: async (email: string) => { onCalendar?.(); if (calendarFails) throw new Error("Unavailable"); return booked.has(email); } },
     "./mailersend-transactional": { sendTripGuideEmailMessage: async (input: Record<string, unknown>) => { emails.push(input); if (emailFails) throw new Error("Uncertain delivery"); return { sentAt: "2026-11-03T17:00:00Z", messageId: "test" }; } },
@@ -197,7 +198,7 @@ test("campaign parsing whitelists fields, bounds values and keeps targeting sepa
   assert.equal(guide.campaignAttribution({ utmCampaign: "x".repeat(1000) }).utmCampaign.length, 120);
 });
 test("guide email escapes names and accurately describes dates, price and lack of reservation", async () => {
-  const m = await loadModule<{ buildTripGuideEmail(input: { firstName: string; timing: string; stopToken: string }): { html: string; text: string } }>("lib/trip-guide-email.ts", { "./consultation": consultation, "./trip-guide": guide, "./mailersend-transactional": { sendTripGuideEmailMessage: async () => ({}) } });
+  const m = await loadModule<{ buildTripGuideEmail(input: { firstName: string; timing: string; stopToken: string }): { html: string; text: string } }>("lib/trip-guide-email.ts", { "./trip-availability.ts": departures, "./consultation": consultation, "./trip-guide": guide, "./mailersend-transactional": { sendTripGuideEmailMessage: async () => ({}) } });
   const message = m.buildTripGuideEmail({ firstName: "<Traveler>", timing: "future", stopToken: uuid() });
   assert.ok(message.html.includes("&lt;Traveler&gt;")); assert.ok(!message.html.includes("<Traveler>"));
   assert.match(message.text, /December 27, 2027–January 3, 2028/); assert.match(message.text, /US\$2,875/); assert.match(message.text, /No payment was collected/);
@@ -448,7 +449,7 @@ test("failed Facebook guide sends are recorded for review and are not blindly re
   await f.saveMeta(input); assert.equal(f.emails.length,1);
 });
 test("guide-only email does not promise reminders", async () => {
-  const m=await loadModule<typeof import('./trip-guide-email')>("lib/trip-guide-email.ts", {"./consultation":consultation,"./trip-guide":guide,"./mailersend-transactional":{sendTripGuideEmailMessage:async()=>({})}});
+  const m=await loadModule<typeof import('./trip-guide-email')>("lib/trip-guide-email.ts", {"./trip-availability.ts":departures,"./consultation":consultation,"./trip-guide":guide,"./mailersend-transactional":{sendTripGuideEmailMessage:async()=>({})}});
   const message=m.buildTripGuideEmail({firstName:"Traveler",timing:"june_2027",stopToken:uuid(),includeReminders:false});
   assert.ok(message.text.includes(guide.tripGuideUrl)); assert.ok(!message.text.includes('three and seven'));
 });
@@ -475,4 +476,30 @@ test("No follow-up permission still fulfills the requested guide exactly once, p
   assert.equal(f.emails.length, before + 1);
   await f.run(new Date("2027-12-27T12:00:00Z"));
   assert.equal(f.emails.length, before + 1);
+});
+
+
+test("each summer guide retains its exact date and stops reminders on that departure", async () => {
+  for (const item of departures.vietnamDepartures.slice(1, 6)) {
+    const f = await fixture();
+    await f.save({ ...leadInput(), timing: item.timing, submittedAt: "2027-06-02T12:00:00Z" });
+    assert.equal(f.sqlite.prepare("SELECT travel_timing FROM trip_guide_leads").get()!.travel_timing, item.timing);
+    const before = f.emails.length;
+    await f.run(new Date("2027-06-05T12:00:00Z"));
+    assert.equal(f.emails.length, before + 1);
+    await f.run(new Date(`${item.departure}T12:00:00Z`));
+    assert.equal(f.emails.length, before + 1);
+  }
+});
+
+test("specific departure labels and Meta answers preserve the chosen date", () => {
+  for (const item of departures.vietnamDepartures) {
+    assert.ok(guide.leadTimings.includes(item.timing));
+    assert.equal(guide.guideTimingLabel(item.timing), item.dateRange);
+    for (const answer of [item.timing, item.departure, item.dateRange, item.dateRange.replaceAll(" ", "_")]) {
+      assert.equal(guide.timingFromInterest(answer), item.timing, answer);
+    }
+  }
+  assert.equal(guide.timingFromInterest("June 2027"), "june_2027");
+  assert.equal(guide.timingFromInterest("July 1, 2027"), "not_sure");
 });

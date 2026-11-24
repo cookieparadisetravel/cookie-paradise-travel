@@ -1,3 +1,4 @@
+import { departureForTiming } from "./trip-availability.ts";
 import type { DashboardInquiry } from "../app/admin/inquiries/dashboard-types";
 import type { GuideLeadRow } from "./lead-inbox";
 import { isActiveInquiryStage, normalizeInquiryStage } from "./inquiry-stage.ts";
@@ -28,7 +29,7 @@ export const feedCreatedAt = (entry: InquiryFeedEntry) => {
   const created = entry.kind === "booking" ? entry.inquiry.createdAt : entry.guide.created_at;
   return entry.guide?.renewed_at && new Date(entry.guide.renewed_at).getTime() > new Date(created).getTime() ? entry.guide.renewed_at : created;
 };
-export const feedDeparture = (entry: InquiryFeedEntry) => entry.kind === "booking" ? entry.inquiry.departure : entry.guide.travel_timing === "june_2027" ? "2027-06-01" : entry.guide.travel_timing === "december_2027" ? "2027-12-27" : "flexible";
+export const feedDeparture = (entry: InquiryFeedEntry) => entry.kind === "booking" ? entry.inquiry.departure : departureForTiming(entry.guide.travel_timing)?.departure ?? "flexible";
 export const feedStage = (entry: InquiryFeedEntry) => normalizeInquiryStage(entry.kind === "booking" ? entry.inquiry.status : entry.guide.status);
 export const feedIsActive = (entry: InquiryFeedEntry) => entry.kind === "booking" ? isActiveInquiryStage(entry.inquiry.status) : isActiveInquiryStage(entry.guide.status);
 export const feedIsNew = (entry: InquiryFeedEntry) => feedStage(entry) === "new";

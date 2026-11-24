@@ -215,3 +215,13 @@ test("December departure uses its own October deadline and installments total th
   assert.equal(plan.installments.at(-1)?.dueDate, "2027-10-27");
   assert.equal(plan.installments.length, 12);
 });
+
+
+test("each added summer departure has its own deadline and a reconciled payment plan", () => {
+  for (const [departure, deadline] of [["2027-06-15", "2027-04-15"], ["2027-06-29", "2027-04-29"], ["2027-07-13", "2027-05-13"], ["2027-07-27", "2027-05-27"], ["2027-08-10", "2027-06-10"]]) {
+    const plan = createCheckedPaymentPlan({ departure, acceptanceDate: "2026-11-24", bookingTotalCents: 287500, partySize: 1 });
+    assert.equal(plan.initialAmountCents, 50000);
+    assert.equal(plan.finalPaymentDeadline, deadline);
+    assert.equal(plan.installments.at(-1)?.dueDate, deadline);
+  }
+});
