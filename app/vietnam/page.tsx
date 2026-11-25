@@ -11,7 +11,7 @@ import { ReferralBrand, ReferralProvider } from "../components/referral-brand";
 import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
 import { consultationBookingUrl } from "@/lib/consultation";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
-import { vietnamDepartures, departureDateSummary } from "@/lib/trip-availability";
+import { vietnamDepartures, departureDateSummary, formatUsd, summerMealSummary } from "@/lib/trip-availability";
 import { DepartureOptions } from "../components/departure-options";
 
 export const dynamic = "force-dynamic";
@@ -23,17 +23,22 @@ export const metadata = publicPageMetadata({
   imageAlt: "Discover Southern Vietnam small-group tour",
 });
 
-const pricing = [["4–8 guests", "$2,875"]];
+const summerDeparture = vietnamDepartures.find(item => !item.allMealsIncluded)!;
+const decemberDeparture = vietnamDepartures.find(item => item.allMealsIncluded)!;
+const pricing = [
+  ["Summer 2027 · 4–8 guests", formatUsd(summerDeparture.sharedRoomUsd)],
+  ["December 27, 2027 · 4–8 guests", formatUsd(decemberDeparture.sharedRoomUsd)],
+];
 const inclusions = [
-  { icon: Utensils, title: "Hotels & meals", description: "Seven hotel nights, seven breakfasts, five lunches and three dinners—including a home-hosted Mekong lunch and Hue royal dinner." },
+  { icon: Utensils, title: "Hotels & meals", description: "Seven hotel nights. Summer departures include seven breakfasts, five lunches, and three dinners, including a home-hosted Mekong lunch and Hue royal dinner. The December 27, 2027 departure includes every meal." },
   { icon: Plane, title: "Flights, transfers & Vietnam visa", description: "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers, private boats and your Vietnam visa." },
   { icon: Users, title: "Guides & experiences", description: "English-speaking local guides, admission fees and scheduled activities, from a vintage-Jeep food tour to Hoi An’s culinary challenge." },
 ];
 const questions = [
   ["Which flights should I book?", "Plan to arrive in Ho Chi Minh City at Tan Son Nhat International Airport (SGN) on day one of your selected departure, and depart from Da Nang International Airport (DAD), near Hoi An, on day eight. See the departure options for exact start and end dates. Your U.S. departure and arrival dates depend on the flight schedule. Confirm flight plans with Trung before purchasing."],
   ["Can couples share a room?", "Yes. Couples can request a queen bed or separate beds, subject to availability. The private-room supplement is for a traveler who wants a room to themselves."],
-  ["Who hosts the trip?", "Your departure will be hosted by Trung or another carefully selected Cookie Paradise Travel Company host, supported by experienced local guides. Ask Trung who is planned for your trip."],
-  ["Which departure dates can I choose?", `Choose from ${departureDateSummary}. Each departure has its own group of 4–8 guests. Private trips can also be planned around your own dates.`],
+  ["Who hosts the trip?", "Summer departures are hosted by Trung or another carefully selected Cookie Paradise host, with English-speaking local guides. On December 27, 2027, a Cookie Paradise host and English-speaking local guides accompany the group. Trung plans the December trip and is your contact before you go. He is not on that departure."],
+  ["Which departure dates can I choose?", `Choose from ${departureDateSummary}. Summer departures are ${formatUsd(summerDeparture.sharedRoomUsd)} per person and include ${summerMealSummary}. The December 27, 2027 departure is ${formatUsd(decemberDeparture.sharedRoomUsd)} per person with every meal included. Each departure has its own group of 4 to 8 guests. Private trips can also be planned around your own dates.`],
 ];
 
 export default async function VietnamTrip() {
@@ -66,7 +71,7 @@ export default async function VietnamTrip() {
         </div>
         <div className="mx-auto max-w-3xl px-5 py-10 text-center sm:px-8 sm:py-12">
           <p className="text-lg leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
-          <p className="mt-5 text-base leading-7"><strong className="text-2xl">$2,875 per traveler</strong> · fixed price<br /><span className="text-sm">Shared room · International airfare extra</span></p>
+          <p className="mt-5 text-base leading-7"><strong className="text-2xl">{formatUsd(summerDeparture.sharedRoomUsd)} per traveler</strong> · summer 2027<br /><strong className="text-2xl">{formatUsd(decemberDeparture.sharedRoomUsd)} per traveler</strong> · December 27, 2027, every meal included<br /><span className="text-sm">Shared room · International airfare extra</span></p>
         </div>
       </section>
 
@@ -80,7 +85,7 @@ export default async function VietnamTrip() {
           </div>
           <div className="rounded-[2rem] border border-black/15 bg-white p-6 sm:p-8">
             <h3 className="font-serif text-2xl">Tour price per person</h3>
-            <p className="mt-2 text-base leading-7">Sharing a room · Same price for 4–8 guests</p>
+            <p className="mt-2 text-base leading-7">Sharing a room. Summer includes {summerMealSummary}. December includes every meal.</p>
             <dl className="mt-5 divide-y divide-black/10">{pricing.map(([group, price]) => <div key={group} className="flex items-baseline justify-between gap-4 py-4"><dt className="font-semibold">{group}</dt><dd className="font-serif text-3xl text-[#805018]">{price}</dd></div>)}</dl>
             <p className="mt-3 border-t border-black/15 pt-5 text-base leading-7">Private room: <strong>+$399</strong>, subject to availability.</p>
           </div>

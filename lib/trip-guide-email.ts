@@ -1,6 +1,6 @@
-import { departureForTiming, departureDateSummary } from "./trip-availability.ts";
+import { departureForTiming, departureDateSummary, formatUsd, summerMealSummary, vietnamDepartures } from "./trip-availability.ts";
 import { consultationBookingUrl } from "./consultation";
-import { tripGuideUrl, retireeGuideUrl, retireeOfferId, retireeOfferSummary, type LeadTiming } from "./trip-guide";
+import { tripGuideUrl, retireeGuideUrl, retireeOfferId, type LeadTiming } from "./trip-guide";
 import { sendTripGuideEmailMessage } from "./mailersend-transactional";
 
 const escape = (text: string) => text.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
@@ -11,9 +11,18 @@ export function buildTripGuideEmail(input: { firstName: string; timing: LeadTimi
   const timing = selected
     ? `You selected ${selected.dateRange}. Our eight-day itinerary visits Ho Chi Minh City, the Mekong Delta, Hue and Hoi An.${selected.timing === "december_2027" ? " Your selected departure runs across New Year." : ""}`
     : `Choose from these eight-day departures: ${departureDateSummary}. Each trip visits Ho Chi Minh City, the Mekong Delta, Hue and Hoi An. Book a call to discuss the date that works for you.`;
-  const isRetiree = input.offer === retireeOfferId && input.timing === "december_2027";
+  const isDecember = selected?.allMealsIncluded === true;
+  const isRetiree = input.offer === retireeOfferId && isDecember;
   const guideUrl = isRetiree ? retireeGuideUrl : tripGuideUrl;
-  const price = isRetiree ? retireeOfferSummary : "The shared-room price is fixed at US$2,875 per traveler. Each group has a minimum of 4 and maximum of 8 guests, plus your host; the price stays the same. Optional all-meals upgrade: add US$125 per traveler (US$3,000 total sharing a room) to include all meals during the eight-day Vietnam tour. International airfare is not included.";
+  const summer = vietnamDepartures.find(item => !item.allMealsIncluded)!;
+  const december = vietnamDepartures.find(item => item.allMealsIncluded)!;
+  const summerPrice = `Summer 2027 departures are US${formatUsd(summer.sharedRoomUsd)} per traveler sharing a room and include ${summerMealSummary}. Optional all-meals upgrade: add US$125 per traveler (US$3,000 total sharing a room) to include all meals during the eight-day Vietnam tour.`;
+  const decemberPrice = `The December 27, 2027 to January 3, 2028 departure is US${formatUsd(december.sharedRoomUsd)} per traveler sharing a room, with every meal included.`;
+  const price = isDecember
+    ? `${decemberPrice} International airfare is not included.`
+    : selected
+      ? `${summerPrice} International airfare is not included.`
+      : `${summerPrice} ${decemberPrice} Each group has a minimum of 4 and a maximum of 8 guests. International airfare is not included.`;
   const assurance = "This is an information request. No payment was collected and no reservation has been confirmed.";
   return {
     subject: "Your Discover Southern Vietnam trip guide",

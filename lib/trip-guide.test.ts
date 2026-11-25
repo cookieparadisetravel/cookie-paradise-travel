@@ -510,23 +510,26 @@ test("specific departure labels and Meta answers preserve the chosen date", () =
 });
 
 
-test("retiree guide pricing is isolated from standard December and summer inquiries", async () => {
+test("December guide pricing stays separate from summer pricing", async () => {
   const m = await loadModule<typeof import('./trip-guide-email')>("lib/trip-guide-email.ts", {"./trip-availability.ts":departures,"./consultation":consultation,"./trip-guide":guide,"./mailersend-transactional":{sendTripGuideEmailMessage:async()=>({})}});
   const base = { firstName: "Traveler", stopToken: uuid(), timing: "december_2027" as const };
   const special = m.buildTripGuideEmail({ ...base, offer: guide.retireeOfferId });
-  for (const output of [special.text, special.html]) {
+  const standardDecember = m.buildTripGuideEmail(base);
+  for (const output of [special.text, special.html, standardDecember.text, standardDecember.html]) {
     assert.match(output, /US\$3,000/);
-    assert.match(output, /all meals included/);
-    assert.ok(output.includes(guide.retireeGuideUrl));
+    assert.match(output, /every meal included/);
     assert.doesNotMatch(output, /2,875/);
   }
-  for (const input of [base, { ...base, timing: "june_2027" as const, offer: guide.retireeOfferId }]) {
-    const standard = m.buildTripGuideEmail(input);
-    assert.match(standard.text, /US\$2,875/);
-    assert.ok(standard.text.includes(guide.tripGuideUrl));
-    assert.match(standard.text, /Optional all-meals upgrade: add US\$125 per traveler \(US\$3,000 total/);
-    assert.doesNotMatch(standard.text, /Retiree package/);
-  }
+  assert.ok(special.text.includes(guide.retireeGuideUrl));
+  assert.ok(standardDecember.text.includes(guide.tripGuideUrl));
+  assert.doesNotMatch(special.text, /Optional all-meals upgrade/);
+  assert.doesNotMatch(standardDecember.text, /Optional all-meals upgrade/);
+  const summer = m.buildTripGuideEmail({ ...base, timing: "june_2027" as const, offer: guide.retireeOfferId });
+  assert.match(summer.text, /US\$2,875/);
+  assert.match(summer.text, /7 breakfasts, 5 lunches, and 3 dinners/);
+  assert.match(summer.text, /Optional all-meals upgrade: add US\$125 per traveler \(US\$3,000 total/);
+  assert.ok(summer.text.includes(guide.tripGuideUrl));
+  assert.doesNotMatch(summer.text, /Retiree package/);
 });
 
 test("retiree inquiry records its offer and fulfills the guide without newsletter signup", async () => {

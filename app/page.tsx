@@ -8,7 +8,7 @@ import { redirect } from "next/navigation";
 import { getSalonPartner, REFERRAL_COOKIE } from "@/lib/salon-referrals";
 import { ReferralBrand, ReferralProvider } from "./components/referral-brand";
 import { getPublicTripAvailability } from "@/lib/public-trip-availability";
-import { vietnamDepartures, departureDateSummary, totalGuestCapacity } from "@/lib/trip-availability";
+import { vietnamDepartures, departureDateSummary, formatUsd, summerMealSummary, totalGuestCapacity } from "@/lib/trip-availability";
 import { DepartureOptions } from "./components/departure-options";
 import { TripBudget } from "./components/trip-budget";
 import { JourneyPhoto } from "./components/journey-photo";
@@ -39,7 +39,12 @@ const itinerary = [
   ["08", "Depart Hoi An via Da Nang", "Breakfast and a private transfer to Da Nang International Airport (DAD) for your onward flight."],
 ];
 
-const pricing = [["4–8 guests", "$2,875"]];
+const summerDeparture = vietnamDepartures.find(item => !item.allMealsIncluded)!;
+const decemberDeparture = vietnamDepartures.find(item => item.allMealsIncluded)!;
+const pricing = [
+  ["Summer 2027 · 4–8 guests", formatUsd(summerDeparture.sharedRoomUsd)],
+  ["December 27, 2027 · 4–8 guests", formatUsd(decemberDeparture.sharedRoomUsd)],
+];
 
 const detailedItinerary = [
   {
@@ -127,7 +132,7 @@ const homepageFaqs = [
   { question: "What happens if the minimum group is not reached?", answer: approvedSummary("Minimum group and company cancellation") + " Independently purchased international flights and other arrangements are not covered by this refund." },
   { question: "What if a major disruption affects the trip?", answer: approvedSummary("Changes and major disruptions") },
   { question: "What if I need to cancel?", answer: approvedSummary("If you cancel") },
-  { question: "Which departure dates can I choose?", answer: `Choose from ${departureDateSummary}. Each departure has its own group of 4–8 guests and the same $2,875 shared-room price. If none of these dates works, book a call to discuss a private trip or future departures.` },
+  { question: "Which departure dates can I choose?", answer: `Choose from ${departureDateSummary}. Summer departures from June through August 2027 are ${formatUsd(summerDeparture.sharedRoomUsd)} per person and include ${summerMealSummary}. The December 27, 2027 departure is ${formatUsd(decemberDeparture.sharedRoomUsd)} per person with every meal included. Each departure has its own group of 4 to 8 guests. If none of these dates works, book a call to discuss a private trip or future departures.` },
 ];
 
 export default async function Home({ searchParams }: { searchParams: Promise<{ ref?: string }> }) {
@@ -179,7 +184,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
         <div className="mx-auto max-w-4xl px-5 py-12 text-center sm:px-8 sm:py-16">
           <div className="hero-trip-details">
             <p className="mt-6 max-w-2xl text-base leading-7 text-[var(--ink)] sm:text-xl sm:leading-8">Taste Ho Chi Minh City (Saigon), drift through the Mekong Delta, explore imperial Hue and wander lantern-lit Hoi An—with your hotels, local guides and daily experiences arranged.</p>
-            <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">$2,875</span><span className="text-base text-[var(--ink)]">per traveler · fixed price</span></p>
+            <p className="mt-7 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">{formatUsd(summerDeparture.sharedRoomUsd)}</span><span className="text-base text-[var(--ink)]">per traveler · summer 2027</span></p>
+            <p className="mt-3 flex flex-wrap items-baseline gap-x-3 gap-y-1"><span className="text-4xl font-bold text-[#805018]">{formatUsd(decemberDeparture.sharedRoomUsd)}</span><span className="text-base text-[var(--ink)]">per traveler · December 27, 2027, every meal included</span></p>
             <p className="mt-2 text-sm leading-6 text-[var(--ink)]">Shared room · International airfare extra</p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
               <ConsultationLink />
@@ -207,10 +213,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             ))}
             <div className="border-t border-black/10 bg-[#fff7e9] px-6 py-5 sm:px-9">
               <h3 className="text-lg font-bold">Make every meal part of the experience.</h3>
-              <p className="mt-2 leading-7">Add all meals during your eight-day Vietnam tour for <strong>$125 per person</strong>. That’s <strong>$3,000 per person</strong> with a shared room. Select the optional upgrade when requesting your seat.</p>
+              <p className="mt-2 leading-7">On a summer departure, add all meals during your eight-day Vietnam tour for <strong>$125 per person</strong>. That’s <strong>$3,000 per person</strong> with a shared room. Select the optional upgrade when requesting your seat. The December 27, 2027 departure already includes every meal.</p>
             </div>
             <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
-              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">One fixed tour price</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
+              <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">Summer and December prices</summary><p className="mt-3 leading-7">Summer departures are {formatUsd(summerDeparture.sharedRoomUsd)} per person sharing a room and include {summerMealSummary}. The December 27, 2027 to January 3, 2028 departure is {formatUsd(decemberDeparture.sharedRoomUsd)} per person sharing a room, and every meal is included. Within each departure, the price does not change with group size for 4 to 8 guests.</p></details>
               Private room: <strong className="text-[var(--ink)]">+$399</strong>, subject to availability. <a href="#faq" className="font-semibold underline">See room options and booking terms.</a>
             </div>
           </div>
@@ -240,7 +246,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
       </figure>
           <div className="divide-y divide-[var(--line)]">
             {[
-              [Utensils, "Hotels & meals", "Seven hotel nights, seven breakfasts, five lunches and three dinners, including a home-hosted Mekong lunch and Hue royal dinner."],
+              [Utensils, "Hotels & meals", "Seven hotel nights. Summer departures include seven breakfasts, five lunches, and three dinners, including a home-hosted Mekong lunch and Hue royal dinner. The December 27, 2027 departure includes every meal."],
               [Plane, "Flights, transfers & Vietnam visa", "The Ho Chi Minh City–Hue flight, private ground transportation, scheduled airport transfers, private boats and your Vietnam visa."],
               [Users, "Guides & experiences", "English-speaking local guides, admission fees and all scheduled activities, from the Jeep food tour to Hoi An’s culinary challenge."],
             ].map(([Icon, title, text]) => {
@@ -258,7 +264,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="lg:self-start">
             <p className="eyebrow">The daily itinerary</p>
             <h2 id="itinerary-title" className="section-title">Explore your eight-day itinerary.</h2>
-            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Open each day for activities and meals included in the $2,875 tour. Choose the $125 all-meals upgrade to include every meal during the tour.</p>
+            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Open each day for activities and meals included in the $2,875 summer tour. Choose the $125 all-meals upgrade to include every meal on a summer departure. The December 27, 2027 departure includes every meal.</p>
             <DestinationSlideshow />
           </div>
           <div id="daily-schedule" className="scroll-mt-6 space-y-4">
@@ -302,7 +308,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
             <p className="eyebrow">A local connection to Vietnam</p>
             <h2 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Meet Trung, your Vietnam trip planner.</h2>
             <p className="mt-6 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Born in Vietnam and now based in Columbus, Indiana, Trung Le spent seven years living in Ho Chi Minh City. He is the founder of Cookie Paradise Travel Company and co-owner of the local Cookie Paradise bakery.</p>
-            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Trung created this itinerary to share the food, everyday life and places he knows. Your departure will be hosted by Trung or another carefully selected Cookie Paradise Travel Company host; ask who is planned for your trip.</p>
+            <p className="mt-4 max-w-2xl text-lg leading-8 text-[var(--muted-ink)]">Trung created this itinerary to share the food, everyday life and places he knows. Summer departures are hosted by Trung or another carefully selected Cookie Paradise host. On December 27, 2027, a Cookie Paradise host and English-speaking local guides accompany the group. Trung plans that departure and is your contact before you go.</p>
             <details className="mt-6 max-w-2xl rounded-2xl border border-[var(--line)] px-5 py-4">
               <summary className="cursor-pointer font-semibold">More about Trung</summary>
               <div className="mt-7 space-y-5 text-lg leading-8 text-[var(--muted-ink)]">
@@ -318,7 +324,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           </div>
           <aside aria-labelledby="trung-value-title" className="rounded-[2rem] border border-[#805018]/20 border-t-4 border-t-[#805018] bg-[#faf8f3] p-7 text-[var(--ink)] shadow-sm sm:p-8 lg:col-start-2 xl:col-start-auto">
             <h3 id="trung-value-title" className="font-serif text-3xl leading-tight">Your Vietnam trip starts with someone you know.</h3>
-            <p className="mt-5 text-base leading-8">I’ll help arrange your flights, take care of your Vietnam e-visa, and help you prepare before we travel together. With no more than eight guests and monthly payments available, you can spend less time sorting out the details and more time looking forward to Vietnam.</p>
+            <p className="mt-5 text-base leading-8">I’ll help arrange your flights, take care of your Vietnam e-visa, and help you prepare before the trip. With no more than eight guests and monthly payments available, you can spend less time sorting out the details and more time looking forward to Vietnam.</p>
           </aside>
         </div>
       </section>
