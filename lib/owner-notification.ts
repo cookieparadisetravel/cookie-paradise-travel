@@ -11,6 +11,7 @@ type InquiryNotification = {
   room: string;
   partySize: number;
   notes: string;
+  allMealsIncluded?: boolean;
   contactConsent: boolean;
   sellerOfTravelStateResident: boolean;
   residenceState: string | null;

@@ -1,9 +1,10 @@
+import { bookingIncludesAllMeals } from "@/lib/booking-meals";
 import { and, eq, isNotNull } from "drizzle-orm";
 import { agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { requireOwner } from "@/lib/owner-auth";
 import { hasValidOrigin } from "@/lib/same-origin";
-import { isPublishedPerTravelerPriceCents, privateRoomSupplementCents } from "@/lib/trip-pricing";
+import { isPublishedPerTravelerPriceCents, privateRoomSupplementCents, allMealsUpgradeCents } from "@/lib/trip-pricing";
 
 type PriceInput = { travelerId: number; tripPriceCents: number; occupancy: "shared" | "private" };
 
@@ -80,7 +81,8 @@ export async function PUT(request: Request, context: { params: Promise<{ id: str
     return Response.json({ error: "The submitted prices must match every traveler on this inquiry exactly once." }, { status: 409 });
   }
   const submittedTotal = prices.reduce((sum, price) => sum + price.tripPriceCents, 0);
-  const hasPriceMismatch = prices.some((price) => price.tripPriceCents !== Number(publishedBasePriceCents) + (price.occupancy === "private" ? privateRoomSupplementCents : 0));
+  const allMealsIncluded = await bookingIncludesAllMeals(inquiryId);
+  const hasPriceMismatch = prices.some((price) => price.tripPriceCents !== Number(publishedBasePriceCents) + (allMealsIncluded ? allMealsUpgradeCents : 0) + (price.occupancy === "private" ? privateRoomSupplementCents : 0));
   if (hasPriceMismatch && !priceMismatchConfirmed) {
     return Response.json({ error: "One or more traveler prices do not match the selected published package price and occupancy. Review and confirm the differences before saving." }, { status: 409 });
   }

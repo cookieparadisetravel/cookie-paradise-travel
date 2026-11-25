@@ -45,6 +45,8 @@ text(46, 666, 'Choose your departure', 29, 'Times-Bold')
 text(46, 641, 'Eight days. Seven nights. Your own group of 4–8 guests.', 11)
 text(46, 622, 'US$2,875 per person sharing a room • Private room +$399', 11)
 
+text(46, 606, 'Optional: all tour meals +$125 per person (US$3,000 shared-room total).', 10)
+
 c.setFillColor(HexColor('#f0e2cd')); c.rect(46, 570, 520, 30, fill=1, stroke=0)
 text(58, 581, 'TRIP DATES', 9, 'Helvetica-Bold')
 text(380, 581, 'FINAL PAYMENT DUE', 9, 'Helvetica-Bold')

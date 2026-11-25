@@ -1,3 +1,4 @@
+import * as residency from "./residency-review.ts";
 import assert from "node:assert/strict";
 import { readFileSync, readdirSync } from "node:fs";
 import { DatabaseSync } from "node:sqlite";
@@ -82,6 +83,8 @@ function fixture(mode: "sandbox" | "production", bookingEnvironment: "sandbox" |
   };
   const unexpected = () => { throw new Error("A provider or state-changing dependency must not run for a blocked booking."); };
   const stubs: Stubs = {
+    "@/lib/booking-meals": { bookingIncludesAllMeals: async () => false },
+    "@/lib/residency-review": residency,
     "cloudflare:workers": { env: runtime },
     "drizzle-orm": {},
     "@/db": { getDb: () => db },
@@ -316,6 +319,8 @@ for (const file of ["autopay-retry", "autopay-stop", "payment-preference-invitat
 
 test("disabled automation prevents continuations from querying or sending agreements/payment links", async () => {
   const stubs: Stubs = {
+    "@/lib/booking-meals": { bookingIncludesAllMeals: async () => false },
+    "@/lib/residency-review": residency,
     "cloudflare:workers": { env: { AUTOMATED_BOOKING_ENABLED: "false", SQUARE_ENV: "sandbox" } },
     "drizzle-orm": sqlBuilders,
   };

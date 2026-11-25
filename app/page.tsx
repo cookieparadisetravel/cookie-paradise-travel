@@ -205,6 +205,10 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
                 <p className="font-serif text-3xl text-[#805018] sm:text-4xl">{price}<span className="ml-1 font-sans text-xs text-[var(--ink)]">/ person</span></p>
               </div>
             ))}
+            <div className="border-t border-black/10 bg-[#fff7e9] px-6 py-5 sm:px-9">
+              <h3 className="text-lg font-bold">Make every meal part of the experience.</h3>
+              <p className="mt-2 leading-7">Add all meals during your eight-day Vietnam tour for <strong>$125 per person</strong>. That’s <strong>$3,000 per person</strong> with a shared room. Select the optional upgrade when requesting your seat.</p>
+            </div>
             <div className="border-t border-black/10 bg-white px-6 py-5 text-sm text-[var(--ink)] sm:px-9">
               <details className="mb-5 border-b border-[var(--line)] pb-5"><summary className="cursor-pointer font-semibold">One fixed tour price</summary><p className="mt-3 leading-7">{approvedSummary("Price and room arrangements").split(" The $399")[0]}</p></details>
               Private room: <strong className="text-[var(--ink)]">+$399</strong>, subject to availability. <a href="#faq" className="font-semibold underline">See room options and booking terms.</a>
@@ -254,7 +258,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ r
           <div className="lg:self-start">
             <p className="eyebrow">The daily itinerary</p>
             <h2 id="itinerary-title" className="section-title">Explore your eight-day itinerary.</h2>
-            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Open each day for activities and meals.</p>
+            <p className="mt-5 mb-7 text-lg leading-8 text-[var(--muted-ink)]">Open each day for activities and meals included in the $2,875 tour. Choose the $125 all-meals upgrade to include every meal during the tour.</p>
             <DestinationSlideshow />
           </div>
           <div id="daily-schedule" className="scroll-mt-6 space-y-4">

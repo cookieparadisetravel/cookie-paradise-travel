@@ -524,7 +524,8 @@ test("retiree guide pricing is isolated from standard December and summer inquir
     const standard = m.buildTripGuideEmail(input);
     assert.match(standard.text, /US\$2,875/);
     assert.ok(standard.text.includes(guide.tripGuideUrl));
-    assert.doesNotMatch(standard.text, /3,000/);
+    assert.match(standard.text, /Optional all-meals upgrade: add US\$125 per traveler \(US\$3,000 total/);
+    assert.doesNotMatch(standard.text, /Retiree package/);
   }
 });
 
