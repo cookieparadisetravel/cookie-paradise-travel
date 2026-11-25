@@ -47,6 +47,7 @@ export type DashboardInquiry = {
   phone: string;
   departure: string;
   roomPreference: string;
+  allMealsIncluded?: boolean;
   partySize: number;
   notes: string;
   referralCode: string | null;

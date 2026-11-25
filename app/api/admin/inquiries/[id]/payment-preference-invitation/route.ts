@@ -1,3 +1,4 @@
+import { bookingIncludesAllMeals } from "@/lib/booking-meals";
 import { env } from "cloudflare:workers";
 import { and, eq, isNull } from "drizzle-orm";
 import { getSquareBookingEnvironmentError } from "@/lib/square-config";
@@ -77,6 +78,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   try {
     expectedBookingTotalCents = calculateExpectedBookingTotalCents({
       partySize: inquiry.partySize,
+      allMealsIncluded: await bookingIncludesAllMeals(bookingRequestId),
       perTravelerPriceCents,
       privateRoomCount,
     });

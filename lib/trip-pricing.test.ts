@@ -54,3 +54,11 @@ test("individual bookings are allowed and parties cannot exceed eight", () => {
   for (const partySize of [1, 4, 8]) assert.equal(calculateExpectedBookingTotalCents({ partySize, perTravelerPriceCents: 287_500, privateRoomCount: 0 }), partySize * 287_500);
   assert.throws(() => calculateExpectedBookingTotalCents({ partySize: 9, perTravelerPriceCents: 287_500, privateRoomCount: 0 }));
 });
+
+test("all-meals upgrade adds $125 per traveler and combines with private rooms", () => {
+  assert.equal(automaticTravelerPriceCents("shared", true), 300_000);
+  assert.equal(automaticTravelerPriceCents("private", true), 339_900);
+  assert.equal(calculateExpectedBookingTotalCents({ partySize: 2, perTravelerPriceCents: 287_500, privateRoomCount: 0, allMealsIncluded: true }), 600_000);
+  assert.equal(calculateExpectedBookingTotalCents({ partySize: 2, perTravelerPriceCents: 287_500, privateRoomCount: 1, allMealsIncluded: true }), 639_900);
+  assert.deepEqual(inferPriceCheckSelection({ bookingTotalCents: 639_900, partySize: 2, preferredPrivateRoomCount: 0, allMealsIncluded: true }), { perTravelerPriceCents: 287_500, privateRoomCount: 1 });
+});

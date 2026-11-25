@@ -12,12 +12,13 @@ import {
 } from "@/components/ui/select";
 
 import { ReferralBrand } from "./referral-brand";
+import { automaticTravelerPriceCents } from "@/lib/trip-pricing";
 import { consultationBookingUrl } from "@/lib/consultation";
 
 type Props = { triggerLabel: string; compact?: boolean; inverse?: boolean;
   bookingInvitationToken?: string; initialOpen?: boolean;
   initialContact?: { name: string; email: string; phone: string };
-  initialTrip?: { departure: string; room: string; partySize: number; sellerOfTravelStateResident?: boolean; residenceState?: string };
+  initialTrip?: { departure: string; room: string; partySize: number; allMealsIncluded?: boolean; sellerOfTravelStateResident?: boolean; residenceState?: string };
 };
 
 
@@ -93,6 +94,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [departure, setDeparture] = useState(initialTrip?.departure && isVietnamDeparture(initialTrip.departure) ? initialTrip.departure : vietnamDepartures[0].departure);
   const [room, setRoom] = useState(initialTrip?.room==="private" ? "private" : "shared");
+  const [allMealsIncluded, setAllMealsIncluded] = useState(initialTrip?.allMealsIncluded ?? false);
   const [partySize, setPartySize] = useState(String(initialTrip?.partySize || 1));
   const [bookingIntent, setBookingIntent] = useState<"" | "ready_to_book" | "needs_information">(bookingInvitationToken ? "ready_to_book" : "");
   const [submittedIntent, setSubmittedIntent] = useState<"" | "ready_to_book" | "needs_information">("");
@@ -200,6 +202,7 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
       departure,
       room,
       partySize: Number(partySize),
+      allMealsIncluded,
       notes: form.get("notes"),
       website: form.get("website"),
       turnstileToken,
@@ -337,6 +340,13 @@ export function BookingDialog({ triggerLabel, compact = false, inverse = false, 
                   </SelectContent>
                 </Select>
                 <p id="room-preference-help" className="mt-2 text-sm font-normal leading-6 text-[var(--muted-ink)]">The $399 private-room supplement applies only to single travelers who want a room to themselves. Couples can share a room with a queen bed or separate beds, depending on their preference. Couples sharing a room should select “Shared double/twin room.”</p>
+              </div>
+              <div className="rounded-2xl border border-[var(--line)] bg-white/70 p-4 sm:col-span-2">
+                <label className="flex cursor-pointer items-start gap-3">
+                  <input type="checkbox" checked={allMealsIncluded} onChange={(event) => setAllMealsIncluded(event.target.checked)} className="mt-1 h-5 w-5 shrink-0 accent-[var(--orange)]" />
+                  <span className="text-sm leading-6"><strong>Include all meals · +$125 per traveler</strong><br />Enjoy all meals during your eight-day Vietnam tour. Applies to every traveler in this booking.</span>
+                </label>
+                <p className="mt-3 text-sm leading-6"><strong>{(automaticTravelerPriceCents(room, allMealsIncluded) / 100).toLocaleString("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 })} per traveler</strong> · {allMealsIncluded ? "All tour meals included" : "Meals listed in the itinerary included"}{room === "private" ? " · Private room included" : " · Shared room"}. International airfare extra.</p>
               </div>
               {!bookingInvitationToken && <fieldset
                 className={`rounded-2xl border p-4 sm:col-span-2 ${fieldErrors.bookingIntent ? "border-red-500 bg-red-50/40 ring-2 ring-red-100" : "border-[var(--line)] bg-white/60"}`}

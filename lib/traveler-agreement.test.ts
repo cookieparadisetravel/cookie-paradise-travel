@@ -133,3 +133,14 @@ test("current agreement has fixed pricing and a four guest minimum", () => {
   assert.doesNotMatch(JSON.stringify(excluded), /fast-track|meet-and-assist|passport, visa/);
   assert.match(JSON.stringify(revisedAgreement), /passport, visa and entry costs/);
 });
+
+test("meal-upgrade rider records selected inclusions and price without changing the standard agreement", async () => {
+  const input = {travelerName:"Meal Traveler",departure:"2027-06-01",occupancy:"Shared double/twin room",tripPriceCents:300_000};
+  const standard=buildPersonalizedTravelerAgreement(input);
+  const upgraded=buildPersonalizedTravelerAgreement({...input,allMealsIncluded:true});
+  assert.doesNotMatch(canonicalizeAgreement(standard), /Selected upgrade — all tour meals/);
+  assert.match(canonicalizeAgreement(upgraded), /already included in the confirmed Trip Price/);
+  assert.match(canonicalizeAgreement(upgraded), /replaces the meal limitations in Appendix A/);
+  assert.notEqual(await hashAgreementDocument(standard),await hashAgreementDocument(upgraded));
+  assert.deepEqual(upgraded.sections.slice(3,-1),fixedPriceAgreement.sections);
+});

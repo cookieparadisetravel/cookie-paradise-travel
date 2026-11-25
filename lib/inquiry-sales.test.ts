@@ -236,6 +236,7 @@ test("booking API uses the handoff once, retains the original referral, and leav
   f.runtime.TURNSTILE_SECRET_KEY="test";f.runtime.AUTOMATED_BOOKING_ENABLED="true";
   let automationCalls=0,notifications=0;
   const route=await loadModule<typeof import("../app/api/booking-requests/route")>("app/api/booking-requests/route.ts",{
+    "@/lib/booking-meals": { ensureBookingMealsStorage: async () => {} },
     "@/lib/trip-availability":await import("./trip-availability.ts"),"@/db/schema":schema,"@/db":{getDb:()=>db},"drizzle-orm":builders,"cloudflare:workers":{env:f.runtime},zod:{z},
     "@/lib/mailerlite":{addConsentedSubscriber:async()=>{throw new Error("No new marketing consent");}},
     "@/lib/owner-notification":{sendOwnerInquiryNotification:async(value:{referralCode:string})=>{assert.equal(value.referralCode,"columbus-uppercuts");notifications++;return "sent";}},
@@ -260,5 +261,31 @@ test("Sandbox records and another trip cannot enter the production handoff or su
     await assert.rejects(f.invitations.sendSalesBookingInvitation(sale,crypto.randomUUID()));
     assert.equal(f.emails.length,0);
     if(sale.squareEnvironment==="sandbox") {await assert.rejects(f.sales.markSalesConsultation(sale));assert.equal(f.sqlite.prepare("SELECT count(*) n FROM consultation_bookings").get()!.n,0);}
+  }
+});
+
+test("secure booking stores the chosen meal upgrade atomically and replay cannot change it", async () => {
+  const f=await fixture(),guideId=f.guide(); const sale=await f.sales.getSalesForGuide(guideId); assert.ok(sale);
+  const {context}=await f.invite(sale.id);
+  const result=await f.invitations.completeSalesBookingInvitation(context,{...input,allMealsIncluded:true});
+  assert.equal(result.started,true);
+  assert.equal(f.sqlite.prepare("SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=?").get(result.bookingId)!.all_meals_included,1);
+  const replay=await f.invitations.completeSalesBookingInvitation(context,{...input,allMealsIncluded:false});
+  assert.equal(replay.started,false);
+  assert.equal(f.sqlite.prepare("SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=?").get(result.bookingId)!.all_meals_included,1);
+});
+
+test("changing the meal choice during an unsigned handoff adjusts existing traveler pricing once", async () => {
+  for (const previous of [false,true]) {
+    const f=await fixture(),id=f.booking();
+    const sale=await f.sales.getSalesForBooking(id); assert.ok(sale);
+    f.sqlite.prepare("INSERT INTO booking_meal_preferences VALUES (?,?)").run(id,previous?1:0);
+    f.sqlite.prepare("INSERT INTO travelers (booking_request_id,first_name,last_name,email,confirmed_trip_price_cents,confirmed_occupancy) VALUES (?,'Alex','Traveler','traveler@example.test',?,'shared')").run(id,previous?300_000:287_500);
+    const {context}=await f.invite(sale.id);
+    const result=await f.invitations.completeSalesBookingInvitation(context,{...input,allMealsIncluded:!previous});
+    assert.equal(result.started,true);
+    assert.equal(f.sqlite.prepare("SELECT confirmed_trip_price_cents FROM travelers").get()!.confirmed_trip_price_cents,previous?287_500:300_000);
+    await f.invitations.completeSalesBookingInvitation(context,{...input,allMealsIncluded:!previous});
+    assert.equal(f.sqlite.prepare("SELECT confirmed_trip_price_cents FROM travelers").get()!.confirmed_trip_price_cents,previous?287_500:300_000);
   }
 });

@@ -60,6 +60,7 @@ export function buildPersonalizedTravelerAgreement(input: {
   departure: string;
   occupancy: string;
   tripPriceCents: number;
+  allMealsIncluded?: boolean;
 }) {
   const summary: AgreementSection = {
     heading: "Trip summary",
@@ -83,9 +84,17 @@ export function buildPersonalizedTravelerAgreement(input: {
     blocks: [paragraph("By electronically accepting this Agreement, the traveler confirms that the traveler has reviewed the itinerary, confirmed Trip Price, payment and cancellation terms, inclusions and exclusions, physical and travel risks, insurance recommendation, Appendix B, and Appendix C; has had an opportunity to ask questions; and agrees to be bound by this Agreement. Exact installment amounts and due dates, when applicable, are presented through Square’s hosted invoice and payment process. Each adult traveler must complete a separate acceptance before an invoice is issued for that traveler. A payer’s signature does not accept another adult traveler’s risk terms.")],
   };
 
+  const mealUpgrade: AgreementSection[] = input.allMealsIncluded ? [{
+    heading: "Selected upgrade — all tour meals",
+    level: 1,
+    blocks: [paragraph("The traveler has selected the optional all-meals upgrade at $125 per person, already included in the confirmed Trip Price above. The shared-room land price with this upgrade is $3,000 per traveler; a private-room supplement, if selected, is additional. All meals during the eight-day Vietnam tour are included. This upgrade replaces the meal limitations in Appendix A and the meal exclusions elsewhere in this Agreement for this booking. It does not include meals outside the tour dates, international airfare, or drinks not expressly listed as included. All other booking terms remain unchanged.")],
+  }] : [];
   return {
     ...currentTravelerAgreement,
-    sections: [summary, ...currentTravelerAgreement.sections, acceptance],
+    ...(input.allMealsIncluded ? { executiveSummary: { ...executiveSummary, items: executiveSummary.items.map(item =>
+      item.label === "Price and room arrangements" ? { ...item, text: item.text + " The selected all-meals upgrade adds $125 per traveler ($3,000 shared-room land total), included in the confirmed Trip Price." } : item
+    ) } } : {}),
+    sections: [summary, ...mealUpgrade, ...currentTravelerAgreement.sections, acceptance],
   } satisfies AgreementDocument;
 }
 

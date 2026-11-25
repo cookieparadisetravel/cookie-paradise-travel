@@ -1,3 +1,5 @@
+import { ensureBookingMealsStorage } from "@/lib/booking-meals";
+import { bookingMealPreferences } from "@/db/schema";
 import { env } from "cloudflare:workers";
 import { desc, eq, inArray, sql } from "drizzle-orm";
 import {
@@ -21,6 +23,9 @@ import type {
 
 export async function loadInquiryDashboardData(inquiryId?: number) {
   const db = getDb();
+  await ensureBookingMealsStorage();
+  const mealRows = await db.select().from(bookingMealPreferences).where(inquiryId === undefined ? undefined : eq(bookingMealPreferences.bookingRequestId, inquiryId));
+  const mealChoices = new Map(mealRows.map(row => [row.bookingRequestId, row.allMealsIncluded]));
   const inquiryFilter = inquiryId === undefined ? undefined : eq(bookingRequests.id, inquiryId);
   const travelerFilter = inquiryId === undefined ? undefined : eq(travelers.bookingRequestId, inquiryId);
   const agreementInvitationFilter = inquiryId === undefined ? undefined : inArray(
@@ -112,6 +117,7 @@ export async function loadInquiryDashboardData(inquiryId?: number) {
 
     return {
       ...inquiry,
+      allMealsIncluded: mealChoices.get(inquiry.id) ?? false,
       paymentEnvironmentError: getSquareBookingEnvironmentError(
         inquiry.squareEnvironment,
         env as unknown as Record<string, string | undefined>,

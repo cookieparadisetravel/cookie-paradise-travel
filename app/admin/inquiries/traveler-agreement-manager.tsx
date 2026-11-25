@@ -4,7 +4,7 @@ import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { AlertTriangle, CheckCircle2, Link2, Loader2, MailCheck, Plus, ShieldCheck, UserRound } from "lucide-react";
 import type { AgreementInvitationDelivery } from "./dashboard-types";
-import { privateRoomSupplementCents, publishedPerTravelerPricesCents } from "@/lib/trip-pricing";
+import { allMealsUpgradeCents, privateRoomSupplementCents, publishedPerTravelerPricesCents } from "@/lib/trip-pricing";
 
 type Traveler = {
   id: number;
@@ -23,6 +23,7 @@ type Props = {
   inquiryId: number;
   expectedPartySize: number;
   initialRoomPreference: string;
+  allMealsIncluded?: boolean;
   initialTravelers: Traveler[];
   agreementActive: boolean;
   acceptedTravelerIds: number[];
@@ -40,7 +41,7 @@ const emptyForm = {
   guardianRelationship: "",
 };
 
-export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialRoomPreference, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries, invoiceExists }: Props) {
+export function TravelerAgreementManager({ inquiryId, expectedPartySize, initialRoomPreference, allMealsIncluded = false, initialTravelers, agreementActive, acceptedTravelerIds, initialInvitationDeliveries, invoiceExists }: Props) {
   const router = useRouter();
   const [travelerList, setTravelerList] = useState(initialTravelers);
   const [form, setForm] = useState(emptyForm);
@@ -72,7 +73,7 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
     const enteredCents = Math.round(Number(priceValues[traveler.id]) * 100);
     const occupancy = occupancyValues[traveler.id];
     if (!Number.isSafeInteger(enteredCents) || enteredCents < 1 || (occupancy !== "shared" && occupancy !== "private")) return false;
-    return enteredCents !== expectedTravelerPriceCents(publishedBasePriceCents, occupancy);
+    return enteredCents !== expectedTravelerPriceCents(publishedBasePriceCents, occupancy, allMealsIncluded);
   }).map((traveler) => traveler.id);
   const pricesReadyToSave = pricingComplete && (mismatchedTravelerIds.length === 0 || priceMismatchConfirmed);
 
@@ -204,10 +205,10 @@ export function TravelerAgreementManager({ inquiryId, expectedPartySize, initial
                 {(() => {
                   const occupancy = occupancyValues[traveler.id];
                   if (occupancy !== "shared" && occupancy !== "private") return <span className="mt-1 block font-medium text-[var(--muted-ink)]">Choose occupancy to calculate the expected price.</span>;
-                  const expectedCents = expectedTravelerPriceCents(publishedBasePriceCents, occupancy);
+                  const expectedCents = expectedTravelerPriceCents(publishedBasePriceCents, occupancy, allMealsIncluded);
                   const enteredCents = Math.round(Number(priceValues[traveler.id]) * 100);
                   const matches = Number.isSafeInteger(enteredCents) && enteredCents === expectedCents;
-                  return <span className={`mt-1 flex items-center gap-1 font-semibold ${matches ? "text-emerald-800" : "text-amber-800"}`}>{matches ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />} Expected: {money(expectedCents)}{occupancy === "private" ? ` (${money(publishedBasePriceCents)} + ${money(privateRoomSupplementCents)} private-room supplement)` : " for shared occupancy"}.</span>;
+                  return <span className={`mt-1 flex items-center gap-1 font-semibold ${matches ? "text-emerald-800" : "text-amber-800"}`}>{matches ? <CheckCircle2 className="h-3.5 w-3.5" /> : <AlertTriangle className="h-3.5 w-3.5" />} Expected: {money(expectedCents)}{allMealsIncluded ? " including $125 all-meals upgrade" : ""}{occupancy === "private" ? ` (${money(publishedBasePriceCents)}${allMealsIncluded ? " + $125 meals" : ""} + ${money(privateRoomSupplementCents)} private-room supplement)` : " for shared occupancy"}.</span>;
                 })()}
               </label>
               <label className="mt-3 block text-xs font-bold text-[var(--ink)]">Confirmed occupancy
@@ -311,8 +312,8 @@ function formatTimestamp(value: string) {
   });
 }
 
-function expectedTravelerPriceCents(basePriceCents: number, occupancy: string) {
-  return basePriceCents + (occupancy === "private" ? privateRoomSupplementCents : 0);
+function expectedTravelerPriceCents(basePriceCents: number, occupancy: string, allMealsIncluded = false) {
+  return basePriceCents + (allMealsIncluded ? allMealsUpgradeCents : 0) + (occupancy === "private" ? privateRoomSupplementCents : 0);
 }
 
 function occupancyFromRoomPreference(roomPreference: string) {

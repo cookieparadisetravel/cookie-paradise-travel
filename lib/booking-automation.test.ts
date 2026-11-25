@@ -54,6 +54,7 @@ async function fixture(state: string | null = "CA", partySize = 1) {
   const flow = await load("./booking-automation.ts", {
     "cloudflare:workers": { env: runtime }, "drizzle-orm": builders, "@/db": { getDb: () => db }, "@/db/schema": schema,
     "@/lib/residency-review": residency, "@/lib/square-config": square, "@/lib/safe-error": safe,
+    "@/lib/booking-meals": { bookingIncludesAllMeals: async (id: number) => sqlite.prepare("SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=?").get(id)?.all_meals_included === 1 },
     "@/lib/traveler-agreement": agreement, "@/lib/payment-schedule": payments, "@/lib/trip-pricing": pricing,
     "@/lib/agreement-readiness": { getAgreementReadiness: async () => ({ readyForInvoice: signed }) },
     "@/lib/mailersend-transactional": { sendAgreementInvitationEmail: delivery("agreement"), sendPaymentChoiceInvitationEmail: delivery("payment"), sendTravelerListInvitationEmail: delivery("travelers") },
@@ -129,4 +130,29 @@ test("summer bookings retain their departure through agreement and payment setup
     assert.deepEqual(f.emails.map(e => e.kind), ["agreement", "payment"]);
     assert.equal(f.sqlite.prepare("SELECT departure FROM booking_requests").get()!.departure, departure);
   }
+});
+
+test("selected all-meals upgrade follows a couple through agreements and payment total", async () => {
+  const f = await fixture("CA", 2);
+  f.sqlite.exec("INSERT INTO booking_meal_preferences VALUES (1,1)");
+  assert.equal(await f.start(), "traveler_list_sent");
+  await f.addTraveler(1); await f.addTraveler(2); await f.afterList();
+  assert.deepEqual(f.sqlite.prepare("SELECT confirmed_trip_price_cents FROM travelers").all().map(row => row.confirmed_trip_price_cents), [300_000,300_000]);
+  for (const row of f.sqlite.prepare("SELECT agreement_document_json FROM agreement_invitations").all()) {
+    assert.match(String(row.agreement_document_json), /Selected upgrade — all tour meals/);
+    assert.match(String(row.agreement_document_json), /\$3,000\.00/);
+  }
+  f.sign(); await f.afterAgreement();
+  assert.equal(f.sqlite.prepare("SELECT confirmed_booking_total_cents FROM booking_requests").get()!.confirmed_booking_total_cents, 600_000);
+});
+
+test("private-room meal upgrade costs $3,399 and does not rewrite emailed agreements", async () => {
+  const f = await fixture();
+  f.sqlite.exec("UPDATE booking_requests SET room_preference='private'; INSERT INTO booking_meal_preferences VALUES (1,1)");
+  assert.equal(await f.start(), "agreements_sent");
+  assert.equal(f.sqlite.prepare("SELECT confirmed_trip_price_cents FROM travelers").get()!.confirmed_trip_price_cents, 339_900);
+  const snapshot = f.sqlite.prepare("SELECT agreement_document_json FROM agreement_invitations").get()!.agreement_document_json;
+  await f.start();
+  assert.equal(f.sqlite.prepare("SELECT agreement_document_json FROM agreement_invitations").get()!.agreement_document_json, snapshot);
+  assert.equal(f.emails.length,1);
 });

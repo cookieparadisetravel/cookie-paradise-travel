@@ -1,6 +1,6 @@
-import { bookingRequests, travelers } from "@/db/schema";
+import { bookingMealPreferences, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { addConsentedSubscriber } from "@/lib/mailerlite";
 import { sendOwnerInquiryNotification } from "@/lib/owner-notification";
 import { env } from "cloudflare:workers";
@@ -14,6 +14,7 @@ import { getSalesBookingInvitation, completeSalesBookingInvitation } from "@/lib
 import { sameOrigin } from "@/lib/lead-request";
 import { referralFromCookie } from "@/lib/salon-referrals";
 
+import { ensureBookingMealsStorage } from "@/lib/booking-meals";
 import { isVietnamDeparture } from "@/lib/trip-availability";
 const validRooms = new Set(["shared", "private"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
@@ -80,6 +81,10 @@ export async function POST(request: Request) {
     const departure = String(payload.departure ?? "");
     const room = String(payload.room ?? "");
     const notes = String(payload.notes ?? "").trim();
+    if (payload.allMealsIncluded !== undefined && typeof payload.allMealsIncluded !== "boolean") {
+      return Response.json({ error: "Please review the meal upgrade selection." }, { status: 400 });
+    }
+    const allMealsIncluded = payload.allMealsIncluded === true;
     const partySize = Number(payload.partySize ?? 1);
     const marketingConsent = payload.marketingConsent === true;
     const contactConsent = payload.contactConsent === true;
@@ -120,12 +125,13 @@ export async function POST(request: Request) {
     if (invitationToken && !invitation) return Response.json({error:"This booking link has expired or is no longer available. Please contact Trung."},{status:410});
     if (invitation && invitation.sale.email!==email) return Response.json({error:"Use the email address this booking link was sent to."},{status:400});
     let referralCode=invitation ? invitation.sale.referralCode : referralFromCookie(request.headers.get("cookie"))?.code ?? null;
+    await ensureBookingMealsStorage();
     const db = getDb();
     let saved:{id:number};
     if (invitation) {
       let completed:{bookingId:number;started:boolean};
       try {
-        completed=await completeSalesBookingInvitation(invitation,{firstName,lastName,fullName,email,phone,departure,room,partySize,notes,marketingConsent,sellerOfTravelStateResident,residenceState,bookingPaused});
+        completed=await completeSalesBookingInvitation(invitation,{firstName,lastName,fullName,email,phone,departure,room,partySize,notes,allMealsIncluded,marketingConsent,sellerOfTravelStateResident,residenceState,bookingPaused});
       } catch(error) {
         console.error("Booking handoff could not be completed",getSafeDatabaseErrorDetails(error));
         return Response.json({error:"This request could not be started. Refresh your booking link or contact Trung. No payment was collected."},{status:409});
@@ -136,7 +142,7 @@ export async function POST(request: Request) {
         return Response.json({ok:true,bookingIntent:"ready_to_book",automationStatus:existing?.automationStatus ?? "not_requested",bookingPaused},{status:200});
       }
     } else {
-      [saved] = await db.insert(bookingRequests).values({
+      const [created] = await db.batch([db.insert(bookingRequests).values({
         squareEnvironment: getSquareEnvironment(env as unknown as Record<string, string | undefined>),
         tripSlug: "vietnam-southern-charms-central-heritage",
         referralCode,
@@ -154,7 +160,10 @@ export async function POST(request: Request) {
         automatedBookingStatus: bookingPaused ? "paused" : "not_requested",
         automatedBookingUpdatedAt: bookingPaused ? now : null,
         status: bookingIntent === "ready_to_book" && automatedBookingEnabled ? "booking_in_progress" : "new",
-      }).returning({ id: bookingRequests.id });
+      }).returning({ id: bookingRequests.id }), db.insert(bookingMealPreferences).values({
+        bookingRequestId: sql`last_insert_rowid()`, allMealsIncluded,
+      })]);
+      [saved] = created;
 
       try { referralCode=await connectNewBookingToSales(saved.id) ?? referralCode; }
       catch { console.error("Booking saved; sales history needs synchronization."); }
@@ -187,7 +196,7 @@ export async function POST(request: Request) {
       residenceState:bookingRequests.residenceState,
     }).from(bookingRequests).where(eq(bookingRequests.id,saved.id)).limit(1))[0] : null;
     const ownerNotificationStatus = await sendOwnerInquiryNotification({
-      id: saved.id, fullName, email, phone, departure, room, partySize, notes,
+      id: saved.id, fullName, email, phone, departure, room, partySize, notes, allMealsIncluded,
       contactConsent: true, sellerOfTravelStateResident:screening?.sellerOfTravelStateResident ?? sellerOfTravelStateResident,
       residenceState: screening ? screening.residenceState : sellerOfTravelStateResident ? residenceState : null,
       bookingIntent: bookingIntent as "ready_to_book" | "needs_information",
