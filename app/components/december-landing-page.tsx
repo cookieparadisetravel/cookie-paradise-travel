@@ -32,13 +32,15 @@ const mealsAnswer = "Yes. On this December departure, every meal is included. Th
 
 const otherDatesAnswer = "Yes. The same Southern Vietnam itinerary also departs on six summer dates from June through August 2027, at $2,875 per person, with 7 breakfasts, 5 lunches, and 3 dinners included (not every meal).";
 
+const nearbyLine = "Whether you’re in Columbus, Indianapolis, Fishers, Carmel, Westfield, Noblesville, Greenwood, Franklin, Bloomington or Seymour, you can plan this trip with someone nearby who knows the places you’re hoping to see.";
+
 export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }) {
   const gift = campaign === "gift_for_parents";
   const hero = gift ? "gift-hoi-an" : "winter-coffee";
   const callLabel = gift ? "Talk through a gift trip" : "Talk with Trung";
   const emailHref = `mailto:trung@cookieparadise.co?subject=${encodeURIComponent(gift ? "A Vietnam trip for my parents, December 27, 2027" : "Winter Vietnam trip, December 27, 2027")}`;
   const questions = gift ? [
-    ["Can I help plan or pay for my parents’ trip?", "Yes. Share the itinerary with them, then talk with Trung together, or start the call yourself and bring them in when they’re ready. You can pay the $500 deposit as the gift, split the remaining payments, or pay in full."],
+    ["Can I help plan or pay for my parents’ trip?", "Yes. Share the itinerary with them, then talk with Trung together, or start the call yourself and bring them in when they’re ready. You can pay the $500 deposit as the gift, help with the monthly payments, or cover the whole trip. Trung will walk your family through it on a free call, together or just with you first."],
     ["Why is a small group a better gift for my parents?", `A cap of 8 guests keeps the days more personal and less rushed than a large coach tour. ${groupComparison} There’s still walking, some early starts, and uneven ground, so review the pace with Trung and your parents before booking. Every meal is included, so they aren’t figuring out restaurants after a long day.`],
     ["Are all meals included?", "Yes, on this December departure every meal is included. Summer dates are $2,875 per person and include 7 breakfasts, 5 lunches, and 3 dinners."],
     ["What is the pace?", paceAnswer],
@@ -66,14 +68,12 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
 
     <section className="december-hero" aria-labelledby="campaign-title">
       <div className="december-hero-copy">
-        <p className="december-eyebrow">{gift ? "For the parents with more places to see" : "Make next winter one to remember"}</p>
-        <h1 id="campaign-title">{gift ? <>Give them<br /><em>Vietnam.</em></> : <>Trade winter coats<br />for <em>Vietnam.</em></>}</h1>
+        <p className="december-eyebrow">For Central Indiana travelers</p>
+        <h1 id="campaign-title">{gift ? <>The gift Mom and Dad<br />will talk about <em>forever.</em></> : <>You’ve earned this.<br />Trade winter coats<br />for <em>Vietnam.</em></>}</h1>
         <p className="december-lede">{gift
-          ? "Not another thing to store. An 8-guest trip they can look forward to for a year: Vietnamese coffee, a home-hosted lunch in the Mekong, lantern-lit evenings in Hoi An, and a host who has time for them. Every meal is included, so they are not paying restaurant bills after the gift is arranged."
-          : "Eight days in Ho Chi Minh City, the Mekong Delta, Hue, and Hoi An, with no more than 8 guests. That small a group is how you share a home-hosted lunch, ride a vintage Jeep for a night of street food, and travel by private boat instead of a coach. Every meal is included, so after you pay, you can just enjoy the week."}</p>
-        <p className="december-support">{gift
-          ? "Planned with Trung Le in Columbus, Indiana. A Cookie Paradise host and English-speaking local guides accompany the group. Trung is your family’s planning contact before they go."
-          : "Planned with Trung Le, who was born in Vietnam and spent seven years living in Ho Chi Minh City. A Cookie Paradise host and English-speaking local guides accompany the group. Trung is your planning contact before you go."}</p>
+          ? "Not another thing to store. An 8-guest trip to Vietnam with every meal included, planned with someone local in Columbus, and a whole year for them to look forward to it."
+          : "Eight days in Vietnam with no more than 8 guests and every meal included, so the only thing left to think about is enjoying it."}</p>
+        <p className="december-support">Planned by Trung Le, from Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years.</p>
         <a className="december-button" href="#get-guide">{gift ? "Get the itinerary for your family" : "Get the itinerary and pricing"}</a>
         <p className="december-note">Free itinerary. No obligation to book.</p>
       </div>
@@ -96,8 +96,8 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
           <p className="december-eyebrow">Your local connection</p>
           <h2 id="local-connection-title">{gift ? "You can plan this gift with someone local." : "Your Vietnam trip starts with someone nearby."}</h2>
           <p>{gift
-            ? "Trung Le, founder of Cookie Paradise Travel Company, is based in Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years. Whether you’re in Indianapolis, Carmel, Westfield or closer to Columbus, you can start with someone nearby who knows the places you’re hoping to see. You and your parents can talk with him together about the itinerary, rooms, and how you’d like to handle payment, before anyone commits. Trung is not on this December departure. A carefully selected Cookie Paradise host will travel with the group."
-            : "Trung Le, founder of Cookie Paradise Travel Company, is based in Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years and built this itinerary around the food, everyday life, and places he knows. Whether you’re in Indianapolis, Carmel, Westfield or closer to Columbus, you can start with someone nearby who knows the places you’re hoping to see. Trung is not on this December departure. A carefully selected Cookie Paradise host will travel with the group."}</p>
+            ? `Trung Le, founder of Cookie Paradise Travel Company, is based in Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years. ${nearbyLine} You and your parents can talk with him together about the itinerary, rooms, and how you’d like to handle payment, before anyone commits. Trung is not on this December departure. A carefully selected Cookie Paradise host will travel with the group.`
+            : `Trung Le, founder of Cookie Paradise Travel Company, is based in Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years and built this itinerary around the food, everyday life, and places he knows. ${nearbyLine} Trung is not on this December departure. A carefully selected Cookie Paradise host will travel with the group.`}</p>
         </div>
         <a className="december-button" href="#meet-trung">Meet Trung</a>
       </div>
@@ -144,7 +144,10 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <p className="december-big-price">$3,000 <span>per person</span></p>
         <p>Land package, sharing a double or twin room. All meals included.</p>
         <p><strong>$500 nonrefundable deposit</strong> per traveler, then monthly installments. Final payment is due <strong>October 27, 2027.</strong></p>
-        {gift && <p>If you’re giving this trip, you can pay the $500 deposit as the gift, contribute to the balance, or cover the trip in full. Trung will walk your family through the options on a call.</p>}
+        {gift && <>
+          <p>You can pay the $500 deposit as the gift, help with the monthly payments, or cover the whole trip. Trung will walk your family through it on a free call, together or just with you first.</p>
+          <p><a href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free call</a> by December 20 and we’ll help you have it ready to give at Christmas.</p>
+        </>}
         <p className="december-note">Private room: +$399, subject to availability. There is no credit card surcharge. Pay by ACH or card at the same price.</p>
         <a href="/#faq">Read cancellation and booking terms</a>
       </div>
