@@ -5,9 +5,10 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { loadTurnstileScript } from "./booking-dialog";
 import { attributionFromSearch, leadCities, tripGuideUrl } from "@/lib/trip-guide";
+import { decemberCampaignAttribution, type DecemberCampaign } from "@/lib/december-campaign";
 import { consultationBookingUrl } from "@/lib/consultation";
 
-export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
+export function TripGuideForm({ showCity = false, campaign }: { showCity?: boolean; campaign?: DecemberCampaign }) {
   const widget = useRef<HTMLDivElement>(null);
   const widgetId = useRef<string | null>(null);
   const submissionId = useRef<string | null>(null);
@@ -40,8 +41,8 @@ export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
     try {
       const response = await fetch("/api/trip-guide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         fullName: data.get("fullName"), email: data.get("email"), phone: data.get("phone") || "", ...(showCity ? { city: data.get("city") } : {}), timing: data.get("timing"),
-        contactConsent: true, marketingConsent: true, website: data.get("website") || "",
-        turnstileToken: token, submissionId: submissionId.current, attribution: attributionFromSearch(window.location.search),
+        contactConsent: true, marketingConsent: campaign ? data.get("marketingConsent") === "on" : true, website: data.get("website") || "",
+        turnstileToken: token, submissionId: submissionId.current, attribution: campaign ? decemberCampaignAttribution(window.location.search, campaign) : attributionFromSearch(window.location.search),
       }) });
       const result = await response.json() as { error?: string; emailStatus?: string };
       if (!response.ok) throw new Error(result.error || "We could not save your request. Please try again.");
@@ -64,13 +65,16 @@ export function TripGuideForm({ showCity = false }: { showCity?: boolean }) {
     </div> : <>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#84511e]">Start with the details</p>
       <h2 className="mt-3 font-serif text-3xl leading-tight">Email me the itinerary and pricing</h2>
-      <p className="mt-3 text-sm leading-6 text-[#6c6055]">Get the daily schedule, meals and included experiences in one PDF.</p>
+      <p className="mt-3 text-sm leading-6 text-[#6c6055]">{campaign === "gift_for_parents" ? "Use your own details to request the itinerary for your family. We’ll send the daily schedule, meals and included experiences in one PDF." : "Get the daily schedule, meals and included experiences in one PDF."}</p>
       <form onSubmit={event => { void submit(event); }} className="mt-6 space-y-4">
         <div className="grid gap-4 sm:grid-cols-2"><label className="text-sm font-semibold">Full Name<input className={inputClass} name="fullName" autoComplete="name" required maxLength={121} /></label><label className="text-sm font-semibold">Email<input className={inputClass} name="email" type="email" autoComplete="email" required maxLength={180} /></label></div>
-        <div className={`grid gap-4 ${showCity ? "sm:grid-cols-2" : ""}`}>{showCity && <label className="text-sm font-semibold">Your city<select className={inputClass} name="city" defaultValue="" required><option value="" disabled>Select a city</option>{leadCities.map(city => <option key={city}>{city}</option>)}</select></label>}<label className="text-sm font-semibold">Travel interest<select className={inputClass} name="timing" defaultValue="not_sure" required>{vietnamDepartures.map(item => <option key={item.timing} value={item.timing}>{item.dateRange}</option>)}<option value="not_sure">I&apos;m still deciding</option><option value="future">A future departure</option></select></label></div>
+        <div className={`grid gap-4 ${showCity ? "sm:grid-cols-2" : ""}`}>{showCity && <label className="text-sm font-semibold">Your city<select className={inputClass} name="city" defaultValue="" required><option value="" disabled>Select a city</option>{leadCities.map(city => <option key={city}>{city}</option>)}</select></label>}{campaign ? <div className="text-sm font-semibold">Your departure<p className="mt-2 font-normal">December 27, 2027–January 3, 2028</p><input type="hidden" name="timing" value="december_2027" /></div> : <label className="text-sm font-semibold">Travel interest<select className={inputClass} name="timing" defaultValue="not_sure" required>{vietnamDepartures.map(item => <option key={item.timing} value={item.timing}>{item.dateRange}</option>)}<option value="not_sure">I&apos;m still deciding</option><option value="future">A future departure</option></select></label>}</div>
         <label className="block text-sm font-semibold">Phone <span className="font-normal text-[#6c6055]">(optional; no automated texts)</span><input className={inputClass} name="phone" type="tel" autoComplete="tel" maxLength={40} /></label>
         <div className="hidden" aria-hidden="true"><label>Website<input name="website" tabIndex={-1} autoComplete="off" /></label></div>
-        <p className="text-sm leading-6">By clicking “Send my itinerary,” you ask Trung at Cookie Paradise Travel Company to email you the itinerary PDF, follow up about this trip (including up to two consultation reminders if you haven&apos;t booked a call), and send occasional Vietnam travel inspiration and trip updates. You can unsubscribe anytime.</p>
+        {campaign ? <>
+          <p className="text-sm leading-6">By clicking “Send my itinerary,” you ask Trung at Cookie Paradise Travel Company to email the itinerary and follow up about this trip, including up to two consultation reminders. You can stop these messages anytime.</p>
+          <label className="flex items-start gap-3 text-sm leading-6"><input className="mt-1 h-5 w-5 shrink-0 accent-[#593412]" type="checkbox" name="marketingConsent" /><span>Also send me occasional Vietnam travel inspiration and future trip updates. Optional; unsubscribe anytime.</span></label>
+        </> : <p className="text-sm leading-6">By clicking “Send my itinerary,” you ask Trung at Cookie Paradise Travel Company to email you the itinerary PDF, follow up about this trip (including up to two consultation reminders if you haven&apos;t booked a call), and send occasional Vietnam travel inspiration and trip updates. You can unsubscribe anytime.</p>}
         <div ref={widget} className="min-h-[140px] max-w-full overflow-hidden min-[401px]:min-h-[65px]" />
         {(error || verificationError) && <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm leading-6 text-red-900">{error || verificationError}</p>}
         <button disabled={status === "saving" || !token} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full bg-[#593412] px-4 py-3 font-bold text-white transition hover:bg-[#75481b] disabled:cursor-wait disabled:opacity-60">{status === "saving" ? <><Loader2 className="animate-spin" size={18} /> Saving your request...</> : <>Send my itinerary <ArrowRight size={18} /></>}</button>
