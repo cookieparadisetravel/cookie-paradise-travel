@@ -24,7 +24,7 @@ async function fixture() {
   let emailFails = false, calendarFails = false;
   const booked = new Set<string>();
   let onCalendar: (() => void) | undefined;
-  type Input = ReturnType<typeof leadInput> & { submittedAt?: string; contactConsent?: boolean };
+  type Input = ReturnType<typeof leadInput> & { submittedAt?: string; contactConsent?: boolean; formId?: string };
   type Save = (input: Input) => Promise<{ created: boolean; emailStatus: string }>;
   const service = await loadModule<{ saveTripGuideLead: Save; saveMetaDashboardLead: Save }>("lib/trip-guide-service.ts", {
     "cloudflare:workers": { env: runtime }, "./trip-guide-storage": storage, "./followup-history": history, "./trip-guide": guide,
@@ -229,6 +229,11 @@ test("public intake enforces origin, bounded bodies, explicit contact consent an
     assert.equal((await route.POST(request({ ...body, firstName: undefined, fullName: "Alex Morgan Lee", city: undefined }))).status, 201);
     assert.equal((saved[1] as { firstName: string }).firstName, "Alex Morgan Lee");
     assert.equal((saved[1] as { city: string }).city, "Not provided");
+    assert.equal((await route.POST(request({ ...body, timing: "december_2027", offer: guide.retireeOfferId, marketingConsent: false }))).status, 201);
+    assert.equal((saved[2] as { formId: string }).formId, guide.retireeOfferId);
+    assert.equal((saved[2] as { marketingConsent: boolean }).marketingConsent, false);
+    assert.equal((await route.POST(request({ ...body, timing: "june_2027", offer: guide.retireeOfferId }))).status, 400);
+
   } finally { globalThis.fetch = original; }
 });
 
@@ -502,4 +507,33 @@ test("specific departure labels and Meta answers preserve the chosen date", () =
   }
   assert.equal(guide.timingFromInterest("June 2027"), "june_2027");
   assert.equal(guide.timingFromInterest("July 1, 2027"), "not_sure");
+});
+
+
+test("retiree guide pricing is isolated from standard December and summer inquiries", async () => {
+  const m = await loadModule<typeof import('./trip-guide-email')>("lib/trip-guide-email.ts", {"./trip-availability.ts":departures,"./consultation":consultation,"./trip-guide":guide,"./mailersend-transactional":{sendTripGuideEmailMessage:async()=>({})}});
+  const base = { firstName: "Traveler", stopToken: uuid(), timing: "december_2027" as const };
+  const special = m.buildTripGuideEmail({ ...base, offer: guide.retireeOfferId });
+  for (const output of [special.text, special.html]) {
+    assert.match(output, /US\$3,000/);
+    assert.match(output, /all meals included/);
+    assert.ok(output.includes(guide.retireeGuideUrl));
+    assert.doesNotMatch(output, /2,875/);
+  }
+  for (const input of [base, { ...base, timing: "june_2027" as const, offer: guide.retireeOfferId }]) {
+    const standard = m.buildTripGuideEmail(input);
+    assert.match(standard.text, /US\$2,875/);
+    assert.ok(standard.text.includes(guide.tripGuideUrl));
+    assert.doesNotMatch(standard.text, /3,000/);
+  }
+});
+
+test("retiree inquiry records its offer and fulfills the guide without newsletter signup", async () => {
+  const f = await fixture();
+  const input = { ...leadInput(), timing: "december_2027" as const, formId: guide.retireeOfferId };
+  await f.save(input);
+  assert.equal(f.emails[0].offer, guide.retireeOfferId);
+  assert.equal(f.sqlite.prepare("SELECT form_id FROM trip_guide_submissions").get()!.form_id, guide.retireeOfferId);
+  assert.equal(f.subscriptions.length, 0);
+  f.sqlite.close();
 });

@@ -4,7 +4,7 @@ import { vietnamDepartures } from "@/lib/trip-availability";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { ArrowRight, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { loadTurnstileScript } from "./booking-dialog";
-import { attributionFromSearch, leadCities, tripGuideUrl } from "@/lib/trip-guide";
+import { attributionFromSearch, leadCities, tripGuideUrl, retireeGuideUrl, retireeOfferId } from "@/lib/trip-guide";
 import { decemberCampaignAttribution, type DecemberCampaign } from "@/lib/december-campaign";
 import { consultationBookingUrl } from "@/lib/consultation";
 
@@ -41,6 +41,7 @@ export function TripGuideForm({ showCity = false, campaign }: { showCity?: boole
     try {
       const response = await fetch("/api/trip-guide", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({
         fullName: data.get("fullName"), email: data.get("email"), phone: data.get("phone") || "", ...(showCity ? { city: data.get("city") } : {}), timing: data.get("timing"),
+        ...(campaign ? { offer: retireeOfferId } : {}),
         contactConsent: true, marketingConsent: campaign ? data.get("marketingConsent") === "on" : true, website: data.get("website") || "",
         turnstileToken: token, submissionId: submissionId.current, attribution: campaign ? decemberCampaignAttribution(window.location.search, campaign) : attributionFromSearch(window.location.search),
       }) });
@@ -60,7 +61,7 @@ export function TripGuideForm({ showCity = false, campaign }: { showCity?: boole
       <CheckCircle2 className="mb-5 h-10 w-10 text-[#6a733c]" aria-hidden="true" />
       <h2 className="font-serif text-3xl">Your Vietnam itinerary is ready</h2>
       <p className="mt-4 leading-7">Thanks—your inquiry has been saved. {emailStatus === "sent" ? "The itinerary and pricing PDF has been emailed to you." : emailStatus === "already_requested" ? "If you requested the itinerary before, use the links below to open it again or book a call." : "Use the download below now. Email delivery was not confirmed; Trung can help with any questions."}</p>
-      <a className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#593412] px-5 py-3 text-center font-bold text-white" href={tripGuideUrl} target="_blank" rel="noopener noreferrer"><Download size={18} /> Open itinerary and pricing (PDF)</a>
+      <a className="mt-6 flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#593412] px-5 py-3 text-center font-bold text-white" href={campaign ? retireeGuideUrl : tripGuideUrl} target="_blank" rel="noopener noreferrer"><Download size={18} /> Open itinerary and pricing (PDF)</a>
       <a className="mt-3 flex min-h-12 items-center justify-center gap-2 rounded-full border border-[#593412] px-5 py-3 text-center font-bold" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free 30-minute call <ArrowRight size={18} /></a>
     </div> : <>
       <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#84511e]">Start with the details</p>

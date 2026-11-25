@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   if (raw && typeof raw === "object" && "website" in raw && raw.website) return Response.json({ ok: true, emailStatus: "not_sent" });
   const parsed = guideRequestSchema.safeParse(raw);
   if (!parsed.success) return Response.json({ error: "Please complete your full name, email and travel interest, and review your request." }, { status: 400 });
-  if (!parsed.data.marketingConsent) return Response.json({ error: "Please refresh the page and submit the guide signup form after reviewing the email signup notice." }, { status: 400 });
+  if (!parsed.data.marketingConsent && !parsed.data.offer) return Response.json({ error: "Please refresh the page and submit the guide signup form after reviewing the email signup notice." }, { status: 400 });
   const secret = env.TURNSTILE_SECRET_KEY?.trim();
   if (!secret || env.SQUARE_ENV !== "production") return Response.json({ error: "The request form is temporarily unavailable. Please book a consultation or try again later." }, { status: 503 });
   try {
@@ -25,8 +25,9 @@ export async function POST(request: Request) {
     if (!verification?.success || verification.action !== "trip_guide" || verification.hostname !== new URL(request.url).hostname) {
       return Response.json({ error: "Human verification expired. Please try again." }, { status: 400 });
     }
-    const { firstName, email, phone, city, timing, marketingConsent, submissionId, attribution } = parsed.data;
+    const { firstName, email, phone, city, timing, marketingConsent, submissionId, attribution, offer } = parsed.data;
     const result = await saveTripGuideLead({ firstName, email, phone, city, timing, marketingConsent,
+      formId: offer, contactConsent: parsed.data.contactConsent,
       submissionId: `website:${submissionId}`, attribution: campaignAttribution(attribution), source: "website",
       referralCode: referralFromCookie(request.headers.get("cookie"))?.code ?? null });
     return Response.json({ ok: true, ...result }, { status: 201, headers: { "Cache-Control": "no-store" } });

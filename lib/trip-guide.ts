@@ -1,6 +1,9 @@
 import { vietnamDepartures, departureForTiming } from "./trip-availability.ts";
 
 export const tripGuideUrl = "https://cookieparadisetravel.com/vietnam-trip-guide.pdf";
+export const retireeGuideUrl = "https://cookieparadisetravel.com/vietnam-retiree-trip-guide.pdf";
+export const retireeOfferId = "retiree_december_2027";
+export const retireeOfferSummary = "Retiree package: US$3,000 per traveler sharing a room, with all meals included during the eight-day Vietnam tour. December 27, 2027-January 3, 2028. International airfare is not included.";
 export const tripGuideLandingUrl = "https://cookieparadisetravel.com/vietnam";
 export const leadCities = ["Columbus", "Franklin", "Bloomington", "Indianapolis", "Carmel", "Westfield", "Other"] as const;
 export const leadTimings = [vietnamDepartures[0].timing, ...vietnamDepartures.slice(1).map(item => item.timing), "not_sure", "future"] as const;
