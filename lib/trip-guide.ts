@@ -1,8 +1,11 @@
 import { vietnamDepartures, departureForTiming } from "./trip-availability.ts";
 
 export const tripGuideUrl = "https://cookieparadisetravel.com/vietnam-trip-guide.pdf";
+export const retireeGuideUrl = "https://cookieparadisetravel.com/vietnam-retiree-trip-guide.pdf";
+export const retireeOfferId = "retiree_december_2027";
+export const retireeOfferSummary = "Retiree package: US$3,000 per traveler sharing a room, with all meals included during the eight-day Vietnam tour. December 27, 2027-January 3, 2028. International airfare is not included.";
 export const tripGuideLandingUrl = "https://cookieparadisetravel.com/vietnam";
-export const leadCities = ["Columbus", "Franklin", "Bloomington", "Other"] as const;
+export const leadCities = ["Columbus", "Franklin", "Bloomington", "Indianapolis", "Carmel", "Westfield", "Other"] as const;
 export const leadTimings = [vietnamDepartures[0].timing, ...vietnamDepartures.slice(1).map(item => item.timing), "not_sure", "future"] as const;
 export const leadStages = ["new", "considering", "booking_in_progress", "waitlist", "closed"] as const;
 export type LeadTiming = typeof leadTimings[number];
@@ -20,7 +23,7 @@ export function campaignAttribution(input: unknown): CampaignAttribution {
   const value = input && typeof input === "object" && !Array.isArray(input) ? input as Record<string, unknown> : {};
   const result = { ...emptyAttribution };
   for (const key of Object.keys(result) as (keyof CampaignAttribution)[]) result[key] = boundedText(value[key], 120);
-  result.audience = ["columbus", "franklin", "bloomington"].includes(result.audience.toLowerCase()) ? result.audience.toLowerCase() : "";
+  result.audience = ["columbus", "franklin", "bloomington", "indianapolis", "carmel", "westfield"].includes(result.audience.toLowerCase()) ? result.audience.toLowerCase() : "";
   for (const key of ["campaignId", "adSetId", "adId"] as const) if (!/^\d{1,32}$/.test(result[key])) result[key] = "";
   return result;
 }

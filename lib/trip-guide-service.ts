@@ -4,7 +4,7 @@ import { ensureFollowupHistoryStorage, followupEventId, claimFollowupEvent, fini
 import { sendTripGuideEmail } from "./trip-guide-email";
 import { addConsentedSubscriber } from "./mailerlite";
 import { sendTripGuideEmailMessage } from "./mailersend-transactional";
-import { boundedText, campaignAttribution, type CampaignAttribution, type LeadSource, type LeadTiming } from "./trip-guide";
+import { boundedText, campaignAttribution, retireeOfferId, retireeOfferSummary, type CampaignAttribution, type LeadSource, type LeadTiming } from "./trip-guide";
 
 export type TripGuideInput = {
   firstName: string; email: string; phone: string; city: string; timing: LeadTiming;
@@ -102,7 +102,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
       WHERE id=? AND guide_email_status='pending' RETURNING id`).bind(now,id).first();
     if (claim) {
       try {
-        const sent = await sendTripGuideEmail({ toEmail: email, firstName: input.firstName, timing: input.timing, stopToken, includeReminders: followupMode === "automatic" });
+        const sent = await sendTripGuideEmail({ toEmail: email, firstName: input.firstName, timing: input.timing, offer: input.formId, stopToken, includeReminders: followupMode === "automatic" });
         emailStatus = "sent";
         if (historyClaim) await finishFollowupEvent(historyClaim, "sent", sent);
         else await db.prepare(`UPDATE trip_guide_leads SET guide_email_status='sent',guide_email_sent_at=?,guide_email_message_id=? WHERE id=?`)
@@ -125,7 +125,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
   const ownerClaim = reopened ? await claimFollowupEvent({ guideId: id, cycle: input.submissionId, event: "owner_notification", at: now }) : null;
   if ((!reopened || ownerClaim) && ownerEmail && env.MAILERSEND_API_TOKEN?.trim() && env.MAILERSEND_FROM_EMAIL?.trim()) {
     try {
-      const text = [reopened ? "Returning Vietnam trip guide inquiry (reopened)" : "New Vietnam trip guide request", `Name: ${input.firstName}`, `Email: ${email}`, `Phone: ${input.phone || "Not provided"}`, `City: ${input.city}`, `Interest: ${input.timing}`, `Source: ${input.source}`, `Campaign: ${boundedText(attribution.utmCampaign) || "Not provided"}`, `Guide email: ${emailStatus}`, "", "Review this inquiry:", `https://cookieparadisetravel.com/admin/inquiries/guide/${id}`].join("\n");
+      const text = [reopened ? "Returning Vietnam trip guide inquiry (reopened)" : "New Vietnam trip guide request", `Name: ${input.firstName}`, `Email: ${email}`, `Phone: ${input.phone || "Not provided"}`, `City: ${input.city}`, `Interest: ${input.timing}`, `Source: ${input.source}`, `Campaign: ${boundedText(attribution.utmCampaign) || "Not provided"}`, ...(input.formId === retireeOfferId && input.timing === "december_2027" ? [retireeOfferSummary] : []), `Guide email: ${emailStatus}`, "", "Review this inquiry:", `https://cookieparadisetravel.com/admin/inquiries/guide/${id}`].join("\n");
       const escaped = text.replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!);
       await sendTripGuideEmailMessage({ toEmail: ownerEmail, toName: "Trung", subject: reopened ? "Returning Vietnam trip guide inquiry" : "New Vietnam trip guide inquiry", text, html: `<pre style="font:16px/1.65 Arial,sans-serif;color:#000000;white-space:pre-wrap">${escaped}</pre><p style="font-family:Arial,sans-serif;font-size:16px;line-height:1.65;color:#000000"><a href="https://cookieparadisetravel.com/admin/inquiries/guide/${id}" style="color:#000000;text-decoration:underline">Open inquiry</a></p>` });
       ownerStatus = "sent";
@@ -136,7 +136,7 @@ export async function saveTripGuideLead(input: TripGuideInput) {
         method: "POST", signal: AbortSignal.timeout(5000), headers: { "content-type": "application/json" },
         body: JSON.stringify({ event: reopened ? "travel_guide.reopened" : "travel_guide.requested", submittedAt: now,
           lead: { id, firstName: input.firstName, email, phone: input.phone, city: input.city,
-            timing: input.timing, source: input.source, campaign: boundedText(attribution.utmCampaign),
+            timing: input.timing, source: input.source, campaign: boundedText(attribution.utmCampaign), offer: input.formId ?? "",
             referralCode: input.referralCode, emailStatus, dashboardUrl: `https://cookieparadisetravel.com/admin/inquiries/guide/${id}` } }),
       });
       ownerStatus = response.ok ? "sent" : "error";

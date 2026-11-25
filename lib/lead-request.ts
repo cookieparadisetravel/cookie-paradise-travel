@@ -29,9 +29,10 @@ const safeText = (length: number) => z.string().trim().min(1).max(length).refine
 export const guideRequestSchema = z.object({
   fullName: safeText(121).optional(), firstName: safeText(60).optional(), email: z.string().trim().toLowerCase().email().max(180),
   phone: z.string().trim().max(40).default(""), city: z.enum(leadCities).optional().transform(city => city ?? "Not provided"), timing: z.enum(leadTimings),
+  offer: z.literal("retiree_december_2027").optional(),
   contactConsent: z.literal(true), marketingConsent: z.boolean().default(false),
   submissionId: z.string().uuid(), turnstileToken: z.string().min(1).max(2048),
   website: z.string().max(500).default(""), attribution: z.unknown().optional(),
-}).strict().refine(value => Boolean(value.fullName || value.firstName), { path: ["fullName"], message: "Your name is required." })
+}).strict().refine(value => !value.offer || value.timing === "december_2027", { path: ["offer"], message: "This offer is for the December 2027 departure." }).refine(value => Boolean(value.fullName || value.firstName), { path: ["fullName"], message: "Your name is required." })
   // Keep the existing storage field and cached forms compatible; new forms collect the full name.
   .transform(({ fullName, firstName, ...value }) => ({ ...value, firstName: fullName ?? firstName! }));
