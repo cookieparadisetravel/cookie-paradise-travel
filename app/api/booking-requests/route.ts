@@ -1,3 +1,4 @@
+import { retireeOfferId } from "@/lib/trip-guide";
 import { bookingMealPreferences, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
 import { eq, sql } from "drizzle-orm";
@@ -15,7 +16,7 @@ import { sameOrigin } from "@/lib/lead-request";
 import { referralFromCookie } from "@/lib/salon-referrals";
 
 import { ensureBookingMealsStorage } from "@/lib/booking-meals";
-import { isVietnamDeparture } from "@/lib/trip-availability";
+import { isVietnamDeparture, vietnamDepartures } from "@/lib/trip-availability";
 const validRooms = new Set(["shared", "private"]);
 const validSellerOfTravelStates = new Set(["CA", "FL", "HI", "MD", "WA"]);
 const validBookingIntents = new Set(["ready_to_book", "needs_information"]);
@@ -84,7 +85,7 @@ export async function POST(request: Request) {
     if (payload.allMealsIncluded !== undefined && typeof payload.allMealsIncluded !== "boolean") {
       return Response.json({ error: "Please review the meal upgrade selection." }, { status: 400 });
     }
-    const allMealsIncluded = payload.allMealsIncluded === true;
+    let allMealsIncluded = payload.allMealsIncluded === true || vietnamDepartures.find(item => item.departure === departure)?.allMealsIncluded === true;
     const partySize = Number(payload.partySize ?? 1);
     const marketingConsent = payload.marketingConsent === true;
     const contactConsent = payload.contactConsent === true;
@@ -124,6 +125,10 @@ export async function POST(request: Request) {
     const invitation=invitationToken ? await getSalesBookingInvitation(invitationToken) : null;
     if (invitationToken && !invitation) return Response.json({error:"This booking link has expired or is no longer available. Please contact Trung."},{status:410});
     if (invitation && invitation.sale.email!==email) return Response.json({error:"Use the email address this booking link was sent to."},{status:400});
+    if (invitation?.offerId === retireeOfferId) {
+      if (departure !== "2027-12-27") return Response.json({error:"The retiree package departs December 27, 2027."},{status:400});
+      allMealsIncluded = true;
+    }
     let referralCode=invitation ? invitation.sale.referralCode : referralFromCookie(request.headers.get("cookie"))?.code ?? null;
     await ensureBookingMealsStorage();
     const db = getDb();

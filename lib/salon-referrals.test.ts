@@ -272,7 +272,7 @@ test("recipient runtime storage and migration are equivalent and idempotent", as
 });
 
 test("the public booking API persists the allowlisted cookie and ignores a forged payload referral", async () => {
-  for (const [cookie, expected] of [...referrals.salonPartners.map(({ code }) => [`cp_travel_referral=${code}`, code] as const), ["cp_travel_referral=unknown", null], ["", null]] as const) {
+  for (const departure of ["2027-06-01", "2027-12-27"]) for (const [cookie, expected] of [...referrals.salonPartners.map(({ code }) => [`cp_travel_referral=${code}`, code] as const), ["cp_travel_referral=unknown", null], ["", null]] as const) {
     const { sqlite, stubs } = await fixture();
     const oldFetch = globalThis.fetch;
     let notifiedCode: string | null | undefined;
@@ -287,15 +287,16 @@ test("the public booking API persists the allowlisted cookie and ignores a forge
       stubs["@/lib/inquiry-sales"]={connectNewBookingToSales:async()=>{}};
       stubs["@/lib/inquiry-booking-invitations"]={getSalesBookingInvitation:async()=>null,completeSalesBookingInvitation:async()=>{throw new Error("Unexpected invitation");}};
       stubs["@/lib/lead-request"]={sameOrigin:()=>true};
+      stubs["@/lib/trip-guide"]=await import("./trip-guide.ts");
       stubs["@/lib/trip-availability"]=await import("./trip-availability.ts");
       stubs["@/lib/booking-meals"]={ensureBookingMealsStorage:async()=>{}};
       const route = await loadModule("app/api/booking-requests/route.ts", stubs);
-      const payload = { firstName: "New", lastName: "Traveler", email: "new@example.com", phone: "555-1234", departure: "2027-06-01", room: "shared", partySize: 1, bookingIntent: "needs_information", contactConsent: true, turnstileToken: "test-token", allMealsIncluded: Boolean(expected), referralCode: "nails-station" };
+      const payload = { firstName: "New", lastName: "Traveler", email: "new@example.com", phone: "555-1234", departure, room: "shared", partySize: 1, bookingIntent: "needs_information", contactConsent: true, turnstileToken: "test-token", allMealsIncluded: Boolean(expected), referralCode: "nails-station" };
       const response = await route.POST(new Request("https://example.com/api/booking-requests", { method: "POST", headers: { "content-type": "application/json", cookie }, body: JSON.stringify(payload) }) as never);
       assert.equal(response.status,201);
       assert.equal(sqlite.prepare("SELECT referral_code FROM booking_requests WHERE email='new@example.com'").get()!.referral_code,expected);
       assert.equal(notifiedCode,expected);
-      assert.equal(sqlite.prepare("SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=(SELECT id FROM booking_requests WHERE email='new@example.com')").get()!.all_meals_included, expected ? 1 : 0);
+      assert.equal(sqlite.prepare("SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=(SELECT id FROM booking_requests WHERE email='new@example.com')").get()!.all_meals_included, expected || departure === "2027-12-27" ? 1 : 0);
     } finally { globalThis.fetch = oldFetch; sqlite.close(); }
   }
 });
