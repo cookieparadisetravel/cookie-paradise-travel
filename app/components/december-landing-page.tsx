@@ -2,6 +2,8 @@
 import { CalendarDays, Users, Check, ChevronDown } from "lucide-react";
 import { BrandLogo } from "./brand-logo";
 import { TripGuideForm } from "./trip-guide-form";
+import { BookingDialog } from "./booking-dialog";
+import { ChristmasGiftCall } from "./christmas-gift-call";
 import { consultationBookingUrl } from "@/lib/consultation";
 import type { DecemberCampaign } from "@/lib/december-campaign";
 import "./december-landing-page.css";
@@ -18,7 +20,7 @@ const inclusions = [
   "All meals during your eight-day Vietnam tour, including the home-hosted Mekong lunch and the Hue royal dinner",
   "Domestic flight from Ho Chi Minh City to Hue",
   "Private ground transportation and scheduled airport transfers, including the final transfer to Da Nang Airport",
-  "A Cookie Paradise host and English-speaking local guides",
+  "An experienced tour leader personally hosting the trip, with English-speaking local guides",
   "Scheduled activities and admission fees, private boats, and your Vietnam e-visa",
 ];
 
@@ -32,7 +34,7 @@ const mealsAnswer = "Yes. On this December departure, every meal is included. Th
 
 const otherDatesAnswer = "Yes. The same Southern Vietnam itinerary also departs on six summer dates from June through August 2027, at $2,875 per person, with 7 breakfasts, 5 lunches, and 3 dinners included (not every meal).";
 
-const nearbyLine = "Whether you’re in Columbus, Indianapolis, Fishers, Carmel, Westfield, Noblesville, Greenwood, Franklin, Bloomington or Seymour, you can plan this trip with someone nearby who knows the places you’re hoping to see.";
+const hostAnswer = "Your trip is personally hosted by an experienced tour leader, with English-speaking local guides. Trung helps you plan and prepare from Columbus, Indiana.";
 
 export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }) {
   const gift = campaign === "gift_for_parents";
@@ -46,8 +48,8 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
     ["What is the pace?", paceAnswer],
     ["What about international flights?", `${flightAnswer} Trung can help your parents choose flights before anyone buys tickets.`],
     ["Can they travel as a couple, or can one parent go with a friend?", "Yes. Couples can share a double, friends can request twin beds, and a private room is +$399, subject to availability."],
-    ["Who hosts the trip?", "A carefully selected Cookie Paradise host travels with the group, plus English-speaking local guides. Trung plans the trip with your family and remains your contact before they go. He is not on this departure."],
-    ["How do I book?", "Book a free conversation with Trung. After you agree on rooms and who’s paying, he’ll send the Traveler Agreement and the deposit invoice."],
+    ["Who hosts the trip?", hostAnswer],
+    ["How do I book?", "Request a seat or book a free conversation with Trung. He’ll help your family arrange rooms and payment, then guide you through the Traveler Agreement and $500 deposit."],
     ["Other dates if December doesn’t work?", "Yes, six summer 2027 departures at $2,875 per person, with 7 breakfasts, 5 lunches, and 3 dinners included (not every meal)."],
   ] : [
     ["Why is the group capped at 8?", `So you can do things a large tour can’t do easily: a meal in a family home, vintage Jeeps, private boats, and a host who has time for each traveler. ${groupComparison} The trip runs with a minimum of 4 guests. We confirm the departure 75 days before it leaves. If we cancel because the minimum isn’t met, tour payments are refunded within 30 days. International flights you buy on your own aren’t covered by that refund.`],
@@ -55,8 +57,8 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
     ["What is the pace?", paceAnswer],
     ["What about international flights?", flightAnswer],
     ["Can I travel solo, with a friend, or as a couple?", "Yes. Couples can share a double, friends can request twin beds, and solo travelers can ask about a private room for +$399, subject to availability. A roommate match isn’t guaranteed."],
-    ["Who hosts the trip?", "This December departure is hosted by a carefully selected Cookie Paradise Travel Company host, plus English-speaking local guides. Trung plans the trip with you and remains your contact before you go. He is not on this departure."],
-    ["How do I book?", "Book a free conversation with Trung. He’ll help you choose a room arrangement, complete the Traveler Agreement, and pay your $500 deposit."],
+    ["Who hosts the trip?", hostAnswer],
+    ["How do I book?", "Request a seat or book a free conversation with Trung. He’ll help you choose a room arrangement, complete the Traveler Agreement, and pay your $500 deposit."],
     ["Are there other dates?", otherDatesAnswer],
   ];
   return <main className={`december-landing ${gift ? "december-gift" : "december-winter"}`}>
@@ -71,10 +73,10 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <p className="december-eyebrow">For Central Indiana travelers</p>
         <h1 id="campaign-title">{gift ? <>The gift Mom and Dad<br />will talk about <em>forever.</em></> : <>You’ve earned this.<br />Trade winter coats<br />for <em>Vietnam.</em></>}</h1>
         <p className="december-lede">{gift
-          ? "Not another thing to store. An 8-guest trip to Vietnam with every meal included, planned with someone local in Columbus, and a whole year for them to look forward to it."
+          ? "Not another thing to store, but an experience they can treasure. Eight days in Vietnam, every meal included, and time together they’ll remember long after they return."
           : "Eight days in Vietnam with no more than 8 guests and every meal included, so the only thing left to think about is enjoying it."}</p>
-        <p className="december-support">Planned by Trung Le, from Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years.</p>
-        <a className="december-button" href="#get-guide">{gift ? "Get the itinerary for your family" : "Get the itinerary and pricing"}</a>
+        <p className="december-support">Planned with Trung Le in Columbus, Indiana. Personally hosted by an experienced tour leader, with English-speaking local guides.</p>
+        <a className="december-button" href="#get-guide">Get the itinerary and pricing</a>
         <p className="december-note">Free itinerary. No obligation to book.</p>
       </div>
       <figure className="december-hero-image">
@@ -94,10 +96,8 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <img src="/about-trung.jpg" width={120} height={120} alt="Trung Le, founder of Cookie Paradise Travel Company" />
         <div className="december-local-copy">
           <p className="december-eyebrow">Your local connection</p>
-          <h2 id="local-connection-title">{gift ? "You can plan this gift with someone local." : "Your Vietnam trip starts with someone nearby."}</h2>
-          <p>{gift
-            ? `Trung Le, founder of Cookie Paradise Travel Company, is based in Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years. ${nearbyLine} You and your parents can talk with him together about the itinerary, rooms, and how you’d like to handle payment, before anyone commits. Trung is not on this December departure. A carefully selected Cookie Paradise host will travel with the group.`
-            : `Trung Le, founder of Cookie Paradise Travel Company, is based in Columbus, Indiana. Born in Vietnam, he lived in Ho Chi Minh City for seven years and built this itinerary around the food, everyday life, and places he knows. ${nearbyLine} Trung is not on this December departure. A carefully selected Cookie Paradise host will travel with the group.`}</p>
+          <h2 id="local-connection-title">Your Vietnam trip starts with someone local.</h2>
+          <p>Trung Le, founder of Cookie Paradise Travel Company, is based in <strong>Columbus, Indiana</strong>. Born in Vietnam, he brings firsthand knowledge and personal guidance to travelers across Central Indiana.</p>
         </div>
         <a className="december-button" href="#meet-trung">Meet Trung</a>
       </div>
@@ -107,14 +107,14 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
       <div>
         <p className="december-eyebrow">{gift ? "A gift that becomes their story" : "Travel with people, not a crowd"}</p>
         <h2 id="story-title">{gift
-          ? <>They have enough things.<br /><em>Give them a trip that fits how they like to travel.</em></>
+          ? <>Give them an experience<br /><em>to look forward to.</em></>
           : <>Eight guests,<br /><em>not a bus.</em></>}</h2>
       </div>
       <div className="december-story-body">
         {gift ? <>
           <p>Maybe they’ve talked about a bigger trip now that they have more time. A large group tour can make that idea feel tiring: early hotel lobbies, a full coach, and little say in the day. {groupComparison} Your parents can share a meal in a family home, travel by private boat, and ask questions without being one of 40 faces.</p>
           <p>Every meal is included, which is a quiet kindness in a gift like this. They are looked after at the table, and they are not adding restaurant costs once you have arranged the trip. You don’t have to build the itinerary yourself. Hotels, the domestic flight, guides, and daily plans are already in place.</p>
-          <p>If you want this to be a Christmas gift this year, start with a conversation now. The trip is in late December 2027, so they’ll have a full year to look forward to it. A $500 deposit per traveler holds a seat, and the balance can be paid in monthly installments through October 27, 2027.</p>
+          <p>Start with a conversation about the gift you have in mind. A $500 deposit per traveler holds a seat after booking is confirmed, and the balance can be paid in monthly installments through October 27, 2027.</p>
         </> : <>
           <p>{groupComparison} A smaller group gets more of Vietnam and a more personal trip.</p>
           <p>With 8 people, you can sit down to a home-hosted lunch in the Mekong, split across vintage Jeeps for a night-time food tour, and take private boats on the delta and the Perfume River. Your host can answer a question without a loudspeaker, and the pace can flex when the group is ready for a pause.</p>
@@ -142,13 +142,17 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <p className="december-eyebrow">Know what you’re planning for</p>
         <h2 id="price-title">A clear price.<br /><em>A small-group trip.</em></h2>
         <p className="december-big-price">$3,000 <span>per person</span></p>
-        <p>Land package, sharing a double or twin room. All meals included.</p>
+        <p>All meals included. Shared double or twin room. International airfare extra.</p>
         <p><strong>$500 nonrefundable deposit</strong> per traveler, then monthly installments. Final payment is due <strong>October 27, 2027.</strong></p>
         {gift && <>
           <p>You can pay the $500 deposit as the gift, help with the monthly payments, or cover the whole trip. Trung will walk your family through it on a free call, together or just with you first.</p>
-          <p><a href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free call</a> by December 20 and we’ll help you have it ready to give at Christmas.</p>
+          <ChristmasGiftCall />
         </>}
         <p className="december-note">Private room: +$399, subject to availability. There is no credit card surcharge. Pay by ACH or card at the same price.</p>
+        <div className="december-actions december-price-actions">
+          <a className="december-button" href="#get-guide">Get the itinerary and pricing</a>
+          <BookingDialog triggerLabel="Request a seat" includedMealsPackage initialTrip={{ departure: "2027-12-27", room: "shared", partySize: 1, allMealsIncluded: true }} />
+        </div>
         <a href="/#faq">Read cancellation and booking terms</a>
       </div>
       <div>
@@ -166,11 +170,11 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <img src="/about-trung.jpg" width={960} height={1280} alt="Trung Le in front of his Cookie Paradise bakery trailer" loading="lazy" />
         <div>
           <p className="december-eyebrow">From Columbus, Indiana, to Vietnam</p>
-          <h2>{gift ? <>Meet Trung Le.<br /><em>Start with a conversation, together or on your own.</em></> : <>Meet Trung Le.<br /><em>Your trip starts with a conversation.</em></>}</h2>
+          <h2>Meet Trung Le.<br /><em>Your local trip planner.</em></h2>
           <p>Born in Vietnam, Trung spent seven years living in Ho Chi Minh City. He planned this itinerary so you can experience the food and everyday life he knows firsthand, in a group small enough for real conversation.</p>
           <p>{gift
-            ? "From choosing flights to the week they depart, Trung is the planning contact for your family. He is not on this December departure. If your parents want to join the call, he can go through the daily pace, room choices, who will host the trip, and the payment plan with everyone on the line."
-            : "From choosing flights to preparing for departure, Trung is your personal planning contact. He is not on this December departure. A carefully selected Cookie Paradise host will travel with the group."}</p>
+            ? "Trung helps your family choose flights, arrange rooms, and prepare for departure. Talk with him together or on your own about how you’d like to give the trip and handle payments."
+            : "From choosing flights to preparing for departure, Trung is your personal planning contact. Talk with him about the itinerary, room choices, and monthly payments."}</p>
           <div className="december-actions">
             <a className="december-button" href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free conversation</a>
             <a href={emailHref}>Email Trung</a>
@@ -193,7 +197,7 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
           <p className="december-eyebrow">{gift ? "A lovely place to start" : "Your next chapter awaits"}</p>
           <h2>{gift ? <>Their next trip<br /><em>starts here.</em></> : <>Picture yourself<br /><em>here next winter.</em></>}</h2>
           <p>{gift
-            ? "Download the itinerary and look it over together. If it feels right, book a call and we can work out how to give it."
+            ? "Get the itinerary and pricing and look them over together. If it feels right, book a call and we can work out how to give it."
             : "Get the daily itinerary and start picturing your days in Vietnam, with a group of no more than 8 and every meal included."}</p>
           <p>$3,000 per person. All meals included. Shared room. International airfare extra.</p>
           <p>Prefer a conversation first?<br /><a href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free call with Trung</a> or <a href={emailHref}>send an email</a>.</p>
