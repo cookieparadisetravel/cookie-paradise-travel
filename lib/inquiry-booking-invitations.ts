@@ -77,12 +77,14 @@ export type SalesInvitationContext={ id:string; salesId:string; bookingId:number
 export async function getSalesBookingInvitation(token:string):Promise<SalesInvitationContext|null> {
   if (!validToken(token) || env.SQUARE_ENV!=="production") return null;
   await ensureInquirySalesStorage(false);
+  // A later general guide request stores a blank form id. It is not an offer and must not replace a retiree package.
   const row=await env.DB!.prepare(`SELECT id,sales_id AS salesId,booking_request_id AS bookingId,
     completed_at AS completedAt,expires_at AS expiresAt,revoked_at AS revokedAt,
     (SELECT s.form_id FROM trip_guide_submissions s JOIN inquiry_sales p ON p.guide_lead_id=s.lead_id
       WHERE p.id=inquiry_booking_invitations.sales_id
       AND (p.cycle_id='initial' OR julianday(s.created_at)>=julianday(p.created_at))
       AND julianday(s.created_at)<=julianday(inquiry_booking_invitations.created_at)
+      AND s.form_id!=''
       ORDER BY julianday(s.created_at) DESC,s.rowid DESC LIMIT 1) AS offerId
     FROM inquiry_booking_invitations WHERE token_hash=?`)
     .bind(await salesTokenHash(token)).first<Omit<SalesInvitationContext,"sale">>();

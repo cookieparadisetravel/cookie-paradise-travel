@@ -350,9 +350,12 @@ test("retiree guide offer carries through secure booking, agreements and payment
 test("later guide submissions do not change an issued booking link's meal offer",async()=>{
   const f=await fixture(),guideId=f.guide();
   f.sqlite.prepare("INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,created_at) VALUES (?,?,'website','retiree_december_2027','2026-11-01T12:00:00Z')").run(crypto.randomUUID(),guideId);
+  f.sqlite.prepare("INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,created_at) VALUES (?,?,'website','','2026-11-02T12:00:00Z')").run(crypto.randomUUID(),guideId);
   const sale=await f.sales.getSalesForGuide(guideId);assert.ok(sale);
   const {token,context}=await f.invite(sale.id);
+  assert.equal(context.offerId,"retiree_december_2027");
+  await assert.rejects(f.invitations.completeSalesBookingInvitation(context,{...input,departure:"2027-06-01"}),/December 27/);
   const future=new Date(Date.now()+60_000).toISOString();
   f.sqlite.prepare("INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,created_at) VALUES (?,?,'website','',?)").run(crypto.randomUUID(),guideId,future);
-  assert.equal((await f.invitations.getSalesBookingInvitation(token))!.offerId,context.offerId);
+  assert.equal((await f.invitations.getSalesBookingInvitation(token))!.offerId,"retiree_december_2027");
 });
