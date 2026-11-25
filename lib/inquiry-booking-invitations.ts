@@ -1,3 +1,5 @@
+import { vietnamDepartures } from "./trip-availability";
+import { retireeOfferId } from "./trip-guide";
 import { allMealsUpgradeCents } from "./trip-pricing";
 import { ensureBookingMealsStorage } from "./booking-meals";
 import { env } from "cloudflare:workers";
@@ -71,12 +73,18 @@ export async function sendSalesBookingInvitation(sale: SalesProcess, submissionI
   return {emailStatus};
 }
 
-export type SalesInvitationContext={ id:string; salesId:string; bookingId:number|null; completedAt:string|null; expiresAt:string; revokedAt:string|null; sale:SalesProcess };
+export type SalesInvitationContext={ id:string; salesId:string; bookingId:number|null; completedAt:string|null; expiresAt:string; revokedAt:string|null; sale:SalesProcess; offerId?:string|null };
 export async function getSalesBookingInvitation(token:string):Promise<SalesInvitationContext|null> {
   if (!validToken(token) || env.SQUARE_ENV!=="production") return null;
   await ensureInquirySalesStorage(false);
   const row=await env.DB!.prepare(`SELECT id,sales_id AS salesId,booking_request_id AS bookingId,
-    completed_at AS completedAt,expires_at AS expiresAt,revoked_at AS revokedAt FROM inquiry_booking_invitations WHERE token_hash=?`)
+    completed_at AS completedAt,expires_at AS expiresAt,revoked_at AS revokedAt,
+    (SELECT s.form_id FROM trip_guide_submissions s JOIN inquiry_sales p ON p.guide_lead_id=s.lead_id
+      WHERE p.id=inquiry_booking_invitations.sales_id
+      AND (p.cycle_id='initial' OR julianday(s.created_at)>=julianday(p.created_at))
+      AND julianday(s.created_at)<=julianday(inquiry_booking_invitations.created_at)
+      ORDER BY julianday(s.created_at) DESC,s.rowid DESC LIMIT 1) AS offerId
+    FROM inquiry_booking_invitations WHERE token_hash=?`)
     .bind(await salesTokenHash(token)).first<Omit<SalesInvitationContext,"sale">>();
   if (!row || row.revokedAt || (!row.completedAt && Date.parse(row.expiresAt)<=Date.now())) return null;
   const sale=await getSalesProcess(row.salesId);
@@ -95,6 +103,11 @@ export async function completeSalesBookingInvitation(context:SalesInvitationCont
   if (env.SQUARE_ENV!=="production" || context.sale.squareEnvironment!=="production" || input.email!==context.sale.email) throw new Error("Please use the email address this booking link was sent to.");
   const db=env.DB!;
   if (context.completedAt && context.bookingId) return {bookingId:context.bookingId,started:false};
+  if (context.offerId === retireeOfferId) {
+    if (input.departure !== "2027-12-27") throw new Error("The retiree package departs December 27, 2027.");
+    input = { ...input, allMealsIncluded: true };
+  }
+  input = { ...input, allMealsIncluded: input.allMealsIncluded === true || vietnamDepartures.find(item => item.departure === input.departure)?.allMealsIncluded === true };
   await ensureBookingMealsStorage();
   const now=new Date().toISOString(),nonce=crypto.randomUUID();
   const common=[input.fullName,input.email,input.phone,input.departure,input.room,input.partySize,input.notes,input.marketingConsent?1:0,input.marketingConsent?now:null,

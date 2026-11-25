@@ -1,3 +1,4 @@
+import { retireeOfferId } from "@/lib/trip-guide";
 import { departureForTiming } from "@/lib/trip-availability";
 import { bookingIncludesAllMeals } from "@/lib/booking-meals";
 import { env } from "cloudflare:workers";
@@ -16,12 +17,14 @@ export default async function StartBookingPage({params}:{params:Promise<{token:s
       .bind(invitation.sale.bookingId).first<typeof trip>() ?? undefined;
     if (trip) trip.allMealsIncluded = await bookingIncludesAllMeals(invitation.sale.bookingId);
   }
+  const includedMealsPackage = invitation?.offerId === retireeOfferId;
   const selectedDeparture = departureForTiming(invitation?.sale.timing ?? "");
   if (!trip && selectedDeparture) trip = { departure: selectedDeparture.departure, room: "shared", partySize: 1 };
+  if (includedMealsPackage) trip = { ...(trip ?? {room:"shared",partySize:1}), departure:"2027-12-27", allMealsIncluded:true };
   return <main className="min-h-screen bg-[var(--sand)] px-5 py-16 text-[var(--ink)]"><section className="mx-auto max-w-2xl rounded-3xl border border-[var(--line)] bg-white p-7 sm:p-10">
     <p className="text-xs font-bold uppercase tracking-widest text-[var(--orange)]">Cookie Paradise Travel Company</p>
     <h1 className="mt-4 font-serif text-4xl">{invitation?.completedAt ? "Your booking request has been received" : invitation ? "Continue your Vietnam booking" : "This booking link is unavailable"}</h1>
-    {invitation && !invitation.completedAt ? <><p className="mt-5 leading-7">Review your saved contact details and complete the remaining trip selections. Submitting the form starts your next booking step. No payment is collected here, and your reservation is not yet confirmed.</p><div className="mt-7"><BookingDialog triggerLabel="Continue my booking" initialOpen bookingInvitationToken={token} initialContact={{name:invitation.sale.name,email:invitation.sale.email,phone:invitation.sale.phone}} initialTrip={trip} /></div></> : <p className="mt-5 leading-7">{invitation?.completedAt ? "Trung will help you with the next steps. No payment was collected by this form, and your reservation is not yet confirmed." : "The link may have expired or been replaced. Contact Trung for a new link, or book a free call below."}</p>}
+    {invitation && !invitation.completedAt ? <><p className="mt-5 leading-7">Review your saved contact details and complete the remaining trip selections. Submitting the form starts your next booking step. No payment is collected here, and your reservation is not yet confirmed.</p><div className="mt-7"><BookingDialog triggerLabel="Continue my booking" initialOpen includedMealsPackage={includedMealsPackage} bookingInvitationToken={token} initialContact={{name:invitation.sale.name,email:invitation.sale.email,phone:invitation.sale.phone}} initialTrip={trip} /></div></> : <p className="mt-5 leading-7">{invitation?.completedAt ? "Trung will help you with the next steps. No payment was collected by this form, and your reservation is not yet confirmed." : "The link may have expired or been replaced. Contact Trung for a new link, or book a free call below."}</p>}
     <a className="mt-7 inline-flex min-h-11 items-center font-semibold underline" href={consultationBookingUrl}>Book a free 30-minute call with Trung →</a>
   </section></main>;
 }

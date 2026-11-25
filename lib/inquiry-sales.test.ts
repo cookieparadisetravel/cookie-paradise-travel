@@ -236,6 +236,7 @@ test("booking API uses the handoff once, retains the original referral, and leav
   f.runtime.TURNSTILE_SECRET_KEY="test";f.runtime.AUTOMATED_BOOKING_ENABLED="true";
   let automationCalls=0,notifications=0;
   const route=await loadModule<typeof import("../app/api/booking-requests/route")>("app/api/booking-requests/route.ts",{
+    "@/lib/trip-guide":await import("./trip-guide.ts"),
     "@/lib/booking-meals": { ensureBookingMealsStorage: async () => {} },
     "@/lib/trip-availability":await import("./trip-availability.ts"),"@/db/schema":schema,"@/db":{getDb:()=>db},"drizzle-orm":builders,"cloudflare:workers":{env:f.runtime},zod:{z},
     "@/lib/mailerlite":{addConsentedSubscriber:async()=>{throw new Error("No new marketing consent");}},
@@ -288,4 +289,70 @@ test("changing the meal choice during an unsigned handoff adjusts existing trave
     await f.invitations.completeSalesBookingInvitation(context,{...input,allMealsIncluded:!previous});
     assert.equal(f.sqlite.prepare("SELECT confirmed_trip_price_cents FROM travelers").get()!.confirmed_trip_price_cents,previous?287_500:300_000);
   }
+});
+
+test("retiree guide offer carries through secure booking, agreements and payment portal without selecting an upgrade", async () => {
+  const {drizzle}=await import("drizzle-orm/sqlite-proxy");
+  const builders=await import("drizzle-orm"), schema=await import("../db/schema.ts");
+  for (const [partySize,room,total] of [[1,"shared",300_000],[2,"shared",600_000],[1,"private",339_900]] as const) {
+    const f=await fixture(),guideId=f.guide();
+    f.sqlite.prepare("UPDATE trip_guide_leads SET travel_timing='december_2027' WHERE id=?").run(guideId);
+    f.sqlite.prepare("INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,utm_content,created_at) VALUES (?,?,'website','retiree_december_2027',?,'2026-11-01T12:00:00Z')").run(crypto.randomUUID(),guideId,partySize===2?"gift":"winter");
+    const sale=await f.sales.getSalesForGuide(guideId); assert.ok(sale);
+    const {context}=await f.invite(sale.id);
+    assert.equal(context.offerId,"retiree_december_2027");
+    await assert.rejects(f.invitations.completeSalesBookingInvitation(context,{...input,departure:"2027-06-01"}),/December 27/);
+    assert.equal(f.sqlite.prepare("SELECT count(*) n FROM booking_requests").get()!.n,0);
+    const result=await f.invitations.completeSalesBookingInvitation(context,{...input,departure:"2027-12-27",partySize,room,allMealsIncluded:false});
+    assert.equal(f.sqlite.prepare("SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=?").get(result.bookingId)!.all_meals_included,1);
+    const db=drizzle(async(query,params,method)=>{
+      const stmt=f.sqlite.prepare(query);if(method==="run"){stmt.run(...params);return{rows:[]};}
+      stmt.setReturnArrays(true);return{rows:method==="get"?stmt.get(...params) as unknown as unknown[]:stmt.all(...params) as unknown as unknown[][]};
+    });
+    f.runtime.AUTOMATED_BOOKING_ENABLED="true";
+    let signed=false;
+    const deliveries:Record<string,unknown>[]=[];
+    const deliver=async(value:Record<string,unknown>)=>{deliveries.push(value);return{sentAt:new Date().toISOString(),messageId:"test"};};
+    const stubs={
+      "cloudflare:workers":{env:f.runtime},"drizzle-orm":builders,"@/db":{getDb:()=>db},"@/db/schema":schema,
+      "@/lib/residency-review":await import("./residency-review.ts"),"@/lib/square-config":await import("./square-config.ts"),"@/lib/safe-error":await import("./safe-error.ts"),
+      "@/lib/traveler-agreement":await import("./traveler-agreement.ts"),"@/lib/payment-schedule":await import("./payment-schedule.ts"),"@/lib/trip-pricing":await import("./trip-pricing.ts"),
+      "@/lib/booking-meals":await loadModule<typeof import("./booking-meals")>("lib/booking-meals.ts",{"cloudflare:workers":{env:f.runtime}}),
+      "@/lib/agreement-readiness":{getAgreementReadiness:async()=>({readyForInvoice:signed})},
+      "@/lib/mailersend-transactional":{sendAgreementInvitationEmail:deliver,sendPaymentChoiceInvitationEmail:deliver,sendTravelerListInvitationEmail:deliver},
+    };
+    const flow=await loadModule<typeof import("./booking-automation")>("lib/booking-automation.ts",stubs);
+    const booking={inquiryId:result.bookingId,requestUrl:"https://example.test/"};
+    assert.equal(await flow.startAutomatedReadyToBookFlow(booking),partySize===1?"agreements_sent":"traveler_list_sent");
+    if(partySize>1){
+      for(let i=0;i<partySize;i++) f.sqlite.prepare("INSERT INTO travelers (booking_request_id,first_name,last_name,email,traveler_type) VALUES (?,'Test',? ,?,'adult')").run(result.bookingId,`Traveler${i}`,`test${i}@example.test`);
+      await flow.continueAutomatedBookingAfterTravelerList(booking);
+    }
+    for(const row of f.sqlite.prepare("SELECT agreement_document_json FROM agreement_invitations").all()){
+      assert.match(String(row.agreement_document_json),/All meals during the eight-day Vietnam tour are included/);
+      assert.match(String(row.agreement_document_json),room==="private"?/\$3,399\.00/:/\$3,000\.00/);
+    }
+    await flow.continueAutomatedBookingAfterAgreement(booking);
+    assert.equal(f.sqlite.prepare("SELECT count(*) n FROM payment_preference_invitations").get()!.n,0);
+    signed=true;await flow.continueAutomatedBookingAfterAgreement(booking);
+    const paymentEmail=deliveries.find(value=>String(value.invitationUrl).includes("/payment-preference/"));assert.ok(paymentEmail);
+    const token=new URL(String(paymentEmail.invitationUrl)).pathname.split("/").at(-1)!;
+    const payment=await loadModule<typeof import("./payment-preference-invitation")>("lib/payment-preference-invitation.ts",stubs);
+    const portal=await payment.getPaymentPreferenceInvitation(token);
+    assert.equal(portal.status,"ready");assert.ok(portal.status==="ready");
+    assert.equal(portal.bookingTotalCents,total);
+    assert.equal(portal.depositAmountCents,partySize*50_000);
+    assert.equal(portal.remainingBalanceCents,total-partySize*50_000);
+    assert.equal(portal.finalPaymentDeadline,"2027-10-27");
+  }
+});
+
+test("later guide submissions do not change an issued booking link's meal offer",async()=>{
+  const f=await fixture(),guideId=f.guide();
+  f.sqlite.prepare("INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,created_at) VALUES (?,?,'website','retiree_december_2027','2026-11-01T12:00:00Z')").run(crypto.randomUUID(),guideId);
+  const sale=await f.sales.getSalesForGuide(guideId);assert.ok(sale);
+  const {token,context}=await f.invite(sale.id);
+  const future=new Date(Date.now()+60_000).toISOString();
+  f.sqlite.prepare("INSERT INTO trip_guide_submissions (id,lead_id,source,form_id,created_at) VALUES (?,?,'website','',?)").run(crypto.randomUUID(),guideId,future);
+  assert.equal((await f.invitations.getSalesBookingInvitation(token))!.offerId,context.offerId);
 });

@@ -1,3 +1,5 @@
+import * as departures from "../lib/trip-availability.ts";
+import * as guide from "../lib/trip-guide.ts";
 import * as pricing from "../lib/trip-pricing.ts";
 import { loadModule } from "./lead-fixture.ts";
 import * as salesTypes from "../lib/inquiry-sales-types.ts";
@@ -12,7 +14,7 @@ export async function loadSalesModules(runtime:Record<string,unknown>,history:Re
   });
   const meals=await loadModule<typeof import("../lib/booking-meals")>("lib/booking-meals.ts",{"cloudflare:workers":{env:runtime}});
   const invitations=await loadModule<typeof import("../lib/inquiry-booking-invitations")>("lib/inquiry-booking-invitations.ts",{
-    "cloudflare:workers":{env:runtime},"./inquiry-sales-storage":storage,"./inquiry-sales":sales,"./booking-meals":meals,"./trip-pricing":pricing,
+    "cloudflare:workers":{env:runtime},"./inquiry-sales-storage":storage,"./inquiry-sales":sales,"./booking-meals":meals,"./trip-pricing":pricing,"./trip-guide":guide,"./trip-availability":departures,
     "./mailersend-transactional":{sendTripGuideEmailMessage:send},"./consultation":consultation,
   });
   return {sales,salesStorage:storage,invitations};
