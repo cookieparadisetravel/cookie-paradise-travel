@@ -111,6 +111,7 @@ async function fixture() {
     "drizzle-orm": sqlBuilders,
     "@/db": { getDb: () => db },
     "@/db/schema": schema,
+    "@/lib/booking-meals": { ensureBookingMealsStorage: async () => {} },
     "@/lib/payment-schedule": { todayInIndiana },
     "@/lib/traveler-agreement": { currentTravelerAgreement: { version: "test-version" } },
     "@/lib/square-config": { getSquareBookingEnvironmentError },
@@ -141,7 +142,7 @@ test("inquiry detail loads only its booking, related records and agreement readi
     assert.equal(inquiries[0].paymentEnvironmentError, null);
     assert.deepEqual(Object.keys(inquiries[0].agreementInvitationDeliveries), ["3"]);
     assert.equal(inquiries[0].latestPaymentChoiceInvitation?.usable, true);
-    assert.equal(queries.length, 7);
+    assert.equal(queries.length, 8);
     assert.ok(queries.every((query) => query.rowCount <= 1));
   } finally { sqlite.close(); }
 });

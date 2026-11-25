@@ -522,11 +522,14 @@ test("December guide pricing stays separate from summer pricing", async () => {
   }
   assert.ok(special.text.includes(guide.retireeGuideUrl));
   assert.ok(standardDecember.text.includes(guide.tripGuideUrl));
+  assert.doesNotMatch(special.text, /Optional all-meals upgrade/);
+  assert.doesNotMatch(standardDecember.text, /Optional all-meals upgrade/);
   const summer = m.buildTripGuideEmail({ ...base, timing: "june_2027" as const, offer: guide.retireeOfferId });
   assert.match(summer.text, /US\$2,875/);
   assert.match(summer.text, /7 breakfasts, 5 lunches, and 3 dinners/);
+  assert.match(summer.text, /Optional all-meals upgrade: add US\$125 per traveler \(US\$3,000 total/);
   assert.ok(summer.text.includes(guide.tripGuideUrl));
-  assert.doesNotMatch(summer.text, /3,000/);
+  assert.doesNotMatch(summer.text, /Retiree package/);
 });
 
 test("retiree inquiry records its offer and fulfills the guide without newsletter signup", async () => {

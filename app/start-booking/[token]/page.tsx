@@ -1,4 +1,5 @@
 import { departureForTiming } from "@/lib/trip-availability";
+import { bookingIncludesAllMeals } from "@/lib/booking-meals";
 import { env } from "cloudflare:workers";
 import { getSalesBookingInvitation } from "@/lib/inquiry-booking-invitations";
 import { BookingDialog } from "@/app/components/booking-dialog";
@@ -9,10 +10,11 @@ export const metadata={title:"Continue your booking | Cookie Paradise Travel",ro
 export default async function StartBookingPage({params}:{params:Promise<{token:string}>}) {
   const {token}=await params;
   const invitation=await getSalesBookingInvitation(token);
-  let trip:{departure:string;room:string;partySize:number;sellerOfTravelStateResident?:boolean;residenceState?:string}|undefined;
+  let trip:{departure:string;room:string;partySize:number;allMealsIncluded?:boolean;sellerOfTravelStateResident?:boolean;residenceState?:string}|undefined;
   if (invitation?.sale.bookingId && !invitation.completedAt) {
     trip=await env.DB!.prepare("SELECT departure,room_preference AS room,party_size AS partySize,seller_of_travel_state_resident AS sellerOfTravelStateResident,residence_state AS residenceState FROM booking_requests WHERE id=?")
       .bind(invitation.sale.bookingId).first<typeof trip>() ?? undefined;
+    if (trip) trip.allMealsIncluded = await bookingIncludesAllMeals(invitation.sale.bookingId);
   }
   const selectedDeparture = departureForTiming(invitation?.sale.timing ?? "");
   if (!trip && selectedDeparture) trip = { departure: selectedDeparture.departure, room: "shared", partySize: 1 };

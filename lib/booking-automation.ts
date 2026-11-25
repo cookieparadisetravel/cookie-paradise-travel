@@ -18,6 +18,7 @@ import {
   sendTravelerListInvitationEmail,
 } from "@/lib/mailersend-transactional";
 import { createPaymentPlan, todayInIndiana } from "@/lib/payment-schedule";
+import { bookingIncludesAllMeals } from "@/lib/booking-meals";
 import { automaticTravelerPriceCents } from "@/lib/trip-pricing";
 import {
   formatSafeDatabaseErrorDetails,
@@ -189,7 +190,7 @@ async function createAndSendTravelerListInvitation(input: { inquiryId: number; r
 async function assignAutomaticTravelerPricing(inquiryId: number, roomPreference: string) {
   const db = getDb();
   const occupancy = roomPreference === "private" ? "private" : "shared";
-  const tripPriceCents = automaticTravelerPriceCents(occupancy);
+  const tripPriceCents = automaticTravelerPriceCents(occupancy, await bookingIncludesAllMeals(inquiryId));
 
   const emailedAgreement = db.select({ id: agreementInvitations.id })
     .from(agreementInvitations)
@@ -239,12 +240,14 @@ async function createAndSendAgreementInvitations(input: { inquiryId: number; req
     companyAcceptedBy: inquiry.companyAcceptedBy ?? COMPANY_AUTOMATION_IDENTITY,
   }).where(eq(bookingRequests.id, inquiry.id));
 
+  const allMealsIncluded = await bookingIncludesAllMeals(inquiry.id);
   for (const traveler of bookingTravelers) {
     const personalizedAgreement = buildPersonalizedTravelerAgreement({
       travelerName: `${traveler.firstName} ${traveler.lastName}`,
       departure: inquiry.departure,
       occupancy: traveler.confirmedOccupancy === "private" ? "Private room supplement" : "Shared double/twin room",
       tripPriceCents: traveler.confirmedTripPriceCents!,
+      allMealsIncluded,
     });
     const agreementHash = await hashAgreementDocument(personalizedAgreement);
     const [accepted] = await db.select({ id: agreementAcceptances.id })

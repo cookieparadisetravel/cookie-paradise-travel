@@ -16,7 +16,7 @@ export function buildTripGuideEmail(input: { firstName: string; timing: LeadTimi
   const guideUrl = isRetiree ? retireeGuideUrl : tripGuideUrl;
   const summer = vietnamDepartures.find(item => !item.allMealsIncluded)!;
   const december = vietnamDepartures.find(item => item.allMealsIncluded)!;
-  const summerPrice = `Summer 2027 departures are US${formatUsd(summer.sharedRoomUsd)} per traveler sharing a room and include ${summerMealSummary}.`;
+  const summerPrice = `Summer 2027 departures are US${formatUsd(summer.sharedRoomUsd)} per traveler sharing a room and include ${summerMealSummary}. Optional all-meals upgrade: add US$125 per traveler (US$3,000 total sharing a room) to include all meals during the eight-day Vietnam tour.`;
   const decemberPrice = `The December 27, 2027 to January 3, 2028 departure is US${formatUsd(december.sharedRoomUsd)} per traveler sharing a room, with every meal included.`;
   const price = isDecember
     ? `${decemberPrice} International airfare is not included.`

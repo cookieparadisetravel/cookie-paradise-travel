@@ -1,3 +1,4 @@
+import { bookingIncludesAllMeals } from "@/lib/booking-meals";
 import { and, eq, isNull, sql } from "drizzle-orm";
 import { agreementAcceptances, agreementInvitations, bookingRequests, travelers } from "@/db/schema";
 import { getDb } from "@/db";
@@ -82,6 +83,7 @@ export async function POST(
     departure: inquiry.departure,
     occupancy: traveler.confirmedOccupancy === "private" ? "Private room supplement" : "Shared double/twin room",
     tripPriceCents: traveler.confirmedTripPriceCents,
+    allMealsIncluded: await bookingIncludesAllMeals(inquiryId),
   });
 
   const agreementHash = await hashAgreementDocument(personalizedAgreement);

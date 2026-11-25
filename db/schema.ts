@@ -148,6 +148,11 @@ export const bookingRequests = sqliteTable("booking_requests", {
   createdAt: text("created_at").notNull().default(sql.raw("CURRENT_TIMESTAMP")),
 });
 
+export const bookingMealPreferences = sqliteTable("booking_meal_preferences", {
+  bookingRequestId: integer("booking_request_id").primaryKey().references(() => bookingRequests.id, { onDelete: "cascade" }),
+  allMealsIncluded: integer("all_meals_included", { mode: "boolean" }).notNull().default(false),
+});
+
 // Private owner updates, separate from the customer's original inquiry message.
 export const inquiryOwnerNotes = sqliteTable("inquiry_owner_notes", {
   id: text("id").primaryKey(),

@@ -1,3 +1,5 @@
+import { allMealsUpgradeCents } from "./trip-pricing";
+import { ensureBookingMealsStorage } from "./booking-meals";
 import { env } from "cloudflare:workers";
 import { getSalesProcess, recordSalesEvent, setSalesStage } from "./inquiry-sales";
 import { ensureInquirySalesStorage } from "./inquiry-sales-storage";
@@ -87,12 +89,13 @@ export async function getSalesBookingInvitation(token:string):Promise<SalesInvit
   return {...row,sale};
 }
 
-export type SalesBookingInput={firstName:string;lastName:string;fullName:string;email:string;phone:string;departure:string;room:string;partySize:number;notes:string;
+export type SalesBookingInput={firstName:string;lastName:string;fullName:string;email:string;phone:string;departure:string;room:string;partySize:number;notes:string;allMealsIncluded?:boolean;
   marketingConsent:boolean;sellerOfTravelStateResident:boolean;residenceState:string;bookingPaused:boolean};
 export async function completeSalesBookingInvitation(context:SalesInvitationContext,input:SalesBookingInput) {
   if (env.SQUARE_ENV!=="production" || context.sale.squareEnvironment!=="production" || input.email!==context.sale.email) throw new Error("Please use the email address this booking link was sent to.");
   const db=env.DB!;
   if (context.completedAt && context.bookingId) return {bookingId:context.bookingId,started:false};
+  await ensureBookingMealsStorage();
   const now=new Date().toISOString(),nonce=crypto.randomUUID();
   const common=[input.fullName,input.email,input.phone,input.departure,input.room,input.partySize,input.notes,input.marketingConsent?1:0,input.marketingConsent?now:null,
     input.sellerOfTravelStateResident?1:0,input.sellerOfTravelStateResident?input.residenceState:null,input.bookingPaused?"paused":"not_requested",now];
@@ -123,6 +126,15 @@ export async function completeSalesBookingInvitation(context:SalesInvitationCont
     first,
     db.prepare(`UPDATE inquiry_booking_invitations SET booking_request_id=(SELECT ${bookingExpression} FROM inquiry_sales p WHERE p.id=sales_id),
       completed_at=?,completion_nonce=? WHERE id=? AND completed_at IS NULL AND revoked_at IS NULL AND changes()=1`).bind(now,nonce,context.id),
+    db.prepare(`UPDATE travelers SET confirmed_trip_price_cents=confirmed_trip_price_cents +
+      (? - coalesce((SELECT all_meals_included FROM booking_meal_preferences WHERE booking_request_id=travelers.booking_request_id),0)) * ?
+      WHERE confirmed_trip_price_cents IS NOT NULL AND booking_request_id=(
+        SELECT booking_request_id FROM inquiry_booking_invitations WHERE id=? AND completion_nonce=?)`)
+      .bind(input.allMealsIncluded?1:0,allMealsUpgradeCents,context.id,nonce),
+    db.prepare(`INSERT INTO booking_meal_preferences (booking_request_id,all_meals_included)
+      SELECT booking_request_id,? FROM inquiry_booking_invitations WHERE id=? AND completion_nonce=?
+      ON CONFLICT(booking_request_id) DO UPDATE SET all_meals_included=excluded.all_meals_included`)
+      .bind(input.allMealsIncluded?1:0,context.id,nonce),
     db.prepare(`UPDATE inquiry_sales SET booking_request_id=(SELECT booking_request_id FROM inquiry_booking_invitations WHERE id=?),
       next_action='',follow_up_date=NULL,updated_at=? WHERE id=?
       AND EXISTS (SELECT 1 FROM inquiry_booking_invitations WHERE id=? AND completion_nonce=?)`).bind(context.id,now,context.salesId,context.id,nonce),

@@ -26,6 +26,7 @@ type Props = {
   invoiceExists: boolean;
   partySize: number;
   roomPreference: string;
+  allMealsIncluded?: boolean;
   agreementReady: boolean;
   agreementReadinessMessage: string;
   initialGeneratedDraft?: PaymentPreferenceGeneratedDraft;
@@ -40,6 +41,7 @@ export function PaymentPreferenceInvitationAction({
   invoiceExists,
   partySize,
   roomPreference,
+  allMealsIncluded = false,
   agreementReady,
   agreementReadinessMessage,
   initialGeneratedDraft,
@@ -48,6 +50,7 @@ export function PaymentPreferenceInvitationAction({
   const router = useRouter();
   const initialPriceCheck = inferPriceCheckSelection({
     bookingTotalCents: initialBookingTotalCents,
+    allMealsIncluded,
     partySize,
     preferredPrivateRoomCount: roomPreference === "private" ? partySize : 0,
   });
@@ -87,7 +90,7 @@ export function PaymentPreferenceInvitationAction({
   };
   const bookingTotalNumber = Number(bookingTotal);
   const bookingTotalCents = Number.isFinite(bookingTotalNumber) ? Math.round(bookingTotalNumber * 100) : 0;
-  const expectedBookingTotalCents = calculateExpectedBookingTotalCents({ partySize, perTravelerPriceCents, privateRoomCount });
+  const expectedBookingTotalCents = calculateExpectedBookingTotalCents({ partySize, perTravelerPriceCents, privateRoomCount, allMealsIncluded });
   const priceDifferenceCents = bookingTotalCents - expectedBookingTotalCents;
   const bookingTotalIsValid = Number.isFinite(bookingTotalNumber) && bookingTotalNumber > 0;
   const priceMatches = bookingTotalIsValid && priceDifferenceCents === 0;
@@ -233,6 +236,7 @@ Cookie Paradise Travel Company`;
           </label>
         </div>
 
+        {allMealsIncluded && <p className="mt-3 text-sm font-semibold">All-meals upgrade selected: +$125 × {partySize} travelers, included in the expected total.</p>}
         <label className="mt-3 block text-sm font-semibold text-[var(--ink)]">
           Confirmed total booking price
           <span className="mt-1 flex items-center rounded-xl border border-[var(--line)] bg-white px-3"><span className="text-[var(--muted-ink)]">$</span><input autoComplete="off" disabled={creating} inputMode="decimal" pattern="[0-9]*[.]?[0-9]{0,2}" className="min-w-0 flex-1 bg-transparent px-2 py-2 outline-none disabled:cursor-not-allowed disabled:opacity-50" type="text" value={bookingTotal} onChange={(event) => {
