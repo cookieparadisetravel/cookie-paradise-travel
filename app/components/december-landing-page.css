@@ -22,7 +22,7 @@
 .december-hero-copy .december-lede{font-size:1.3rem;line-height:1.6;max-width:34rem}
 .december-support{max-width:32rem}
 .december-hero-copy .december-button{margin-top:.5rem}
-.december-landing .december-note{font-size:.9375rem;line-height:1.6;margin-top:.75rem;color:#5f5145}
+.december-landing .december-note{font-size:1rem;line-height:1.6;margin-top:.75rem;color:#5f5145}
 .december-hero-image{position:relative;margin:0;min-width:0;overflow:hidden;background:#e8d7bd}
 .december-hero-image img{height:100%;width:100%;object-fit:cover;object-position:48% center;display:block}
 .december-gift .december-hero-image img{object-position:42% center}
@@ -30,7 +30,7 @@
 .december-facts{padding:1.8rem max(1.5rem,calc((100% - 1240px)/2));background:#f4ebde;display:grid;grid-template-columns:1.25fr 1fr 1.1fr;gap:2rem;border-bottom:1px solid #dfd4c6}
 .december-facts>div{display:flex;gap:1rem;align-items:center}
 .december-facts svg{flex-shrink:0;width:28px;height:28px;color:#815029}
-.december-facts p{margin:0}.december-facts strong{display:block;font-size:1.25rem}.december-facts span{display:block;font-size:.9375rem;line-height:1.6}
+.december-facts p{margin:0}.december-facts strong{display:block;font-size:1.25rem}.december-facts span{display:block;font-size:1rem;line-height:1.6}
 .december-local-strip{background:#49301f;color:#fffdf8;border-top:4px solid var(--campaign-gold)}
 .december-local-inner{display:flex;align-items:center;gap:2rem;max-width:1320px;margin:auto;padding:2.75rem 2.5rem}
 .december-local-strip img{width:120px;height:120px;flex-shrink:0;border-radius:50%;object-fit:cover;border:3px solid var(--campaign-gold)}
@@ -62,3 +62,10 @@
 @media(max-width:1000px){.december-header nav>a:not(.december-button){display:none}.december-hero{grid-template-columns:1fr;min-height:0}.december-hero-copy{padding:3rem 2.5rem}.december-hero-image{height:auto;aspect-ratio:3/2;max-height:530px}.december-hero-image img{object-position:center}.december-hero h1{font-size:clamp(2.8rem,7vw,4.6rem)}.december-route{grid-template-columns:1fr 1fr;gap:2rem}.december-section-heading{align-items:start;flex-direction:column;gap:1rem}.december-section{padding:3.5rem 2.5rem}.december-story,.december-care-grid,.december-price,.december-final-grid{grid-template-columns:1fr;gap:2rem}.december-story-body{padding:0}.december-founder-grid{grid-template-columns:1fr 1.5fr;gap:2rem}.december-three{gap:1.5rem}.december-price-intro>p{max-width:100%}.december-final-grid>div:first-child{padding:0}}
 @media(max-width:640px){.december-landing{font-size:1.125rem}.december-header{padding:1.1rem 1.25rem;gap:1rem}.december-header .company-logo{width:10rem}.december-header .december-button{padding:.65rem .8rem;font-size:.9375rem;min-height:48px;max-width:10rem}.december-hero-copy{padding:2.5rem 1.25rem 2rem}.december-hero-copy .december-button{width:100%}.december-hero-image{aspect-ratio:3/2}.december-hero h1{font-size:2.85rem}.december-hero-copy .december-lede{font-size:1.1875rem}.december-facts{grid-template-columns:1fr;padding:1.25rem;gap:0}.december-facts>div{padding:1rem 0;border-bottom:1px solid #d6c4aa}.december-facts>div:last-child{border:0}.december-facts strong{font-size:1.1875rem}.december-facts span{font-size:1rem}.december-local-inner{display:grid;grid-template-columns:80px 1fr;gap:1.25rem;padding:2rem 1.25rem}.december-local-strip img{width:80px;height:80px}.december-local-copy{display:contents}.december-local-strip .december-eyebrow{align-self:center;margin:0}.december-local-strip h2,.december-local-strip .december-local-copy>p:not(.december-eyebrow),.december-local-strip .december-button{grid-column:1/-1}.december-local-strip h2{margin:0}.december-local-strip .december-button{justify-self:start}.december-section{padding:3rem 1.25rem}.december-gift-plan{padding-top:0}.december-three{grid-template-columns:1fr;gap:1rem}.december-route{gap:1.8rem;grid-template-columns:1fr}.december-route img{aspect-ratio:3/2}.december-route h3{font-size:1.75rem}.december-pace{padding:1.5rem}.december-founder-grid{grid-template-columns:1fr}.december-founder-grid>img{max-height:370px;object-position:center 38%;width:100%}.december-actions{align-items:start;gap:1rem}.december-actions .december-button{width:100%}.december-final-grid{gap:1.5rem}.december-landing #get-guide{padding:1.3rem}.december-footer{padding:2.5rem 1.25rem;gap:1.5rem}.december-footer nav{margin-left:0;width:100%}.december-landing h2{font-size:2.1rem}.december-price .december-big-price{font-size:3rem}}
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+
+.december-price-actions{gap:1rem;margin-bottom:1.5rem}
+.december-price-actions>button{min-height:56px;border:1px solid var(--campaign-brown);border-radius:6px;padding:.9rem 1.6rem;background:transparent;color:var(--campaign-brown);font-size:1.0625rem;font-weight:700;box-shadow:none;transform:none}
+.december-price-actions>button:hover{background:#f5ead9;transform:none}
+.december-price-actions>button svg{display:none}
+@media(min-width:1001px){.december-gift .december-hero h1{font-size:clamp(2.8rem,4.1vw,3.5rem)}}
+@media(max-width:640px){.december-price-actions>a,.december-price-actions>button{width:100%}}
