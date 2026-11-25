@@ -144,7 +144,10 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <p className="december-big-price">$3,000 <span>per person</span></p>
         <p>Land package, sharing a double or twin room. All meals included.</p>
         <p><strong>$500 nonrefundable deposit</strong> per traveler, then monthly installments. Final payment is due <strong>October 27, 2027.</strong></p>
-        {gift && <p>You can pay the $500 deposit as the gift, help with the monthly payments, or cover the whole trip. Trung will walk your family through it on a free call, together or just with you first.</p>}
+        {gift && <>
+          <p>You can pay the $500 deposit as the gift, help with the monthly payments, or cover the whole trip. Trung will walk your family through it on a free call, together or just with you first.</p>
+          <p><a href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free call</a> by December 20 and we’ll help you have it ready to give at Christmas.</p>
+        </>}
         <p className="december-note">Private room: +$399, subject to availability. There is no credit card surcharge. Pay by ACH or card at the same price.</p>
         <a href="/#faq">Read cancellation and booking terms</a>
       </div>
