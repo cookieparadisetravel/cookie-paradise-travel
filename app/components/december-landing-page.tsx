@@ -62,7 +62,7 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
       <div><p><strong>$2,875 per person</strong><span>Shared room · International airfare extra</span></p></div>
     </section>
 
-    <section className="december-local-strip" aria-label="Your local connection"><img src="/about-trung.jpg" width={80} height={80} alt="Trung Le, founder of Cookie Paradise Travel Company" /><p><strong>A local connection, before you go.</strong><span>Trung Le, founder of Cookie Paradise Travel Company, is based in <strong>Columbus, Indiana.</strong></span></p><a href="#meet-trung">Meet Trung</a></section>
+    <section className="december-local-strip" aria-labelledby="local-connection-title"><div className="december-local-inner"><img src="/about-trung.jpg" width={120} height={120} alt="Trung Le, founder of Cookie Paradise Travel Company" /><div className="december-local-copy"><p className="december-eyebrow">Your local connection</p><h2 id="local-connection-title">Your Vietnam trip starts<br />with someone local.</h2><p>Trung Le, founder of Cookie Paradise Travel Company, is based in <strong>Columbus, Indiana.</strong></p></div><a className="december-button" href="#meet-trung">Meet Trung</a></div></section>
 
     <section className="december-section december-story" aria-labelledby="story-title">
       <div><p className="december-eyebrow">{gift ? "A gift that becomes their story" : "Travel with people, not a crowd"}</p><h2 id="story-title">{gift ? <>They have enough things.<br /><em>Give them an experience to look forward to.</em></> : <>More connection.<br /><em>Less to figure out on your own.</em></>}</h2></div>
