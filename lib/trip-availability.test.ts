@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { availabilitySummary, countBookedSpots, type AvailabilityBooking, vietnamDepartures, isVietnamDeparture } from "./trip-availability.ts";
+import { availabilitySummary, countBookedSpots, decemberSharedRoomUsd, summerMealSummary, summerSharedRoomUsd, type AvailabilityBooking, vietnamDepartures, isVietnamDeparture } from "./trip-availability.ts";
 const booking = (changes: Partial<AvailabilityBooking> = {}): AvailabilityBooking => ({
   partySize: 2, status: "booking_in_progress", squareEnvironment: "production", squareDepositInvoiceStatus: "unpaid", ...changes,
 });
@@ -36,4 +36,16 @@ test("all six summer departures and the year-end trip are accepted with eight-da
     assert.equal(trip.capacity, 8);
   }
   for (const date of ["2027-06-02", "2027-08-17", "2028-01-03"]) assert.equal(isVietnamDeparture(date), false);
+});
+
+test("December is priced apart from the summer departures", () => {
+  const december = vietnamDepartures.find(item => item.departure === "2027-12-27");
+  assert.equal(december?.sharedRoomUsd, decemberSharedRoomUsd);
+  assert.equal(december?.allMealsIncluded, true);
+  assert.equal(summerMealSummary, "7 breakfasts, 5 lunches, and 3 dinners");
+  for (const trip of vietnamDepartures) {
+    if (trip.departure === "2027-12-27") continue;
+    assert.equal(trip.sharedRoomUsd, summerSharedRoomUsd);
+    assert.equal(trip.allMealsIncluded, false);
+  }
 });

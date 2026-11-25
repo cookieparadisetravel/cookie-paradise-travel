@@ -1,4 +1,4 @@
-import { vietnamDepartures } from "@/lib/trip-availability";
+import { formatUsd, summerMealSummary, vietnamDepartures } from "@/lib/trip-availability";
 import { getFinalPaymentDeadline } from "@/lib/payment-schedule";
 import { BookingDialog } from "./booking-dialog";
 import type { TripAvailabilityValue } from "./trip-availability";
@@ -18,6 +18,8 @@ export function DepartureOptions({ availabilities }: { availabilities: TripAvail
         const deadline = getFinalPaymentDeadline(item.departure, "2026-11-24");
         return <article key={item.departure} className="flex flex-col rounded-2xl border border-black/15 bg-white p-5 sm:p-6">
           <h4 className="text-lg font-bold leading-7">{item.dateRange}</h4>
+          <p className="mt-3 text-base font-semibold">{formatUsd(item.sharedRoomUsd)} per person</p>
+          <p className="text-sm leading-6">{item.allMealsIncluded ? "Every meal included" : summerMealSummary}</p>
           <p className="mt-3 text-base font-semibold text-[#805018]">{availability
             ? availability.full ? "Fully booked" : `${availability.remaining} ${availability.remaining === 1 ? "seat" : "seats"} available`
             : "Contact Trung for current availability"}</p>
