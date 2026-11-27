@@ -41,6 +41,17 @@
 .december-local-strip .december-button:hover{background:#ffca7e;border-color:#ffca7e}.december-local-strip :focus-visible{outline-color:#fffdf8}
 .december-section{max-width:1320px;margin:auto;padding:5rem 2.5rem}
 .december-story{display:grid;grid-template-columns:1fr 1fr;gap:5rem;align-items:start}.december-story-body{padding-top:2rem}
+.december-editorial-photo{margin:0;min-width:0}
+.december-editorial-photo img{display:block;width:100%;height:auto;border-radius:5px}
+.december-editorial-photo figcaption{padding-top:.7rem;font-size:1rem;line-height:1.5}
+.december-editorial-photo figcaption>span{display:block;font-weight:600}
+.december-editorial-photo small{display:block;margin-top:.25rem;font-size:.8125rem;color:#5f5145;line-height:1.5}
+.december-story-photo{margin-top:2rem}
+.december-inclusion-photos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.25rem;margin-bottom:2rem}
+.december-inclusion-photos img{aspect-ratio:3/2;object-fit:cover}
+.december-final-photo{margin-top:2rem}
+.december-final-photo img{aspect-ratio:3/2;object-fit:cover;object-position:center 40%}
+@media(max-width:640px){.december-inclusion-photos{grid-template-columns:1fr;gap:1.5rem}.december-story-photo,.december-final-photo{margin-top:1.5rem}}
 .december-gift-plan{padding-top:0}.december-gift-plan>h2{font-size:2rem}
 .december-three{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem;border-top:1px solid #cdbba3;padding-top:1.8rem}
 .december-three h3{font-size:1.5rem}.december-three p{font-size:1.0625rem}

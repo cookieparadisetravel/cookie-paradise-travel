@@ -36,6 +36,22 @@ const otherDatesAnswer = "Yes. The same Southern Vietnam itinerary also departs 
 
 const hostAnswer = "Your trip is personally hosted by an experienced tour leader, with English-speaking local guides. Trung helps you plan and prepare from Columbus, Indiana.";
 
+const campaignPhotos = {
+  "lantern-workshop": { alt: "Illustration of two older couples making silk lanterns with a Vietnamese instructor", height: 1067, caption: "Make something to bring home.", credit: <>AI-generated illustration</> },
+  "mekong-sampans": { alt: "Sampans carrying people along a palm-lined canal in the Mekong Delta", height: 853, caption: "See the Mekong from the water.", credit: <><a href="https://commons.wikimedia.org/wiki/File:Canal_in_Mekong_Delta_-_My_Tho_-_Vietnam_(15912635245).jpg">Esin Üstün</a> · <a href="https://creativecommons.org/licenses/by/2.0/">CC BY 2.0</a> · resized</> },
+  "vietnamese-meal": { alt: "Vietnamese fish, rice noodles, fresh herbs and dipping sauce served together", height: 854, caption: "Every meal, taken care of.", credit: <><a href="https://www.pexels.com/photo/2318966/">Quang Nguyen Vinh / Pexels</a></> },
+  "twin-room": { alt: "A warmly furnished twin hotel room with two beds and a garden view", height: 854, caption: "A place to unwind.", credit: <><a href="https://www.pexels.com/photo/beds-inside-a-hotel-room-14025023/">Quang Nguyen Vinh / Pexels</a> · Illustrative room</> },
+  "evening-lanterns": { alt: "Colorful lanterns glowing above a street in Vietnam at dusk", height: 1920, caption: "Evenings worth looking forward to.", credit: <><a href="https://unsplash.com/photos/IeCSFQLc-Fs">Kyle Thacker / Unsplash</a></> },
+};
+
+function CampaignPhoto({ photo, className = "", sizes = "(min-width: 1001px) 560px, (min-width: 641px) calc(100vw - 80px), calc(100vw - 40px)" }: { photo: keyof typeof campaignPhotos; className?: string; sizes?: string }) {
+  const { alt, height, caption, credit } = campaignPhotos[photo];
+  return <figure className={`december-editorial-photo ${className}`}>
+    <img src={`/campaigns/${photo}-1280.webp`} srcSet={`/campaigns/${photo}-640.webp 640w, /campaigns/${photo}-1280.webp 1280w`} sizes={sizes} width={1280} height={height} loading="lazy" decoding="async" alt={alt} />
+    <figcaption><span>{caption}</span><small>{credit}</small></figcaption>
+  </figure>;
+}
+
 export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }) {
   const gift = campaign === "gift_for_parents";
   const hero = gift ? "gift-hoi-an" : "winter-coffee";
@@ -109,6 +125,7 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <h2 id="story-title">{gift
           ? <>Give them an experience<br /><em>to look forward to.</em></>
           : <>Eight guests,<br /><em>not a bus.</em></>}</h2>
+        <CampaignPhoto photo={gift ? "lantern-workshop" : "mekong-sampans"} className="december-story-photo" />
       </div>
       <div className="december-story-body">
         {gift ? <>
@@ -156,6 +173,10 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
         <a href="/#faq">Read cancellation and booking terms</a>
       </div>
       <div>
+        <div className="december-inclusion-photos">
+          <CampaignPhoto photo="vietnamese-meal" sizes="(min-width: 1001px) 270px, (min-width: 641px) calc((100vw - 100px) / 2), calc(100vw - 40px)" />
+          <CampaignPhoto photo="twin-room" sizes="(min-width: 1001px) 270px, (min-width: 641px) calc((100vw - 100px) / 2), calc(100vw - 40px)" />
+        </div>
         <h3>Included in your journey</h3>
         <ul className="december-inclusions">{inclusions.map(item => <li key={item}><Check aria-hidden="true" size={22} /><span>{item}</span></li>)}</ul>
         <div className="december-extra">
@@ -201,6 +222,7 @@ export function DecemberLandingPage({ campaign }: { campaign: DecemberCampaign }
             : "Get the daily itinerary and start picturing your days in Vietnam, with a group of no more than 8 and every meal included."}</p>
           <p>$3,000 per person. All meals included. Shared room. International airfare extra.</p>
           <p>Prefer a conversation first?<br /><a href={consultationBookingUrl} target="_blank" rel="noopener noreferrer">Book a free call with Trung</a> or <a href={emailHref}>send an email</a>.</p>
+          <CampaignPhoto photo="evening-lanterns" className="december-final-photo" />
         </div>
         <TripGuideForm showCity campaign={campaign} />
       </div>
